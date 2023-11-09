@@ -17,7 +17,7 @@ export type TownJoinResponse = {
   interactables: TypedInteractable[];
 }
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'BoardArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -71,6 +71,34 @@ export interface ViewingArea extends Interactable {
   video?: string;
   isPlaying: boolean;
   elapsedTimeSec: number;
+}
+
+//represents an image or text component. for images, content is file path  (?)
+export interface component {
+type: 'image' | 'text',
+location: XY,
+size: number
+content: string
+}
+
+/*comments
+*/
+export interface Board {
+  createdBy: PlayerID;
+  owner: PlayerID;
+  boardID: string;
+  boardName: string;
+  editors: PlayerID[];
+  viewers: PlayerID[];
+  components: component[]
+
+}
+
+export interface BoardArea extends Interactable {
+  activeDocument?: Board;
+  allDocuments: Board[];
+  allRegisteredUsers: PlayerID[];
+
 }
 
 export type GameStatus = 'IN_PROGRESS' | 'WAITING_TO_START' | 'OVER';

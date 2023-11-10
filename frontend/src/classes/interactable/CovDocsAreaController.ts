@@ -3,19 +3,46 @@ import PlayerController from '../PlayerController';
 import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
   GameArea,
+  GameInstanceID,
   GameMove,
   GameMoveCommand,
   GameState,
+  InteractableID,
+  PlayerID,
   WinnableGameState,
 } from '../../types/CoveyTownSocket';
+import { BoardAreaEvents } from './BoardAreaController';
+import { BoardArea as BoardAreaModel } from '../../types/CoveyTownSocket';
+
+import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
+import TownController from '../TownController';
 
 export interface CovDocsGameState extends GameState {
   content: string;
 }
 
-export type CovDocsEvents = GameEventTypes & {
+/**
+ * The events that a CovDocsAreaController can emit
+ */
+export type CovDocsEvents = BaseInteractableEventMap & {
   docUpdated: (newContent: string) => void;
+
+  //examples from viewing area:
+  /**
+   * A progressChange event indicates that the progress of the video has changed, either
+   * due to the user scrubbing through the video, or from the natural progression of time.
+   * Listeners are passed the new playback time elapsed in seconds.
+   */
+  // progressChange: (elapsedTimeSec: number) => void;
+  /**
+   * A videoChange event indicates that the video selected for this viewing area has changed.
+   * Listeners are passed the new video, which is either a string (the URL to a video), or
+   * the value `undefined` to indicate that there is no video set.
+   */
+  // videoChange: (video: string | undefined) => void;
 };
+
+
 
 export type CovDocsOverwriteMove = { content: string };
 export type CovDocsValidateUser = { id: CovDocUserID };
@@ -33,19 +60,39 @@ export type CovDocUserID = string;
  * A very state machine class. Could it be refactored through advanced design patterns?
  * What if we don't store the signed in user and the opened document here.
  */
-export default class CovDocsAreaController extends GameAreaController<
-  CovDocsGameState,
-  CovDocsEvents
-> {
+export default class CovDocsAreaController extends InteractableAreaController<BoardAreaEvents, BoardAreaModel> {
+  
+  protected _instanceID?: GameInstanceID;
+
+  protected _townController: TownController;
+
+  protected _allRegisteredUsers: PlayerID[];
+
+  private _model: BoardAreaModel;
+
+  
+
+  /**
+   * Constructs a new BoardAreaController, initialized with the state of the
+   * provided boardAreaModel.
+   *
+   * @param boardAreaModel The board area model that this controller should represent
+   */
+  constructor(id: InteractableID, boardAreaModel: BoardAreaModel, townController: TownController) {
+    // super(boardAreaModel.id);
+     super(id);
+     this._model = boardAreaModel;
+     this._townController = townController;
+     this._allRegisteredUsers = boardAreaModel.allRegisteredUsers;
+   }
+
+
+   //checks if their is an active document open
   public isActive(): boolean {
-    throw new Error('Method not implemented.');
+    return this._model.activeDocument !== undefined;
   }
 
-  protected _updateFrom(newModel: GameArea<CovDocsGameState>): void {
-    super._updateFrom(newModel);
-    // this next line could be a thing
-    // this.emit('docModified', newDoc);
-  }
+  
 
   // Sends a request to server to overwrite document
   public async writeToDoc(newDoc: CovDocDocID) {
@@ -71,8 +118,8 @@ export default class CovDocsAreaController extends GameAreaController<
   // TODO: create type for user ids
   // TODO: what if this returned a ValidatedCBoardAreaController
   // which contains methods only available to validated users?
-  async validatePastUser(user_id: CovDocDocID, password: CovDocDocID): boolean {
-    return false;
+  async isARegisteredUser(user_id: CovDocUserID, password: string): Promise<boolean> {
+    return (this._allRegisteredUsers.find(user => user === user_id ) !== undefined)
   }
 
   /**
@@ -121,5 +168,31 @@ export default class CovDocsAreaController extends GameAreaController<
 
   async getOwnedDocs(id: CovDocUserID): Promise<CovDocDocID[]> {
     return [];
+  }
+  
+ /**
+   * @returns BoardAreaModel that represents the current state of this BoardAreaController
+   */
+ public toInteractableAreaModel(): BoardAreaModel {
+  return this._model;}
+
+
+  /**
+   * Applies updates to this board area controller's model, setting the relevant fields
+   * from the updatedModel
+   *
+   * @param updatedModel
+   */
+  protected _updateFrom(updatedModel: BoardAreaModel): void {
+    //super._updateFrom(newModel);
+    // this next line could be a thing
+    // this.emit('docModified', newDoc);
+ 
+    if (updatedModel.allRegisteredUsers !== this._model.allRegisteredUsers) {
+      this._allRegisteredUsers = updatedModel.allRegisteredUsers;}
+  
+      this._model = updatedModel;
+  
+      //add emit statements for ui
   }
 }

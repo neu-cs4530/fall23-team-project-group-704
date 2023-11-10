@@ -107,7 +107,7 @@ export type GameStatus = 'IN_PROGRESS' | 'WAITING_TO_START' | 'OVER';
  */
 export interface GameState {
   status: GameStatus;
-} 
+}
 
 /**
  * Type for the state of a game that can be won
@@ -219,7 +219,15 @@ export interface GameMoveCommand<MoveType> {
   gameID: GameInstanceID;
   move: MoveType;
 }
-export type InteractableCommandReturnType<CommandType extends InteractableCommand> = 
+
+export interface CDocument {
+  name: string;
+  ownerID: string;
+  permissions: {view: boolean, edit: boolean};
+  last_saved: string
+  last_user: string;
+}
+export type InteractableCommandReturnType<CommandType extends InteractableCommand> =
   CommandType extends JoinGameCommand ? { gameID: string}:
   CommandType extends ViewingAreaUpdateCommand ? undefined :
   CommandType extends GameMoveCommand<TicTacToeMove> ? undefined :

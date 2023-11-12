@@ -73,33 +73,30 @@ export interface ViewingArea extends Interactable {
   elapsedTimeSec: number;
 }
 
-//represents an image or text component. for images, content is file path  (?)
-export interface component {
-type: 'image' | 'text',
-location: XY,
-size: number
-content: string
-}
-
 /*comments
 */
-export interface Board {
+export interface ICDocDocument {
   createdBy: PlayerID;
   owner: PlayerID;
   boardID: string;
   boardName: string;
   editors: PlayerID[];
   viewers: PlayerID[];
-  components: component[]
-
+  content: string;
 }
 
-export interface BoardArea extends Interactable {
-  activeDocument?: Board;
-  allDocuments: Board[];
+export interface ICDocArea extends Interactable {
+  activeDocument?: ICDocDocument;
+  // until we can selectively send different documents to different users
+  // in the area, let's send everything
+  allDocuments: ICDocDocument[];
   allRegisteredUsers: PlayerID[];
-
 }
+
+export type CDocDocID = string;
+export type CDocUserID = string;
+export type CDocHTMLContent = string;
+export type CDocPassword = string;
 
 export type GameStatus = 'IN_PROGRESS' | 'WAITING_TO_START' | 'OVER';
 /**
@@ -202,7 +199,8 @@ interface InteractableCommandBase {
   type: string;
 }
 
-export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand;
+export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand 
+| CDocWriteDocCommand | CDocGetDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | CDocCreateNewDoc | CDocsGetOwnedDocs;
 export interface ViewingAreaUpdateCommand  {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -220,18 +218,32 @@ export interface GameMoveCommand<MoveType> {
   move: MoveType;
 }
 
-export interface CDocument {
-  name: string;
-  ownerID: string;
-  permissions: {view: boolean, edit: boolean};
-  last_saved: string
-  last_user: string;
+export interface CDocWriteDocCommand {
+  type: 'WriteDoc';
+  docid: CDocDocID;
+  content: string;
 }
-export type InteractableCommandReturnType<CommandType extends InteractableCommand> =
+export interface CDocGetDocCommand {
+  type: 'GetDoc';
+  docid: CDocDocID;
+}
+export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CovDocUserID ; password: string};
+
+export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CovDocUserID; password: CDocPassword };
+export interface CDocCreateNewDoc { type: 'CreateNewDoc'; id: CovDocUserID };
+export interface CDocsGetOwnedDocs { type: 'GetOwnedDocs'; id: CovDocUserID };
+//export interface CovDocsOpenDoc { type: 'OpenDoc'; id: CovDocDocID };
+//export interface CovDocsCloseDoc { type: 'CloseDoc'; id: CovDocDocID };
+// some of these can have InteractableCommandReponse as a return from backend?
+
+// we have to modify this too
+export type InteractableCommandReturnType<CommandType extends InteractableCommand> = 
   CommandType extends JoinGameCommand ? { gameID: string}:
   CommandType extends ViewingAreaUpdateCommand ? undefined :
   CommandType extends GameMoveCommand<TicTacToeMove> ? undefined :
   CommandType extends LeaveGameCommand ? undefined :
+  CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
+  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
   never;
 
 export type InteractableCommandResponse<MessageType> = {

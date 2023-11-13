@@ -4,7 +4,7 @@
 import { GameArea, GameInstanceID, GameState, InteractableID, PlayerID } from "../../types/CoveyTownSocket";
 import { GameEventTypes } from "./GameAreaController";
 import InteractableAreaController, { BaseInteractableEventMap } from "./InteractableAreaController";
-import { BoardArea as BoardAreaModel } from '../../types/CoveyTownSocket';
+import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
 import PlayerController from "../PlayerController";
 import TownController from "../TownController";
 

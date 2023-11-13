@@ -2,6 +2,10 @@ import _ from 'lodash';
 import PlayerController from '../PlayerController';
 import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
+  CDocCreateNewDocCommand,
+  CDocCreateNewUserCommand,
+  CDocWriteDocCommand,
+  CDocOpenDocCommand,
   GameArea,
   GameInstanceID,
   GameMove,
@@ -10,38 +14,25 @@ import {
   InteractableID,
   PlayerID,
   WinnableGameState,
+  CDocCloseDocCommand,
 } from '../../types/CoveyTownSocket';
 import { BoardAreaEvents } from './BoardAreaController';
-import { BoardArea as BoardAreaModel } from '../../types/CoveyTownSocket';
+import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
 
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
 
-export interface CovDocsGameState extends GameState {
-  content: string;
-}
 
 /**
  * The events that a CovDocsAreaController can emit
  */
 export type CovDocsEvents = BaseInteractableEventMap & {
-  docUpdated: (newContent: string) => void;
-
-  //examples from viewing area:
-  /**
-   * A progressChange event indicates that the progress of the video has changed, either
-   * due to the user scrubbing through the video, or from the natural progression of time.
-   * Listeners are passed the new playback time elapsed in seconds.
-   */
-  // progressChange: (elapsedTimeSec: number) => void;
-  /**
-   * A videoChange event indicates that the video selected for this viewing area has changed.
-   * Listeners are passed the new video, which is either a string (the URL to a video), or
-   * the value `undefined` to indicate that there is no video set.
-   */
-  // videoChange: (video: string | undefined) => void;
+  docOpened: () => void,
+  docClosed: () => void,
+  docUpdated: (newContent: string) => void,
+  newUserRegistered: (user_id: CovDocUserID) => void;
+  //add one for active users changed and add a field for active users in board area?
 };
-
 
 
 export type CovDocsOverwriteMove = { content: string };
@@ -66,12 +57,9 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
 
   protected _townController: TownController;
 
-  protected _allRegisteredUsers: PlayerID[];
-
-  private _model: BoardAreaModel;
+  private _boardArea: BoardAreaModel;
 
   
-
   /**
    * Constructs a new BoardAreaController, initialized with the state of the
    * provided boardAreaModel.
@@ -81,29 +69,23 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
   constructor(id: InteractableID, boardAreaModel: BoardAreaModel, townController: TownController) {
     // super(boardAreaModel.id);
      super(id);
-     this._model = boardAreaModel;
+     this._boardArea = boardAreaModel;
      this._townController = townController;
-     this._allRegisteredUsers = boardAreaModel.allRegisteredUsers;
    }
 
 
    //checks if their is an active document open
   public isActive(): boolean {
-    return this._model.activeDocument !== undefined;
+    return this._boardArea.activeDocument !== undefined;
   }
 
-  
 
   // Sends a request to server to overwrite document
-  public async writeToDoc(newDoc: CovDocDocID) {
-    const response = await this._townController.sendInteractableCommand<
-      GameMoveCommand<CovDocsOverwriteMove>
-    >(this.id, {
-      type: 'GameMove',
-      gameID: this.id,
-      move: {
-        content: newDoc,
-      },
+  public async writeToDoc(newDoc: string) {
+     await this._townController.sendInteractableCommand<CDocWriteDocCommand>
+    (this.id, {
+      type: 'WriteDoc',
+      content: newDoc
     });
   }
 
@@ -115,11 +97,11 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
    * @param password
    * @returns
    */
-  // TODO: create type for user ids
   // TODO: what if this returned a ValidatedCBoardAreaController
   // which contains methods only available to validated users?
-  async isARegisteredUser(user_id: CovDocUserID, password: string): Promise<boolean> {
-    return (this._allRegisteredUsers.find(user => user === user_id ) !== undefined)
+  //does this need to be async?
+  async isARegisteredUser(user_id: CovDocUserID): Promise<boolean> {
+    return (this._boardArea.allRegisteredUsers.find(user => user === user_id ) !== undefined)
   }
 
   /**
@@ -128,7 +110,12 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
    * @param user_id
    * @param password
    */
-  async createNewUser(user_id: CovDocDocID, password: CovDocDocID) {}
+  async createNewUser(user_id: CovDocUserID) {
+    await this._townController.sendInteractableCommand<CDocCreateNewUserCommand>(this.id, {
+      type:'CreateNewUser',
+      username: user_id
+    });
+  }
 
   /**
    * Creates a new document in the document directory, returning
@@ -136,16 +123,24 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
    * Throws exception if not signed in.
    * @returns
    */
-  // TODO: make custom type for doc_id
-  async addNewDocument(): Promise<CovDocDocID> {
-    return '';
+  async addNewDocument(user_id: CovDocUserID): Promise<CovDocDocID> {
+    await this._townController.sendInteractableCommand<CDocCreateNewDocCommand>(this.id, {
+      type: 'CreateNewDoc',
+      id: user_id
+    });
+    return 'HOW TO GENERATE A UNIQUE ID EACH TIME?';
   }
 
   /**
    * Loads the given document as the 'loaded document'.
-   * @param id
+   * @param doc_id
    */
-  async openDocument(id: CovDocDocID) {
+  //does this need to return anything?
+  async openDocument(doc_id: CovDocDocID) {
+    await this._townController.sendInteractableCommand<CDocOpenDocCommand>(this.id, {
+      type: 'OpenDoc',
+      id: doc_id
+    })
     return;
   }
 
@@ -154,18 +149,22 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
    * Throws exception if nothing loaded.
    * @returns
    */
+  //what is this method used for?
   async getOpenedDocument(): Promise<string> {
     return '';
   }
 
   /**
    * Closes the loaded document. Throws exception if nothing loaded.
-   * @returns
    */
-  async closeDocument() {
-    return;
+  async closeDocument(doc_id: CovDocDocID) {
+    await this._townController.sendInteractableCommand<CDocCloseDocCommand>(this.id, {
+      type: 'CloseDoc',
+      id: doc_id
+    });
   }
 
+  //what is this method used for?
   async getOwnedDocs(id: CovDocUserID): Promise<CovDocDocID[]> {
     return [];
   }
@@ -174,25 +173,47 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
    * @returns BoardAreaModel that represents the current state of this BoardAreaController
    */
  public toInteractableAreaModel(): BoardAreaModel {
-  return this._model;}
+  return this._boardArea;}
 
 
   /**
-   * Applies updates to this board area controller's model, setting the relevant fields
+   * Applies updates to this boardAreaController's model, setting the relevant fields
    * from the updatedModel
    *
    * @param updatedModel
    */
   protected _updateFrom(updatedModel: BoardAreaModel): void {
-    //super._updateFrom(newModel);
-    // this next line could be a thing
-    // this.emit('docModified', newDoc);
  
-    if (updatedModel.allRegisteredUsers !== this._model.allRegisteredUsers) {
-      this._allRegisteredUsers = updatedModel.allRegisteredUsers;}
+      const old_board = this._boardArea.activeDocument
+
+      const aDocWasOpen = old_board? true : false
+      
+      const previousUsers = this._boardArea.allRegisteredUsers
+    
+      this._boardArea = updatedModel;
   
-      this._model = updatedModel;
-  
+      const new_board = this._boardArea.activeDocument
+
+      const aDocNowOpen = new_board? true : false
+
+      const currentUsers = this._boardArea.allRegisteredUsers
+
+
       //add emit statements for ui
+      if(aDocWasOpen !== aDocNowOpen) {
+        if (aDocNowOpen) {
+          this.emit('docOpened')
+        } else {this.emit('docClosed')}
+      } 
+
+      if (aDocWasOpen) {
+          if (old_board?.content !== new_board?.content) { //need a different way to measure equality for boards?
+        this.emit('docUpdated', new_board?.content)
+      }
+      }
+    
+     if (previousUsers !== currentUsers) {
+      this.emit('newUserRegistered', updatedModel.allRegisteredUsers[updatedModel.allRegisteredUsers.length - 1])
+      }
   }
 }

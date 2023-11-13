@@ -199,8 +199,9 @@ interface InteractableCommandBase {
   type: string;
 }
 
-export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand 
-| CDocWriteDocCommand | CDocGetDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | CDocCreateNewDoc | CDocsGetOwnedDocs;
+export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand | 
+CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | CDocCreateNewDocCommand | CDocGetOwnedDocsCommand;
+
 export interface ViewingAreaUpdateCommand  {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -220,28 +221,38 @@ export interface GameMoveCommand<MoveType> {
 
 export interface CDocWriteDocCommand {
   type: 'WriteDoc';
-  docid: CDocDocID;
   content: string;
 }
-export interface CDocGetDocCommand {
-  type: 'GetDoc';
-  docid: CDocDocID;
-}
-export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CovDocUserID ; password: string};
+// export interface CDocGetDocCommand {
+//   type: 'GetDoc';
+//   docid: CDocDocID;
+// }
 
-export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CovDocUserID; password: CDocPassword };
-export interface CDocCreateNewDoc { type: 'CreateNewDoc'; id: CovDocUserID };
-export interface CDocsGetOwnedDocs { type: 'GetOwnedDocs'; id: CovDocUserID };
-//export interface CovDocsOpenDoc { type: 'OpenDoc'; id: CovDocDocID };
-//export interface CovDocsCloseDoc { type: 'CloseDoc'; id: CovDocDocID };
+export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CovDocUserID};
+export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CovDocUserID};
+export interface CDocCreateNewDocCommand { type: 'CreateNewDoc'; id: CovDocUserID };
+export interface CDocGetOwnedDocsCommand { type: 'GetOwnedDocs'; id: CovDocUserID };
+export interface CDocOpenDocCommand { type: 'OpenDoc'; id: CovDocDocID };
+export interface CDocCloseDocCommand { type: 'CloseDoc'; id: CovDocDocID };
 // some of these can have InteractableCommandReponse as a return from backend?
 
+
+// export interface CDocument {
+//   name: string;
+//   ownerID: string;
+//   permissions: {view: boolean, edit: boolean};
+//   last_saved: string
+//   last_user: string;
+// }
+
 // we have to modify this too
-export type InteractableCommandReturnType<CommandType extends InteractableCommand> = 
+export type InteractableCommandReturnType<CommandType extends InteractableCommand> =
   CommandType extends JoinGameCommand ? { gameID: string}:
   CommandType extends ViewingAreaUpdateCommand ? undefined :
   CommandType extends GameMoveCommand<TicTacToeMove> ? undefined :
   CommandType extends LeaveGameCommand ? undefined :
+  CommandType extends CDocWriteDocCommand ? undefined :
+  CommandType extends CreateDocCommand ? undefined :
   CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
   CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
   never;

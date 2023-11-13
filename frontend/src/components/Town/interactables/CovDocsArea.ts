@@ -1,6 +1,6 @@
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 
-export default class CDocsArea extends Interactable {
+export default class CovDocsArea extends Interactable {
   private _isInteracting = false;
 
   addedToScene() {
@@ -28,6 +28,6 @@ export default class CDocsArea extends Interactable {
   }
 
   getType(): KnownInteractableTypes {
-    return 'CDocsArea';
+    return 'covDocsArea';
   }
 }

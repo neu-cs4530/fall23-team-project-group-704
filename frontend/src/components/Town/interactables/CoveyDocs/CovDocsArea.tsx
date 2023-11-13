@@ -20,15 +20,17 @@ import {
   import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
   import useTownController from '../../../../hooks/useTownController';
   import { InteractableID } from '../../../../types/CoveyTownSocket';
+  import CovDocsAreaInteractable from '../CovDocsArea';
   
   /**
-   * The CDocSharing component renders the sharing/permissions editing interface for covey boards.
+   * The CDocSharing component renders the UI of the Covey Docs Area.
+   * 
+   * (later: design the sharing/permissions editing interface + all the others for covey boards)
    *
    * It uses Chakra-UI components
    *
-   *
    */
-  function CDocSharing({ interactableID }: { interactableID: InteractableID }): JSX.Element {
+  function CovDocsArea({ interactableID }: { interactableID: InteractableID }): JSX.Element {
     const areaController = useInteractableAreaController<CovDocsAreaController>(interactableID);
   
     const town = useTownController();
@@ -50,7 +52,6 @@ import {
     });
   
     const updateFields = () => {
-      console.log(areaController.x?.userName);
       setFields({
         // hist: areaController.history,
         // xPlayer: areaController.x ? areaController.x.userName : '(No player yet!)',
@@ -65,48 +66,27 @@ import {
       });
     };
   
-    function GameEnded() {
-      let message;
-  
-      const atoast = useToast();
-  
-      if (areaController.winner === undefined) {
-        message = 'Game ended in a tie';
-      } else if (areaController.winner === fields.ourPlayer) {
-        message = 'You won!';
-      } else {
-        message = 'You lost :(';
-      }
-  
-      atoast({
-        title: 'Game Over',
-        description: message,
-        status: 'info',
-        duration: 9000,
-        isClosable: true,
-      });
-    }
   
     useEffect(() => {
       // Subscribe to events when the component mounts
-      areaController.addListener('gameUpdated', updateFields);
-      areaController.addListener('gameEnd', GameEnded);
+      //areaController.addListener('gameUpdated', updateFields);
+      //areaController.addListener('gameEnd', GameEnded);
       // Unsubscribe from events when the component unmounts
       return () => {
-        areaController.removeListener('gameUpdated', updateFields);
-        areaController.removeListener('gameEnd', GameEnded);
+        //areaController.removeListener('gameUpdated', updateFields);
+        //areaController.removeListener('gameEnd', GameEnded);
       };
     }, [areaController]);
   
-    function DrawLeaderBoard(props: { hist: GameResult[] }) {
-      const hist = props.hist;
+    // function DrawLeaderBoard(props: { hist: GameResult[] }) {
+    //   const hist = props.hist;
   
-      return (
-        <GridItem rowSpan={4} colSpan={2} bg='green.200'>
-          <Leaderboard results={hist} />
-        </GridItem>
-      );
-    }
+    //   return (
+    //     <GridItem rowSpan={4} colSpan={2} bg='green.200'>
+    //       <Leaderboard results={hist} />
+    //     </GridItem>
+    //   );
+    // }
   
     // function DrawPlayerList(props: { xUser: string; oUser: string }) {
     //   // const controller = props.controller;
@@ -152,6 +132,7 @@ import {
     //   );
     // }
   
+    //move these to a separate permissions ui file
     function DrawPermissionsLabel(props: { }) {
   
       return (
@@ -321,33 +302,32 @@ import {
   
   // Do not edit below this line
   /**
-   * A wrapper component for the TicTacToeArea component.
-   * Determines if the player is currently in a tic tac toe area on the map, and if so,
-   * renders the TicTacToeArea component in a modal.
+   * A wrapper component for the CovDocsArea component.
+   * Determines if the player is currently in a covDocs area on the map, and if so,
+   * renders the CovDocsArea component in a modal.
    *
    */
 
-//how to edit this for boardarea?
-//change this to render the file with all of the ui components combined
-  export default function TicTacToeAreaWrapper(): JSX.Element {
-    const cDocArea = useInteractable<CDocAreaInteractable>('cDocArea');
+//any additional edits needed to suit this to covDocsarea?
+  export default function CovDocsAreaWrapper(): JSX.Element {
+    const covDocsArea = useInteractable<CovDocsAreaInteractable>('covDocsArea');
     const townController = useTownController();
     const closeModal = useCallback(() => {
-      if (cDocArea) {
-        townController.interactEnd(cDocArea);
-        const controller = townController.getGameAreaController(cDocArea);
-        controller.leaveGame();
+      if (covDocsArea) {
+        townController.interactEnd(covDocsArea);
+        const controller = townController.getCovDocsAreaController(covDocsArea);
+        //controller.leaveGame(); what to put here?
       }
-    }, [townController, gameArea]);
+    }, [townController, covDocsArea]);
   
-    if (gameArea && gameArea.getData('type') === 'TicTacToe') {
+    if (covDocsArea && covDocsArea.getData('type') === 'covDocs') {//?
       return (
         <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>{gameArea.name}</ModalHeader>
+            <ModalHeader>{covDocsArea.name}</ModalHeader>
             <ModalCloseButton />
-            <CDocSharing interactableID={gameArea.name} />
+            <CovDocsArea interactableID={covDocsArea.name} />
           </ModalContent>
         </Modal>
       );

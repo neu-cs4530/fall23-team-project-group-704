@@ -17,7 +17,7 @@ export type TownJoinResponse = {
   interactables: TypedInteractable[];
 }
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'CDocsArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'CovDocsArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -93,8 +93,8 @@ export interface ICDocArea extends Interactable {
   allRegisteredUsers: PlayerID[];
 }
 
-export type CDocDocID = string;
-export type CDocUserID = string;
+export type CovDocDocID = string;
+export type CovDocUserID = string;
 export type CDocHTMLContent = string;
 export type CDocPassword = string;
 
@@ -254,7 +254,7 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
   CommandType extends CDocWriteDocCommand ? undefined :
   CommandType extends CreateDocCommand ? undefined :
   CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
-  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
+  CommandType extends CDocsGetOwnedDocs ? {docs: CovDocDocID[]} : 
   never;
 
 export type InteractableCommandResponse<MessageType> = {

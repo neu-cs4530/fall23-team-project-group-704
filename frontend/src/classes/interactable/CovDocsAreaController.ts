@@ -2,7 +2,8 @@ import _ from 'lodash';
 import PlayerController from '../PlayerController';
 import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
-  CDocDocID,
+  CovDocDocID,
+  CovDocUserID,
   CDocWriteDocCommand,
   CDocOpenDocCommand,
   CDocCreateNewDocCommand,
@@ -19,7 +20,6 @@ import {
   CDocCloseDocCommand,
 } from '../../types/CoveyTownSocket';
 
-import { BoardAreaEvents } from './BoardAreaController';
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';

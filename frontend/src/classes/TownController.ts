@@ -9,7 +9,7 @@ import Interactable from '../components/Town/Interactable';
 import ConversationArea from '../components/Town/interactables/ConversationArea';
 import GameArea from '../components/Town/interactables/GameArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
-import CDocsArea from '../components/Town/interactables/CDocsArea';
+import CovDocsArea from '../components/Town/interactables/CovDocsArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
@@ -332,7 +332,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return ret as GameAreaController<GameState, GameEventTypes>[];
   }
 
-  public get cDocAreas() {
+  public get covDocsAreas() {
     const ret = this._interactableControllers.filter(
       eachInteractable => eachInteractable instanceof CovDocsAreaController,
     );
@@ -614,7 +614,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
             );
-          }
+          } //need to add a case for boardarea?
         });
         this._userID = initialData.userID;
         this._ourPlayer = this.players.find(eachPlayer => eachPlayer.id == this.userID);
@@ -680,17 +680,17 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   /**
    * Retrieve the CovDoc area controller that corresponds to a cdocAreaModel, creating one if necessary
    *
-   * @param cDocArea
+   * @param covDocsArea
    * @returns
    */
-  public getCovDocsAreaController(cDocArea: CDocsArea): ViewingAreaController {
+  public getCovDocsAreaController(covDocsArea: CovDocsArea): CovDocsAreaController {
     const existingController = this._interactableControllers.find(
-      eachExistingArea => eachExistingArea.id === cDocArea.name,
+      eachExistingArea => eachExistingArea.id === covDocsArea.name,
     );
-    if (existingController instanceof ViewingAreaController) {
+    if (existingController instanceof CovDocsAreaController) {
       return existingController;
     } else {
-      throw new Error(`No such viewing area controller ${existingController}`);
+      throw new Error(`No such covDocs area controller ${existingController}`);
     }
   }
 

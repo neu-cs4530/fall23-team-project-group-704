@@ -1,15 +1,15 @@
-import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
+import { CovDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
 
 export default class CDocServer {
-  getOwnedDocs(docid: CDocDocID): CDocDocID[] {
+  getOwnedDocs(docid: CovDocDocID): CovDocDocID[] {
     throw new Error('Method not implemented.');
   }
 
-  public loadIfNotLoaded(docid: CDocDocID) {}
+  public loadIfNotLoaded(docid: CovDocDocID) {}
 
-  public writeToDoc(docid: CDocDocID, content: string) {}
+  public writeToDoc(docid: CovDocDocID, content: string) {}
 
-  public getDoc(docid: CDocDocID): ICDocDocument {
+  public getDoc(docid: CovDocDocID): ICDocDocument {
     const doc: ICDocDocument = {
       createdBy: '',
       owner: '',

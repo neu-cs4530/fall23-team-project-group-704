@@ -12,12 +12,22 @@ import {
   InteractableCommandReturnType,
   InteractableType,
   TicTacToeGameState,
+  PlayerID,
 } from '../types/CoveyTownSocket';
-import CDocServer from './CDocServer';
+import CovDocsServer from './CDocServer';
 import InteractableArea from './InteractableArea';
+import { ICDocDocument } from '../types/CoveyTownSocket';
 
-export default class CDocsArea extends InteractableArea {
-  private _server: CDocServer = new CDocServer();
+export default class CovDocsArea extends InteractableArea {
+  private _server: CovDocsServer = new CovDocsServer(); //is server necessary? there is no server field in the analogous gameArea file
+
+  protected _allDocuments: ICDocDocument[];
+
+  protected _allRegisteredUsers: PlayerID[];
+
+//need a state_updated function that emits areaChanged?
+//(possibly) missing functions: removeplayer, getgame, gethistory
+
 
   public handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
@@ -25,13 +35,13 @@ export default class CDocsArea extends InteractableArea {
   ): InteractableCommandReturnType<CommandType> {
     if (command.type === 'WriteDoc') {
       this._emitAreaChanged();
-      this._server.writeToDoc(command.docid, command.content);
+      //this._server.writeToDoc(command.docid, command.content);
       return undefined as InteractableCommandReturnType<CommandType>;
     }
-    if (command.type === 'GetDoc') {
-      const doc = this._server.getDoc(command.docid);
-      return { doc } as InteractableCommandReturnType<CommandType>;
-    }
+    // if (command.type === 'GetDoc') {
+    //   const doc = this._server.getDoc(command.docid);
+    //   return { doc } as InteractableCommandReturnType<CommandType>;
+    // }
     if (command.type === 'GetOwnedDocs') {
       const docs = this._server.getOwnedDocs(command.id);
       return { docs } as InteractableCommandReturnType<CommandType>;
@@ -40,16 +50,20 @@ export default class CDocsArea extends InteractableArea {
   }
 
   protected getType(): InteractableType {
-    return 'CDocsArea';
+    return 'CovDocsArea';
+  }
+
+  public get isActive(): boolean {
+    return true;
   }
 
   toModel(): Interactable {
     const model: ICDocArea = {
-      allDocuments: [],
-      allRegisteredUsers: [],
-      type: 'ConversationArea',
-      id: '',
-      occupants: [],
+      allDocuments: this._allDocuments,
+      allRegisteredUsers: this._allRegisteredUsers,
+      type: this.getType(),
+      id: this.id,
+      occupants: this.occupantsByID,
     };
     return model;
   }

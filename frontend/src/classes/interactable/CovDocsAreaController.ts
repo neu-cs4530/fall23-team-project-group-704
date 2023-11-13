@@ -2,26 +2,27 @@ import _ from 'lodash';
 import PlayerController from '../PlayerController';
 import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
-  CDocCreateNewDocCommand,
-  CDocCreateNewUserCommand,
+  CDocDocID,
   CDocWriteDocCommand,
   CDocOpenDocCommand,
+  CDocCreateNewDocCommand,
+  CDocCreateNewUserCommand,
   GameArea,
   GameInstanceID,
   GameMove,
   GameMoveCommand,
   GameState,
+  ICDocArea,
   InteractableID,
   PlayerID,
   WinnableGameState,
   CDocCloseDocCommand,
 } from '../../types/CoveyTownSocket';
+
 import { BoardAreaEvents } from './BoardAreaController';
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
-
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
-
 
 /**
  * The events that a CovDocsAreaController can emit
@@ -34,7 +35,7 @@ export type CovDocsEvents = BaseInteractableEventMap & {
   //add one for active users changed and add a field for active users in board area?
 };
 
-
+/**
 export type CovDocsOverwriteMove = { content: string };
 export type CovDocsValidateUser = { id: CovDocUserID };
 export type CovDocsCreateNewUser = { username: CovDocUserID; password: CovDocUserID };
@@ -43,19 +44,17 @@ export type CovDocsGetOwnedDocs = { id: CovDocUserID };
 export type CovDocsOpenDoc = { id: CovDocDocID };
 export type CovDocsCloseDoc = { id: CovDocDocID };
 // some of these can have InteractableCommandReponse as a return from backend?
-
-export type CovDocDocID = string;
-export type CovDocUserID = string;
+**/
 
 /**
  * A very state machine class. Could it be refactored through advanced design patterns?
  * What if we don't store the signed in user and the opened document here.
  */
-export default class CovDocsAreaController extends InteractableAreaController<BoardAreaEvents, BoardAreaModel> {
+export default class CovDocsAreaController extends InteractableAreaController<CovDocsEvents, ICDocArea> {
   
-  protected _instanceID?: GameInstanceID;
+  protected _instanceID?: GameInstanceID; //is this necessary? how to dissacociate this from games
 
-  protected _townController: TownController;
+  private _townController: TownController;
 
   private _boardArea: BoardAreaModel;
 
@@ -82,7 +81,7 @@ export default class CovDocsAreaController extends InteractableAreaController<Bo
 
   // Sends a request to server to overwrite document
   public async writeToDoc(newDoc: string) {
-     await this._townController.sendInteractableCommand<CDocWriteDocCommand>
+     await this._townController.sendInteractableCommand<CDocWriteDocCommand> //add docId param to this command type?
     (this.id, {
       type: 'WriteDoc',
       content: newDoc

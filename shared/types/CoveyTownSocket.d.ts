@@ -73,14 +73,6 @@ export interface ViewingArea extends Interactable {
   elapsedTimeSec: number;
 }
 
-//represents an image or text component. for images, content is file path  (?)
-export interface component {
-type: 'image' | 'text',
-location: XY,
-size: number
-content: string
-}
-
 /*comments
 */
 export interface ICDocDocument {
@@ -90,8 +82,7 @@ export interface ICDocDocument {
   boardName: string;
   editors: PlayerID[];
   viewers: PlayerID[];
-  content: string
-
+  content: string;
 }
 
 export interface ICDocArea extends Interactable {
@@ -100,8 +91,12 @@ export interface ICDocArea extends Interactable {
   // in the area, let's send everything
   allDocuments: ICDocDocument[];
   allRegisteredUsers: PlayerID[];
-
 }
+
+export type CDocDocID = string;
+export type CDocUserID = string;
+export type CDocHTMLContent = string;
+export type CDocPassword = string;
 
 export type GameStatus = 'IN_PROGRESS' | 'WAITING_TO_START' | 'OVER';
 /**
@@ -206,6 +201,7 @@ interface InteractableCommandBase {
 
 export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand | 
 CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | CDocCreateNewDocCommand | CDocGetOwnedDocsCommand;
+
 export interface ViewingAreaUpdateCommand  {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -257,7 +253,8 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
   CommandType extends LeaveGameCommand ? undefined :
   CommandType extends CDocWriteDocCommand ? undefined :
   CommandType extends CreateDocCommand ? undefined :
-  CommandType extends Command ? undefined :
+  CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
+  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
   never;
 
 export type InteractableCommandResponse<MessageType> = {

@@ -9,6 +9,7 @@ import Interactable from '../components/Town/Interactable';
 import ConversationArea from '../components/Town/interactables/ConversationArea';
 import GameArea from '../components/Town/interactables/GameArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
+import CDocsArea from '../components/Town/interactables/CDocsArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
@@ -35,6 +36,7 @@ import InteractableAreaController, {
 import TicTacToeAreaController from './interactable/TicTacToeAreaController';
 import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
+import CovDocsAreaController from './interactable/CovDocsAreaController';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -328,6 +330,13 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       eachInteractable => eachInteractable instanceof GameAreaController,
     );
     return ret as GameAreaController<GameState, GameEventTypes>[];
+  }
+
+  public get cDocAreas() {
+    const ret = this._interactableControllers.filter(
+      eachInteractable => eachInteractable instanceof CovDocsAreaController,
+    );
+    return ret as CovDocsAreaController[];
   }
 
   /**
@@ -667,6 +676,24 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       throw new Error('Game area controller not created');
     }
   }
+
+  /**
+   * Retrieve the CovDoc area controller that corresponds to a cdocAreaModel, creating one if necessary
+   *
+   * @param cDocArea
+   * @returns
+   */
+  public getCovDocsAreaController(cDocArea: CDocsArea): ViewingAreaController {
+    const existingController = this._interactableControllers.find(
+      eachExistingArea => eachExistingArea.id === cDocArea.name,
+    );
+    if (existingController instanceof ViewingAreaController) {
+      return existingController;
+    } else {
+      throw new Error(`No such viewing area controller ${existingController}`);
+    }
+  }
+
 
   /**
    * Emit a viewing area update to the townService

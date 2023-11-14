@@ -71,7 +71,7 @@ export default class TicTacToeGameArea extends GameArea<TicTacToeGame> {
   public handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
     player: Player,
-  ): InteractableCommandReturnType<CommandType> {
+  ): Promise<InteractableCommandReturnType<CommandType>> {
     if (command.type === 'GameMove') {
       const game = this._game;
       if (!game) {

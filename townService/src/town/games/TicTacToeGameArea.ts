@@ -86,7 +86,7 @@ export default class TicTacToeGameArea extends GameArea<TicTacToeGame> {
         move: command.move,
       });
       this._stateUpdated(game.toModel());
-      return undefined as InteractableCommandReturnType<CommandType>;
+      return Promise.resolve() as Promise<InteractableCommandReturnType<CommandType>>;
     }
     if (command.type === 'JoinGame') {
       let game = this._game;
@@ -97,7 +97,14 @@ export default class TicTacToeGameArea extends GameArea<TicTacToeGame> {
       }
       game.join(player);
       this._stateUpdated(game.toModel());
-      return { gameID: game.id } as InteractableCommandReturnType<CommandType>;
+
+      return new Promise((resolve, reject) => {
+        if (game) {
+          resolve({ gameID: game.id } as InteractableCommandReturnType<CommandType>);
+        } else {
+          reject(new Error('Game was null'));
+        }
+      }) as Promise<InteractableCommandReturnType<CommandType>>;
     }
     if (command.type === 'LeaveGame') {
       const game = this._game;
@@ -109,7 +116,7 @@ export default class TicTacToeGameArea extends GameArea<TicTacToeGame> {
       }
       game.leave(player);
       this._stateUpdated(game.toModel());
-      return undefined as InteractableCommandReturnType<CommandType>;
+      return Promise.resolve() as Promise<InteractableCommandReturnType<CommandType>>;
     }
     throw new InvalidParametersError(INVALID_COMMAND_MESSAGE);
   }

@@ -64,6 +64,7 @@ export default class CDocsArea extends InteractableArea {
       type: 'CDocsArea',
       id: this.id,
       occupants: this.occupantsByID,
+      allRegisteredUsers: [],
     };
     return model;
   }

@@ -94,6 +94,7 @@ export interface ICDocArea extends Interactable {
   // until we can selectively send different documents to different users
   // in the area, let's send everything
   ownedDocuments: CDocDocID[];
+  allRegisteredUsers: PlayerID[];
 }
 
 export type CDocDocID = string;

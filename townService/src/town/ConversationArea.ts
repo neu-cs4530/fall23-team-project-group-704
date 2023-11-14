@@ -82,9 +82,9 @@ export default class ConversationArea extends InteractableArea {
     return new ConversationArea({ id: name, occupants: [] }, rect, broadcastEmitter);
   }
 
-  public handleCommand<
-    CommandType extends InteractableCommand,
-  >(): InteractableCommandReturnType<CommandType> {
+  public handleCommand<CommandType extends InteractableCommand>(): Promise<
+    InteractableCommandReturnType<CommandType>
+  > {
     throw new InvalidParametersError('Unknown command type');
   }
 }

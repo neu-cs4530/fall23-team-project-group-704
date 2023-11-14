@@ -13,42 +13,35 @@ import {
 import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
 
-// Ideas for dealing with async database operations:
-// 1. Load entire database into memory at start
-// 2. Have a multitry approach for frontend - have to try fetching multiple times until it works,
-// it will work when the data has been loaded into the cache that is this class
-// 3. Make frontend listen for the return value as an event
-
 // How to send different model to each user?
-
+// TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
   private _server: CDocServer = new CDocServer();
 
+  // TODO: I will duplicate the model state by caching it here and sending it
+  // in toModel, and also directly return parts of the model through the handleCommand return
   private _activeDocument: ICDocDocument;
 
   private _ownedDocuments: CDocDocID[];
 
-  public handleCommand<CommandType extends InteractableCommand>(
+  public async handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
     player: Player,
-  ): InteractableCommandReturnType<CommandType> {
+  ): Promise<InteractableCommandReturnType<CommandType>> {
     if (command.type === 'WriteDoc') {
-      this._server.writeToDoc(command.docid, command.content).then(() => this._emitAreaChanged());
+      await this._server.writeToDoc(command.docid, command.content);
+      this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetDoc') {
-      this._server.getDoc(command.docid).then(doc => {
-        this._activeDocument = doc;
-        this._emitAreaChanged();
-      });
-      return undefined as InteractableCommandReturnType<CommandType>;
+      const doc = await this._server.getDoc(command.docid);
+      this._activeDocument = doc;
+      return { doc } as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetOwnedDocs') {
-      this._server.getOwnedDocs(command.id).then(ownedDocs => {
-        this._ownedDocuments = ownedDocs;
-        this._emitAreaChanged();
-      });
-      return undefined as InteractableCommandReturnType<CommandType>;
+      const docs = await this._server.getOwnedDocs(command.id);
+      this._ownedDocuments = docs;
+      return { docs } as InteractableCommandReturnType<CommandType>;
     }
     throw new InvalidParametersError(INVALID_COMMAND_MESSAGE);
   }

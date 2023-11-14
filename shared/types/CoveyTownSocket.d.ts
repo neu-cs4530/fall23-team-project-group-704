@@ -17,7 +17,7 @@ export type TownJoinResponse = {
   interactables: TypedInteractable[];
 }
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'CovDocsArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'CDocsArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -85,16 +85,20 @@ export interface ICDocDocument {
   content: string;
 }
 
+/**
+ * Represents the state of the model for one user. 
+ * TODO: find way to return a different model to each user
+ */
 export interface ICDocArea extends Interactable {
   activeDocument?: ICDocDocument;
   // until we can selectively send different documents to different users
   // in the area, let's send everything
-  allDocuments: ICDocDocument[];
+  ownedDocuments: CDocDocID[];
   allRegisteredUsers: PlayerID[];
 }
 
-export type CovDocDocID = string;
-export type CovDocUserID = string;
+export type CDocDocID = string;
+export type CDocUserID = string;
 export type CDocHTMLContent = string;
 export type CDocPassword = string;
 
@@ -200,7 +204,8 @@ interface InteractableCommandBase {
 }
 
 export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand | 
-CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | CDocCreateNewDocCommand | CDocGetOwnedDocsCommand;
+CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | 
+CDocCreateNewDocCommand | CDocGetOwnedDocsCommand | CDocGetDocCommand;
 
 export interface ViewingAreaUpdateCommand  {
   type: 'ViewingAreaUpdate';
@@ -222,18 +227,19 @@ export interface GameMoveCommand<MoveType> {
 export interface CDocWriteDocCommand {
   type: 'WriteDoc';
   content: string;
+  docid: string;
 }
-// export interface CDocGetDocCommand {
-//   type: 'GetDoc';
-//   docid: CDocDocID;
-// }
+export interface CDocGetDocCommand {
+   type: 'GetDoc';
+   docid: CDocDocID;
+}
 
-export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CovDocUserID};
-export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CovDocUserID};
-export interface CDocCreateNewDocCommand { type: 'CreateNewDoc'; id: CovDocUserID };
-export interface CDocGetOwnedDocsCommand { type: 'GetOwnedDocs'; id: CovDocUserID };
-export interface CDocOpenDocCommand { type: 'OpenDoc'; id: CovDocDocID };
-export interface CDocCloseDocCommand { type: 'CloseDoc'; id: CovDocDocID };
+export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CDocUserID};
+export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CDocUserID};
+export interface CDocCreateNewDocCommand { type: 'CreateNewDoc'; id: CDocUserID };
+export interface CDocGetOwnedDocsCommand { type: 'GetOwnedDocs'; id: CDocUserID };
+export interface CDocOpenDocCommand { type: 'OpenDoc'; id: CDocDocID };
+export interface CDocCloseDocCommand { type: 'CloseDoc'; id: CDocDocID };
 // some of these can have InteractableCommandReponse as a return from backend?
 
 
@@ -254,7 +260,7 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
   CommandType extends CDocWriteDocCommand ? undefined :
   CommandType extends CreateDocCommand ? undefined :
   CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
-  CommandType extends CDocsGetOwnedDocs ? {docs: CovDocDocID[]} : 
+  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
   never;
 
 export type InteractableCommandResponse<MessageType> = {

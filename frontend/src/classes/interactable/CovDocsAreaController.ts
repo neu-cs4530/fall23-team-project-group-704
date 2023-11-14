@@ -2,8 +2,8 @@ import _ from 'lodash';
 import PlayerController from '../PlayerController';
 import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
-  CovDocDocID,
-  CovDocUserID,
+  CDocDocID,
+  CDocUserID,
   CDocWriteDocCommand,
   CDocOpenDocCommand,
   CDocCreateNewDocCommand,
@@ -28,10 +28,10 @@ import TownController from '../TownController';
  * The events that a CovDocsAreaController can emit
  */
 export type CovDocsEvents = BaseInteractableEventMap & {
-  docOpened: () => void,
-  docClosed: () => void,
-  docUpdated: (newContent: string) => void,
-  newUserRegistered: (user_id: CovDocUserID) => void;
+  docOpened: () => void;
+  docClosed: () => void;
+  docUpdated: (newContent: string) => void;
+  newUserRegistered: (user_id: CDocUserID) => void;
   //add one for active users changed and add a field for active users in board area?
 };
 
@@ -50,15 +50,16 @@ export type CovDocsCloseDoc = { id: CovDocDocID };
  * A very state machine class. Could it be refactored through advanced design patterns?
  * What if we don't store the signed in user and the opened document here.
  */
-export default class CovDocsAreaController extends InteractableAreaController<CovDocsEvents, ICDocArea> {
-  
+export default class CovDocsAreaController extends InteractableAreaController<
+  CovDocsEvents,
+  ICDocArea
+> {
   protected _instanceID?: GameInstanceID; //is this necessary? how to dissacociate this from games
 
   private _townController: TownController;
 
   private _boardArea: BoardAreaModel;
 
-  
   /**
    * Constructs a new BoardAreaController, initialized with the state of the
    * provided boardAreaModel.
@@ -67,24 +68,23 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
    */
   constructor(id: InteractableID, boardAreaModel: BoardAreaModel, townController: TownController) {
     // super(boardAreaModel.id);
-     super(id);
-     this._boardArea = boardAreaModel;
-     this._townController = townController;
-   }
+    super(id);
+    this._boardArea = boardAreaModel;
+    this._townController = townController;
+  }
 
-
-   //checks if their is an active document open
+  //checks if their is an active document open
   public isActive(): boolean {
     return this._boardArea.activeDocument !== undefined;
   }
 
-
   // Sends a request to server to overwrite document
   public async writeToDoc(newDoc: string) {
-     await this._townController.sendInteractableCommand<CDocWriteDocCommand> //add docId param to this command type?
-    (this.id, {
+    await this._townController.sendInteractableCommand<CDocWriteDocCommand>(this.id, {
+      //add docId param to this command type?
       type: 'WriteDoc',
-      content: newDoc
+      content: newDoc,
+      docid: newDoc,
     });
   }
 
@@ -99,8 +99,8 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
   // TODO: what if this returned a ValidatedCBoardAreaController
   // which contains methods only available to validated users?
   //does this need to be async?
-  async isARegisteredUser(user_id: CovDocUserID): Promise<boolean> {
-    return (this._boardArea.allRegisteredUsers.find(user => user === user_id ) !== undefined)
+  async isARegisteredUser(user_id: CDocUserID): Promise<boolean> {
+    return this._boardArea.allRegisteredUsers.find(user => user === user_id) !== undefined;
   }
 
   /**
@@ -109,10 +109,10 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
    * @param user_id
    * @param password
    */
-  async createNewUser(user_id: CovDocUserID) {
+  async createNewUser(user_id: CDocUserID) {
     await this._townController.sendInteractableCommand<CDocCreateNewUserCommand>(this.id, {
-      type:'CreateNewUser',
-      username: user_id
+      type: 'CreateNewUser',
+      username: user_id,
     });
   }
 
@@ -122,10 +122,10 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
    * Throws exception if not signed in.
    * @returns
    */
-  async addNewDocument(user_id: CovDocUserID): Promise<CovDocDocID> {
+  async addNewDocument(user_id: CDocUserID): Promise<CDocDocID> {
     await this._townController.sendInteractableCommand<CDocCreateNewDocCommand>(this.id, {
       type: 'CreateNewDoc',
-      id: user_id
+      id: user_id,
     });
     return 'HOW TO GENERATE A UNIQUE ID EACH TIME?';
   }
@@ -135,11 +135,11 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
    * @param doc_id
    */
   //does this need to return anything?
-  async openDocument(doc_id: CovDocDocID) {
+  async openDocument(doc_id: CDocDocID) {
     await this._townController.sendInteractableCommand<CDocOpenDocCommand>(this.id, {
       type: 'OpenDoc',
-      id: doc_id
-    })
+      id: doc_id,
+    });
     return;
   }
 
@@ -156,24 +156,24 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
   /**
    * Closes the loaded document. Throws exception if nothing loaded.
    */
-  async closeDocument(doc_id: CovDocDocID) {
+  async closeDocument(doc_id: CDocDocID) {
     await this._townController.sendInteractableCommand<CDocCloseDocCommand>(this.id, {
       type: 'CloseDoc',
-      id: doc_id
+      id: doc_id,
     });
   }
 
   //what is this method used for?
-  async getOwnedDocs(id: CovDocUserID): Promise<CovDocDocID[]> {
+  async getOwnedDocs(id: CDocUserID): Promise<CDocDocID[]> {
     return [];
   }
-  
- /**
+
+  /**
    * @returns BoardAreaModel that represents the current state of this BoardAreaController
    */
- public toInteractableAreaModel(): BoardAreaModel {
-  return this._boardArea;}
-
+  public toInteractableAreaModel(): BoardAreaModel {
+    return this._boardArea;
+  }
 
   /**
    * Applies updates to this boardAreaController's model, setting the relevant fields
@@ -182,37 +182,41 @@ export default class CovDocsAreaController extends InteractableAreaController<Co
    * @param updatedModel
    */
   protected _updateFrom(updatedModel: BoardAreaModel): void {
- 
-      const old_board = this._boardArea.activeDocument
+    const oldBoard = this._boardArea.activeDocument;
 
-      const aDocWasOpen = old_board? true : false
-      
-      const previousUsers = this._boardArea.allRegisteredUsers
-    
-      this._boardArea = updatedModel;
-  
-      const new_board = this._boardArea.activeDocument
+    const aDocWasOpen = oldBoard ? true : false;
 
-      const aDocNowOpen = new_board? true : false
+    const previousUsers = this._boardArea.allRegisteredUsers;
 
-      const currentUsers = this._boardArea.allRegisteredUsers
+    this._boardArea = updatedModel;
 
+    const newBoard = this._boardArea.activeDocument;
 
-      //add emit statements for ui
-      if(aDocWasOpen !== aDocNowOpen) {
-        if (aDocNowOpen) {
-          this.emit('docOpened')
-        } else {this.emit('docClosed')}
-      } 
+    const aDocNowOpen = newBoard ? true : false;
 
-      if (aDocWasOpen) {
-          if (old_board?.content !== new_board?.content) { //need a different way to measure equality for boards?
-        this.emit('docUpdated', new_board?.content)
+    const currentUsers = this._boardArea.allRegisteredUsers;
+
+    //add emit statements for ui
+    if (aDocWasOpen !== aDocNowOpen) {
+      if (aDocNowOpen) {
+        this.emit('docOpened');
+      } else {
+        this.emit('docClosed');
       }
+    }
+
+    if (aDocWasOpen) {
+      if (oldBoard?.content !== newBoard?.content) {
+        //need a different way to measure equality for boards?
+        this.emit('docUpdated', newBoard?.content);
       }
-    
-     if (previousUsers !== currentUsers) {
-      this.emit('newUserRegistered', updatedModel.allRegisteredUsers[updatedModel.allRegisteredUsers.length - 1])
-      }
+    }
+
+    if (previousUsers !== currentUsers) {
+      this.emit(
+        'newUserRegistered',
+        updatedModel.allRegisteredUsers[updatedModel.allRegisteredUsers.length - 1],
+      );
+    }
   }
 }

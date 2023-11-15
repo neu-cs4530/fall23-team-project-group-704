@@ -489,9 +489,9 @@
                 {
                  "height":223.999666666667,
                  "id":30,
-                 "name":"Basement Dining Table 2",
+                 "name":"Doc Area",
                  "rotation":0,
-                 "type":"ConversationArea",
+                 "type":"CDocsArea",
                  "visible":true,
                  "width":164.667,
                  "x":3260.99983333333,

@@ -3,6 +3,8 @@ import Interactable, { KnownInteractableTypes } from '../Interactable';
 export default class CovDocsArea extends Interactable {
   private _isInteracting = false;
 
+  private _infoTextBox: Phaser.GameObjects.Text | undefined;
+
   addedToScene() {
     super.addedToScene();
     this.setTintFill();
@@ -20,7 +22,28 @@ export default class CovDocsArea extends Interactable {
     if (this._isInteracting) {
       this.townController.interactableEmitter.emit('endInteraction', this);
       this._isInteracting = false;
+      this._infoTextBox?.setVisible(false);
     }
+  }
+
+  private async _showInfoBox() {
+    if (!this._infoTextBox) {
+      const cDocController = this.townController.getCovDocsAreaController(this);
+      const msg = await cDocController.getOpenedDocument();
+      this._infoTextBox = this.scene.add
+        .text(this.scene.scale.width / 2, this.scene.scale.height / 2, msg, {
+          color: '#000000',
+          backgroundColor: '#FFFFFF',
+        })
+        .setScrollFactor(0)
+        .setDepth(30);
+    }
+    this._infoTextBox.setVisible(true);
+    this._infoTextBox.x = this.scene.scale.width / 2 - this._infoTextBox.width / 2;
+  }
+
+  overlap(): void {
+    this._showInfoBox();
   }
 
   interact(): void {

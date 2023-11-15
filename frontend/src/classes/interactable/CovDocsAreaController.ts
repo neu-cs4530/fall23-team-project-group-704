@@ -19,6 +19,7 @@ import {
   WinnableGameState,
   CDocCloseDocCommand,
   ICDocDocument,
+  CDocGetDocCommand,
 } from '../../types/CoveyTownSocket';
 
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
@@ -33,9 +34,9 @@ export type CovDocsEvents = BaseInteractableEventMap & {
   docClosed: () => void;
   docUpdated: (newContent: string) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
-  userLoggedIn: (user_id: CDocUserID) => void
-  newDocumentCreated: () => void
-  userLoggedOut: (user_id: CDocUserID) => void
+  userLoggedIn: (user_id: CDocUserID) => void;
+  newDocumentCreated: () => void;
+  userLoggedOut: (user_id: CDocUserID) => void;
   //add one for active users changed and add a field for active users in board area?
 };
 
@@ -80,11 +81,11 @@ export default class CovDocsAreaController extends InteractableAreaController<
     this._activeDoc = this._boardArea.activeDocument?.boardID;
   }
 
-/**
- * Gets the currently active doc
- */
+  /**
+   * Gets the currently active doc
+   */
   public get activeDoc(): CDocDocID | undefined {
-    return this._activeDoc
+    return this._activeDoc;
   }
 
   //checks if their is an active document open
@@ -163,8 +164,12 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @returns
    */
   //what is this method used for?
-  async getOpenedDocument(): Promise<string> {
-    return '';
+  public async getOpenedDocument(): Promise<string> {
+    const { doc } = await this._townController.sendInteractableCommand<CDocGetDocCommand>(this.id, {
+      type: 'GetDoc',
+      docid: 'INVALID ID',
+    });
+    return doc.content;
   }
 
   /**

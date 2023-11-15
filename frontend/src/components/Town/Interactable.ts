@@ -7,7 +7,7 @@ export type KnownInteractableTypes =
   | 'viewingArea'
   | 'transporter'
   | 'gameArea'
-  | 'cdocsArea'
+  | 'cdocsArea';
 
 /**
  * A base abstract class for representing an "interactable" in the Phaser game world.

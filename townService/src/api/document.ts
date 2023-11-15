@@ -1,22 +1,22 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
-import { User } from './user';
+import User from './user';
 
 @Entity()
 export default class Document {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: string;
 
   @Column()
-  userId: User;
+  userId: string;
 
   @Column()
   name: string;
 
-  @OneToMany(() => User, (u) => u.id)
-  allowedUsersView: User[];
+  @OneToMany(() => User, u => u.id)
+  allowedUsersView: string[];
 
-  @OneToMany(() => User, (u) => u.id)
-  allowedUsersEdit: User[];
+  @OneToMany(() => User, u => u.id)
+  allowedUsersEdit: string[];
 
   @Column()
   data: string;

@@ -18,6 +18,7 @@ import {
   PlayerID,
   WinnableGameState,
   CDocCloseDocCommand,
+  CDocGetDocCommand,
 } from '../../types/CoveyTownSocket';
 
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
@@ -149,8 +150,12 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @returns
    */
   //what is this method used for?
-  async getOpenedDocument(): Promise<string> {
-    return '';
+  public async getOpenedDocument(): Promise<string> {
+    const { doc } = await this._townController.sendInteractableCommand<CDocGetDocCommand>(this.id, {
+      type: 'GetDoc',
+      docid: 'INVALID ID',
+    });
+    return doc.content;
   }
 
   /**

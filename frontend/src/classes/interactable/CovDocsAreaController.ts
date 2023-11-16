@@ -32,6 +32,9 @@ export type CovDocsEvents = BaseInteractableEventMap & {
   docClosed: () => void;
   docUpdated: (newContent: string) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
+  userLoggedIn: (user_id: CDocUserID) => void
+  newDocumentCreated: () => void
+  userLoggedOut: (user_id: CDocUserID) => void
   //add one for active users changed and add a field for active users in board area?
 };
 

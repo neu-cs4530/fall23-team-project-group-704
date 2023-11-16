@@ -8,6 +8,10 @@ import {
   Center,
   Divider,
   RadioGroup,
+  MenuItem,
+  MenuButton,
+  MenuList,
+  ChevronDownIcon,
   Stack,
   Radio,
   Heading,
@@ -32,6 +36,7 @@ import {
   import useTownController from '../../../../hooks/useTownController';
   import { CDocDocID, CDocUserID, InteractableID } from '../../../../types/CoveyTownSocket';
   import CovDocsAreaInteractable from '../CovDocsArea';
+import Menu from '../../../VideoCall/VideoFrontend/components/MenuBar/Menu/Menu';
  
  
  /**
@@ -43,6 +48,7 @@ import {
 function CDocPermissions(props: {owner: CDocUserID, editors: CDocUserID[], viewers: CDocUserID[]}): JSX.Element {
 const viewers = props.viewers;
 const editors = props.editors;
+const owner = props.owner;
 function DrawPermissionsTitle(props: { }) {
   
   return (
@@ -120,11 +126,49 @@ function DrawEditorsBox() {
 
   function DrawOwnershipBox() {
 
-    return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
+    const [newOwner, setNewOwner] = useState(owner);
+
+  function TransferOwnershipButton() {
+
+    function handleClick(user: CDocUserID) {
+      setNewOwner('');
+      
+      return <Menu>
+  <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+    Transfer Ownership
+    </MenuButton>
+  <MenuList>
+  {viewers.map(user => {
+                return <MenuItem onClick={handleClick(user)} key={user}>
+                  {user}
+                </MenuItem>;
+              })}
+  </MenuList>
+</Menu>
+    }
+  }
   
-      </GridItem>
-    );
+  return (
+      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
+        <Box>
+          The Owner of this document is:
+          </Box>
+          <Box>
+            {owner}
+            </Box>
+            <Box>
+            </Box>
+  
+            <Box>
+              <TransferOwnershipButton></TransferOwnershipButton>
+              </Box>
+    <Center height='50px'>
+      Transferring ownership to:
+    <Divider orientation='vertical' />
+    {newOwner}
+    </Center>
+        </GridItem>
+      );
   }
 
   function DrawSaveButton() {

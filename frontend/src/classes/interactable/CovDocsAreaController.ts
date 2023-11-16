@@ -18,6 +18,7 @@ import {
   PlayerID,
   WinnableGameState,
   CDocCloseDocCommand,
+  ICDocDocument,
 } from '../../types/CoveyTownSocket';
 
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
@@ -28,7 +29,7 @@ import TownController from '../TownController';
  * The events that a CovDocsAreaController can emit
  */
 export type CovDocsEvents = BaseInteractableEventMap & {
-  docOpened: () => void;
+  docOpened: (docID: CDocDocID) => void;
   docClosed: () => void;
   docUpdated: (newContent: string) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
@@ -63,6 +64,8 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
   private _boardArea: BoardAreaModel;
 
+  protected _activeDoc?: CDocDocID;
+
   /**
    * Constructs a new BoardAreaController, initialized with the state of the
    * provided boardAreaModel.
@@ -74,6 +77,14 @@ export default class CovDocsAreaController extends InteractableAreaController<
     super(id);
     this._boardArea = boardAreaModel;
     this._townController = townController;
+    this._activeDoc = this._boardArea.activeDocument?.boardID;
+  }
+
+/**
+ * Gets the currently active doc
+ */
+  public get activeDoc(): CDocDocID | undefined {
+    return this._activeDoc
   }
 
   //checks if their is an active document open

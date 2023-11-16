@@ -21,6 +21,8 @@ import {
   import useTownController from '../../../../hooks/useTownController';
   import { CDocDocID, CDocUserID, InteractableID } from '../../../../types/CoveyTownSocket';
   import CovDocsAreaInteractable from '../CovDocsArea';
+import CDocDirectory from './CDocDirectory';
+import CDoc from './CDoc';
   
   /**
    * The CDocArea component renders the UI of the overall Covey Docs Area, keeping track of the current screen shown to the user
@@ -32,7 +34,7 @@ import {
   function CDocArea({ interactableID }: { interactableID: InteractableID }): JSX.Element {
     const areaController = useInteractableAreaController<CovDocsAreaController>(interactableID);
   
-    const town = useTownController();
+    //const town = useTownController();
     //const initialOurPlayer = town.ourPlayer;
     //const initialOtherPlayer = areaController.players.find(p => p !== initialOurPlayer); //are there other players?
   
@@ -55,34 +57,60 @@ import {
         }
 
   //sets the current screen to start out as the login screen
-    const [currentScreen, setCurrentScreen] = useState(DrawLoginScreen());
+    const [currentScreen, setCurrentScreen] = useState<JSX.Element>(DrawLoginScreen());
+    const [currentDoc, setCurrentDoc] = useState<CDocDocID | undefined>('');
+
+//updates the current document and the current screen accordingly
+function updateScreen(screen: JSX.Element) {
+setCurrentDoc(areaController.activeDoc);
+setCurrentScreen(screen)
+}
   
 //draws a document
- function DrawDocumentScreen(props: { doc_id: CDocDocID, user_id: CDocUserID, newDoc: boolean }): JSX.Element {
-      const docID = props.doc_id;
-      const userID = props.user_id;
-      const newDoc = props.newDoc;
-  
+ function DrawDocumentScreen(): JSX.Element {
+      const docID = currentDoc;
+     // const userID = props.user_id;
+     // const newDoc = props.newDoc;
+
+  if (docID === undefined) {
+    return <Grid templateRows='repeat(7, 1fr)' templateColumns='repeat(6, 1fr)' width='500px' gap={4}>
+    <GridItem rowSpan={4} colSpan={2} bg='green.200'>
+      Error obtaining document info  
+      </GridItem>
+      </Grid> 
+  }
       return (
         <Grid templateRows='repeat(7, 1fr)' templateColumns='repeat(6, 1fr)' width='500px' gap={4}>
           <GridItem rowSpan={4} colSpan={2} bg='green.200'>
-            <CDoc docID={docID} userID = {userID} newDoc = {newDoc} />
+            <CDoc docID={docID} />
         </GridItem>
       </Grid> 
       );
     }
 
+    /**
+     * Draws the document directory screen
+     */
+    function DrawDirectoryScreen(): JSX.Element {
+      return (
+        <Grid templateRows='repeat(7, 1fr)' templateColumns='repeat(6, 1fr)' width='500px' gap={4}>
+          <GridItem rowSpan={4} colSpan={2} bg='green.200'>
+            <CDocDirectory documents={[]} />
+        </GridItem>
+      </Grid> 
+      );
+    }
 
   //subscribes listeners to the different events that can be emitted by the controller in order to know when to re-render
     useEffect(() => {
       // Subscribe to events when the component mounts
       //input document area here directly?
-      areaController.addListener('docOpened', setCurrentScreen(DrawDocumentScreen({doc_id: '011', user_id: 'name', newDoc: false})));
+      areaController.addListener('docOpened', updateScreen(DrawDocumentScreen()));
       areaController.addListener('docClosed', setCurrentScreen(DrawDirectoryScreen()));
-      areaController.addListener('docUpdated', setCurrentScreen(DrawDocumentScreen({doc_id: '011', user_id: 'name', newDoc: false})));
+      areaController.addListener('docUpdated', setCurrentScreen(DrawDocumentScreen()));
       areaController.addListener('newUserRegistered', setCurrentScreen(DrawDirectoryScreen()));
       areaController.addListener('userLoggedIn', setCurrentScreen(DrawDirectoryScreen()));
-      areaController.addListener('newDocumentCreated', setCurrentScreen(DrawDocumentScreen({doc_id: '011', user_id: 'name', newDoc: true})));
+      areaController.addListener('newDocumentCreated', setCurrentScreen(DrawDocumentScreen()));
       areaController.addListener('userLoggedOut', setCurrentScreen(DrawLoginScreen()));
       return () => {
         // Unsubscribe from events when the component unmounts
@@ -93,7 +121,7 @@ import {
   
    //main return statment that renders whatever the current screen is
     return (
-    {currentScreen}
+    currentScreen
     );
   }
   

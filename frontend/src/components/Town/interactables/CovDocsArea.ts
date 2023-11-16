@@ -28,6 +28,6 @@ export default class CovDocsArea extends Interactable {
   }
 
   getType(): KnownInteractableTypes {
-    return 'covDocsArea';
+    return 'cdocsArea';
   }
 }

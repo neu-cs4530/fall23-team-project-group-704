@@ -19,6 +19,8 @@ import {
   WinnableGameState,
   CDocCloseDocCommand,
   ICDocDocument,
+  CDocGetDocCommand,
+  CDocPassword,
 } from '../../types/CoveyTownSocket';
 
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
@@ -39,9 +41,9 @@ export type CovDocsEvents = BaseInteractableEventMap & {
   docClosed: () => void;
   docUpdated: (newContent: string) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
-  userLoggedIn: (user_id: CDocUserID) => void
-  newDocumentCreated: () => void
-  userLoggedOut: (user_id: CDocUserID) => void
+  userLoggedIn: (user_id: CDocUserID) => void;
+  newDocumentCreated: () => void;
+  userLoggedOut: (user_id: CDocUserID) => void;
   //add one for active users changed and add a field for active users in board area?
 };
 
@@ -91,6 +93,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
  */
   public get activeDocID(): CDocDocID | undefined {
     return this._activeDocID;
+
   }
 
   //checks if their is an active document open
@@ -134,10 +137,11 @@ public get activeDocContent(): ICDocDocument | undefined {
    * @param user_id
    * @param password
    */
-  async createNewUser(user_id: CDocUserID) {
+  async createNewUser(user_id: CDocUserID, password: CDocPassword) {
     await this._townController.sendInteractableCommand<CDocCreateNewUserCommand>(this.id, {
       type: 'CreateNewUser',
       username: user_id,
+      password: password,
     });
   }
 
@@ -148,11 +152,14 @@ public get activeDocContent(): ICDocDocument | undefined {
    * @returns
    */
   async addNewDocument(user_id: CDocUserID): Promise<CDocDocID> {
-    await this._townController.sendInteractableCommand<CDocCreateNewDocCommand>(this.id, {
-      type: 'CreateNewDoc',
-      id: user_id,
-    });
-    return 'HOW TO GENERATE A UNIQUE ID EACH TIME?';
+    const { doc } = await this._townController.sendInteractableCommand<CDocCreateNewDocCommand>(
+      this.id,
+      {
+        type: 'CreateNewDoc',
+        id: user_id,
+      },
+    );
+    return doc.boardID;
   }
 
   /**
@@ -163,7 +170,7 @@ public get activeDocContent(): ICDocDocument | undefined {
   async openDocument(doc_id: CDocDocID) {
     await this._townController.sendInteractableCommand<CDocOpenDocCommand>(this.id, {
       type: 'OpenDoc',
-      id: doc_id,
+      docid: doc_id,
     });
     return;
   }
@@ -174,8 +181,23 @@ public get activeDocContent(): ICDocDocument | undefined {
    * @returns
    */
   //what is this method used for?
-  async getOpenedDocument(): Promise<string> {
-    return '';
+  public async getOpenedDocument(): Promise<string> {
+    if (this._boardArea.activeDocument)
+      return this.getDocByID(this._boardArea.activeDocument.boardID);
+    else throw new Error('No active document');
+  }
+
+  /**
+   * TODO: make a choice between this method and the state machine getOpenedDocument, or use both
+   * @param id
+   * @returns
+   */
+  public async getDocByID(id: CDocDocID): Promise<string> {
+    const { doc } = await this._townController.sendInteractableCommand<CDocGetDocCommand>(this.id, {
+      type: 'GetDoc',
+      docid: id,
+    });
+    return doc.content;
   }
 
   /**
@@ -233,7 +255,8 @@ public get activeDocContent(): ICDocDocument | undefined {
     if (aDocWasOpen) {
       if (oldBoard?.content !== newBoard?.content) {
         //need a different way to measure equality for boards?
-        this.emit('docUpdated', newBoard?.content);
+        if (newBoard) this.emit('docUpdated', newBoard.content);
+        else throw new Error('New board was null');
       }
     }
 

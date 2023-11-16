@@ -27,7 +27,7 @@ import {
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
+import { isCDocArea, isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
 import GameAreaController, { GameEventTypes } from './interactable/GameAreaController';
 import InteractableAreaController, {
@@ -615,6 +615,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
             );
           } //need to add a case for boardarea?
+          else if (isCDocArea(eachInteractable)) {
+            this._interactableControllers.push(
+              new CovDocsAreaController(eachInteractable.id, eachInteractable, this),
+            );
+          }
         });
         this._userID = initialData.userID;
         this._ourPlayer = this.players.find(eachPlayer => eachPlayer.id == this.userID);
@@ -693,7 +698,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       throw new Error(`No such covDocs area controller ${existingController}`);
     }
   }
-
 
   /**
    * Emit a viewing area update to the townService

@@ -234,11 +234,13 @@ export interface CDocGetDocCommand {
    docid: CDocDocID;
 }
 
-export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CDocUserID};
-export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CDocUserID};
+export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CDocUserID; password: CDocPassword};
+export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CDocUserID; password: CDocPassword};
 export interface CDocCreateNewDocCommand { type: 'CreateNewDoc'; id: CDocUserID };
 export interface CDocGetOwnedDocsCommand { type: 'GetOwnedDocs'; id: CDocUserID };
-export interface CDocOpenDocCommand { type: 'OpenDoc'; id: CDocDocID };
+export interface CDocOpenDocCommand {
+  type: 'OpenDoc'; docid: string 
+};
 export interface CDocCloseDocCommand { type: 'CloseDoc'; id: CDocDocID };
 // some of these can have InteractableCommandReponse as a return from backend?
 
@@ -261,6 +263,8 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
   CommandType extends CreateDocCommand ? undefined :
   CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
   CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
+  CommandType extends CDocValidateUserCommand ? {validation: boolean} :
+  CommandType extends CDocCreateNewDocCommand ? {doc: ICDocDocument} :
   never;
 
 export type InteractableCommandResponse<MessageType> = {

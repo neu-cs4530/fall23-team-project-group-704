@@ -176,5 +176,5 @@ export default abstract class InteractableArea {
   public abstract handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
     player: Player,
-  ): InteractableCommandReturnType<CommandType>;
+  ): Promise<InteractableCommandReturnType<CommandType>>;
 }

@@ -1,9 +1,11 @@
+import CovDocsArea from '../components/Town/interactables/CovDocsArea';
 import {
   ConversationArea,
   Interactable,
   TicTacToeGameState,
   ViewingArea,
   GameArea,
+  ICDocArea,
 } from './CoveyTownSocket';
 
 /**
@@ -24,4 +26,8 @@ export function isTicTacToeArea(
   interactable: Interactable,
 ): interactable is GameArea<TicTacToeGameState> {
   return interactable.type === 'TicTacToeArea';
+}
+
+export function isCDocArea(interactable: Interactable): interactable is ICDocArea {
+  return interactable.type === 'CDocsArea';
 }

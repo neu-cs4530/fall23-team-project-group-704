@@ -1,10 +1,39 @@
 import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
+import { ICDocServer } from './ICDocServer';
 import Document from '../api/document';
 import appDataSource from '../api/datasource';
 
 // TODO: change ids from numbers to right type
 /** We will do all operations directly to database for now. */
-export default class CDocServer {
+export default class CDocServer implements ICDocServer {
+  async createNewDoc(user_id: string): Promise<ICDocDocument> {
+    const newDoc: Document = {
+      id: 'invalid',
+      userId: user_id,
+      name: 'Default Doc',
+      allowedUsersView: [],
+      allowedUsersEdit: [],
+      data: 'this is a default doc',
+      uploaded_data: [],
+    };
+    const newID = await appDataSource
+      .createQueryBuilder()
+      .insert()
+      .into(Document)
+      .values([{}])
+      .returning('id')
+      .execute();
+    return this.getDoc(newID.generatedMaps[0].id);
+  }
+
+  validateUser(id: string): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  async createNewUser(username: string, password: string) {
+    throw new Error('Method not implemented.');
+  }
+
   async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
     const docs = await appDataSource
       .createQueryBuilder()
@@ -43,7 +72,7 @@ export default class CDocServer {
         createdBy: document.userId,
         owner: '',
         boardID: String(document.id),
-        boardName: document.userId,
+        boardName: document.id,
         editors: document.allowedUsersEdit,
         viewers: document.allowedUsersView,
         content: document.data,

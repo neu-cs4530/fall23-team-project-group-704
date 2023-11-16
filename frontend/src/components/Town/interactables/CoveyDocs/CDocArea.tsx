@@ -62,7 +62,7 @@ import CDoc from './CDoc';
 
 //updates the current document and the current screen accordingly
 function updateScreen(screen: JSX.Element) {
-setCurrentDoc(areaController.activeDoc);
+setCurrentDoc(areaController.activeDocID);
 setCurrentScreen(screen)
 }
   

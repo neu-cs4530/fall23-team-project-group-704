@@ -25,6 +25,12 @@ import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
 
+//TODO: 
+//idea : add a parameter on document that is permissionsOpen? that is a state variable. that way the controller 
+//can control toggling between the permissions and the document editing ui? first see how the current implementation goes and how it 
+//works to determine if this is a worthwhile change
+
+
 /**
  * The events that a CovDocsAreaController can emit
  */
@@ -64,7 +70,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
   private _boardArea: BoardAreaModel;
 
-  protected _activeDoc?: CDocDocID;
+  protected _activeDocID?: CDocDocID;
 
   /**
    * Constructs a new BoardAreaController, initialized with the state of the
@@ -77,20 +83,25 @@ export default class CovDocsAreaController extends InteractableAreaController<
     super(id);
     this._boardArea = boardAreaModel;
     this._townController = townController;
-    this._activeDoc = this._boardArea.activeDocument?.boardID;
+    this._activeDocID = this._boardArea.activeDocument?.boardID;
   }
 
 /**
  * Gets the currently active doc
  */
-  public get activeDoc(): CDocDocID | undefined {
-    return this._activeDoc
+  public get activeDocID(): CDocDocID | undefined {
+    return this._activeDocID;
   }
 
   //checks if their is an active document open
   public isActive(): boolean {
     return this._boardArea.activeDocument !== undefined;
   }
+
+public get activeDocContent(): ICDocDocument | undefined {
+  return this._boardArea.activeDocument;
+}
+
 
   // Sends a request to server to overwrite document
   public async writeToDoc(newDoc: string) {

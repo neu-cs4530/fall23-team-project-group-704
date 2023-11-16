@@ -45,11 +45,20 @@ import Menu from '../../../VideoCall/VideoFrontend/components/MenuBar/Menu/Menu'
   * to the permissions screen. The overall CDocArea UI does not deal directly with the Permissions UI.)
   */
 
-function CDocPermissions(props: {owner: CDocUserID, editors: CDocUserID[], viewers: CDocUserID[]}): JSX.Element {
-const viewers = props.viewers;
-const editors = props.editors;
-const owner = props.owner;
-function DrawPermissionsTitle(props: { }) {
+ //permissionsWereChanged: ({owner: CDocUserID, editors: CDocUserID[], viewers: CDocUserID[]}) => void
+
+export default function CDocPermissions(props: {owner: CDocUserID, editors: CDocUserID[], viewers: CDocUserID[], permissionsWereChanged: any}): JSX.Element {
+const [viewers, setViewers] = useState<CDocUserID>(props.viewers);
+const [newViewers, setNewViewers] = useState<CDocUserID>(viewers);
+
+const [editors, setEditors] = useState<CDocUserID>(props.editors);
+const [newEditors, setNewEditors] = useState<CDocUserID>(editors);
+
+const [owner, setOwner] = useState<CDocUserID>(props.owner);
+const [newOwner, setNewOwner] = useState(owner);
+
+
+function DrawPermissionsTitle() {
   
   return (
     <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
@@ -58,18 +67,33 @@ function DrawPermissionsTitle(props: { }) {
   );
 }
 
+
 function DrawEditorsBox() {
 
-  const UserRadioGroup = () => {
+  const UserRadioGroup = ({userID} : {userID : CDocUserID}) => {
     const [selectedOption, setSelectedOption] = useState('no selection');
+    
+    const isMakeViewerDisabled = (userID !== owner);
+    const isRemoveAccessDisabled = (userID !== owner);
 
     const handleSelectChange = (value: string) => {
-      setSelectedOption(value === selectedOption ? '' : value);}
+      setSelectedOption(value === selectedOption ? '' : value);
+
+      if (selectedOption === 'viewer') {
+        setNewViewers([...newViewers, userID]);
+        setNewEditors(newEditors.filter((aUser: CDocUserID) => aUser !== userID));
+      }else if (selectedOption === '') {
+        setNewEditors([...new Set([...newEditors, userID])]);
+        setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
+      }else if (selectedOption === 'remove') {
+        setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
+        setNewEditors(newEditors.filter((aUser: CDocUserID) => aUser !== userID));
+      }}
     
     return <RadioGroup onChange={handleSelectChange} value={selectedOption}>
                     <Stack direction='row'>
-                      <Radio value='viewer'>Make viewer</Radio>
-                      <Radio value='remove'>Remove access</Radio>
+                      <Radio value='viewer' isDisabled={isMakeViewerDisabled}>Make viewer</Radio>
+                      <Radio value='remove' isDisabled={isRemoveAccessDisabled}>Remove access</Radio>
                       </Stack>
                       </RadioGroup>
     }
@@ -78,12 +102,12 @@ function DrawEditorsBox() {
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
         People who can edit:
         <List>
-    {editors.map(user => {
+    {editors.map((user: CDocUserID) => {
                 return <ListItem key={user}>
                   <Center height='50px'>
                     {user}
                     <Divider orientation='vertical' />
-                    <UserRadioGroup />
+                    <UserRadioGroup userID={user}/>
                     </Center></ListItem>;
               })}
               </List>
@@ -93,16 +117,25 @@ function DrawEditorsBox() {
 
   function DrawViewersBox() {
 
-    const UserRadioGroup = () => {
+    const UserRadioGroup = ({userID} : {userID : CDocUserID}) => {
+
       const [selectedOption, setSelectedOption] = useState('no selection');
+
+      const isMakeEditorDisabled = (viewers.find((user:CDocUserID) => user === userID) !== undefined);
+      const isRemoveAccessDisabled = (userID !== owner);
   
       const handleSelectChange = (value: string) => {
-        setSelectedOption(value === selectedOption ? '' : value);}
+        setSelectedOption(value === selectedOption ? '' : value);
+        if (selectedOption === 'editor') {
+          setNewEditors([...newEditors, userID]);
+          setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID))
+        }
+      }
       
       return <RadioGroup onChange={handleSelectChange} value={selectedOption}>
                       <Stack direction='row'>
-                        <Radio value='editor'>Make editor</Radio>
-                        <Radio value='remove'>Remove access</Radio>
+                        <Radio value='editor' isDisabled={isMakeEditorDisabled}>Make editor</Radio>
+                        <Radio value='remove' isDisabled={isRemoveAccessDisabled}>Remove access</Radio>
                         </Stack>
                         </RadioGroup>
       }
@@ -111,12 +144,12 @@ function DrawEditorsBox() {
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
   People who can view:
   <List>
-    {viewers.map(user => {
+    {viewers.map((user: CDocUserID) => {
                 return <ListItem key={user}>
                   <Center height='50px'>
                     {user}
                     <Divider orientation='vertical' />
-                    <UserRadioGroup />
+                    <UserRadioGroup userID={user}/>
                     </Center></ListItem>;
               })}
               </List>
@@ -124,21 +157,25 @@ function DrawEditorsBox() {
     );
   }
 
+/**
+ * Displays the id of the current owner of the document as well as an option to choose another user to transfer ownership to.
+ * Clicking a user's id through the dropdown menu populates the 'transfer ownership to' field, and ownership is transferred after
+ * clicking the save all changes button.
+ */
   function DrawOwnershipBox() {
-
-    const [newOwner, setNewOwner] = useState(owner);
 
   function TransferOwnershipButton() {
 
     function handleClick(user: CDocUserID) {
-      setNewOwner('');
+      setNewOwner(user);
+    }
       
       return <Menu>
   <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
     Transfer Ownership
     </MenuButton>
   <MenuList>
-  {viewers.map(user => {
+  {viewers.map((user: CDocUserID) => {
                 return <MenuItem onClick={handleClick(user)} key={user}>
                   {user}
                 </MenuItem>;
@@ -146,7 +183,6 @@ function DrawEditorsBox() {
   </MenuList>
 </Menu>
     }
-  }
   
   return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
@@ -171,20 +207,42 @@ function DrawEditorsBox() {
       );
   }
 
+/**
+ * Renders the save button, which saves all changes currently selected.
+ * @returns 
+ */
   function DrawSaveButton() {
+
+    function handleSaveClick() {
+      setOwner(newOwner);
+      setEditors(newEditors);
+      setViewers(newViewers);
+     props.permissionsWereChanged({owner: owner, editors: editors, viewers: viewers})
+    }
 
     return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-  
+  <Button onClick={handleSaveClick()}>
+    Save All Changes
+  </Button>
       </GridItem>
     );
   }
 
+  /**
+   * Displays a button which allows the user to exit the Permissions UI and return to the document.
+   * @returns 
+   */
   function DrawExitButton() {
+    //implement this the same way that permissionswerechanged was implemented? first see if that works
+    function handleClick() {
 
+}
     return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-  
+        <Button onClick={handleClick()}>
+          Exit
+        </Button>
       </GridItem>
     );
   }

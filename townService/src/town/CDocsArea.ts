@@ -1,3 +1,5 @@
+import { BroadcastOperator } from 'socket.io';
+import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
 import InvalidParametersError, { INVALID_COMMAND_MESSAGE } from '../lib/InvalidParametersError';
 import Player from '../lib/Player';
 import {
@@ -9,46 +11,79 @@ import {
   ICDocDocument,
   CDocUserID,
   CDocDocID,
+  ServerToClientEvents,
+  SocketData,
+  TownEmitter,
+  BoundingBox,
 } from '../types/CoveyTownSocket';
 import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
-
-// Ideas for dealing with async database operations:
-// 1. Load entire database into memory at start
-// 2. Have a multitry approach for frontend - have to try fetching multiple times until it works,
-// it will work when the data has been loaded into the cache that is this class
-// 3. Make frontend listen for the return value as an event
+import { ICDocServer, MockCDocServer } from './ICDocServer';
 
 // How to send different model to each user?
-
+// TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
-  private _server: CDocServer = new CDocServer();
+  private _server: ICDocServer = new MockCDocServer();
 
-  private _activeDocument: ICDocDocument;
+  // TODO: I will duplicate the model state by caching it here and sending it
+  // in toModel, and also directly return parts of the model through the handleCommand return
+  private _activeDocument: ICDocDocument | undefined;
 
   private _ownedDocuments: CDocDocID[];
 
-  public handleCommand<CommandType extends InteractableCommand>(
+  /**
+   * Creates a new ConversationArea
+   *
+   * @param conversationAreaModel model containing this area's current topic and its ID
+   * @param coordinates  the bounding box that defines this conversation area
+   * @param townEmitter a broadcast emitter that can be used to emit updates to players
+   */
+  public constructor(id: string, coordinates: BoundingBox, townEmitter: TownEmitter) {
+    super(id, coordinates, townEmitter);
+  }
+
+  public async handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
     player: Player,
-  ): InteractableCommandReturnType<CommandType> {
+  ): Promise<InteractableCommandReturnType<CommandType>> {
     if (command.type === 'WriteDoc') {
-      this._server.writeToDoc(command.docid, command.content).then(() => this._emitAreaChanged());
+      await this._server.writeToDoc(command.docid, command.content);
+      this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetDoc') {
-      this._server.getDoc(command.docid).then(doc => {
-        this._activeDocument = doc;
-        this._emitAreaChanged();
-      });
-      return undefined as InteractableCommandReturnType<CommandType>;
+      const doc = await this._server.getDoc(command.docid);
+      return { doc } as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetOwnedDocs') {
-      this._server.getOwnedDocs(command.id).then(ownedDocs => {
-        this._ownedDocuments = ownedDocs;
-        this._emitAreaChanged();
-      });
+      const docs = await this._server.getOwnedDocs(command.id);
+      this._ownedDocuments = docs;
+      return { docs } as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'OpenDoc') {
+      const doc = await this._server.getDoc(command.docid);
+      this._activeDocument = doc;
+      this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'CloseDoc') {
+      this._activeDocument = undefined;
+      this._emitAreaChanged();
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'CreateNewUser') {
+      await this._server.createNewUser(command.username, command.password);
+      this._emitAreaChanged();
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'ValidateUser') {
+      const validated: boolean = await this._server.validateUser(command.id, command.password);
+      return { validation: validated } as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'CreateNewDoc') {
+      const doc: ICDocDocument = await this._server.createNewDoc(command.id);
+      this._emitAreaChanged();
+      return { doc } as InteractableCommandReturnType<CommandType>;
     }
     throw new InvalidParametersError(INVALID_COMMAND_MESSAGE);
   }
@@ -67,5 +102,17 @@ export default class CDocsArea extends InteractableArea {
       allRegisteredUsers: [],
     };
     return model;
+  }
+
+  public static fromMapObject(
+    mapObject: ITiledMapObject,
+    broadcastEmitter: TownEmitter,
+  ): CDocsArea {
+    const { name, width, height } = mapObject;
+    if (!width || !height) {
+      throw new Error(`Malformed viewing area ${name}`);
+    }
+    const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
+    return new CDocsArea(name, rect, broadcastEmitter);
   }
 }

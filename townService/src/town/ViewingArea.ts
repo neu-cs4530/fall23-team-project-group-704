@@ -112,11 +112,11 @@ export default class ViewingArea extends InteractableArea {
 
   public handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
-  ): InteractableCommandReturnType<CommandType> {
+  ): Promise<InteractableCommandReturnType<CommandType>> {
     if (command.type === 'ViewingAreaUpdate') {
       const viewingArea = command as ViewingAreaUpdateCommand;
       this.updateModel(viewingArea.update);
-      return {} as InteractableCommandReturnType<CommandType>;
+      return Promise.resolve() as Promise<InteractableCommandReturnType<CommandType>>;
     }
     throw new InvalidParametersError('Unknown command type');
   }

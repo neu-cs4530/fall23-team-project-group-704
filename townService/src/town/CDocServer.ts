@@ -1,20 +1,47 @@
 import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
-// import Document from '../api/document';
-// import appDataSource from '../api/datasource';
+import { ICDocServer } from './ICDocServer';
+import Document from '../api/document';
+import appDataSource from '../api/datasource';
 
 // TODO: change ids from numbers to right type
 /** We will do all operations directly to database for now. */
-export default class CDocServer {
+export default class CDocServer implements ICDocServer {
+  async createNewDoc(user_id: string): Promise<ICDocDocument> {
+    const newDoc: Document = {
+      id: 'invalid',
+      userId: user_id,
+      name: 'Default Doc',
+      allowedUsersView: [],
+      allowedUsersEdit: [],
+      data: 'this is a default doc',
+      uploaded_data: [],
+    };
+    const newID = await appDataSource
+      .createQueryBuilder()
+      .insert()
+      .into(Document)
+      .values([{}])
+      .returning('id')
+      .execute();
+    return this.getDoc(newID.generatedMaps[0].id);
+  }
+
+  validateUser(id: string): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
+  async createNewUser(username: string, password: string) {
+    throw new Error('Method not implemented.');
+  }
+
   async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
-    return [];
-    /** 
     const docs = await appDataSource
       .createQueryBuilder()
       .select('doc')
       .from(Document, 'doc')
       .where('doc.id = :id', { id: docid })
       .getMany();
-    return docs.map(doc => String(doc.id)); */
+    return docs.map(doc => String(doc.id));
   }
 
   public loadIfNotLoaded(docid: CDocDocID) {
@@ -22,26 +49,16 @@ export default class CDocServer {
   }
 
   public async writeToDoc(docid: CDocDocID, content: string) {
-    /** await appDataSource
+    await appDataSource
       .createQueryBuilder()
       .update(Document)
       .set({ data: content })
       .where('id = :id', { id: docid })
-      .execute(); */
+      .execute();
   }
 
   public async getDoc(docid: CDocDocID): Promise<ICDocDocument> {
-    const doc: ICDocDocument = {
-      createdBy: '',
-      owner: '',
-      boardID: '',
-      boardName: '',
-      editors: [],
-      viewers: [],
-      content: 'IF THIS APPEARS I AM HAPPY',
-    };
-    return doc;
-    /** const document = await appDataSource
+    const document = await appDataSource
       .createQueryBuilder()
       .select('doc')
       .from(Document, 'doc')
@@ -60,7 +77,7 @@ export default class CDocServer {
         viewers: document.allowedUsersView,
         content: document.data,
       };
-      return doc; 
-      */
+      return doc;
+    }
   }
 }

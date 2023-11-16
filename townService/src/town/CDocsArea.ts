@@ -18,15 +18,16 @@ import {
 } from '../types/CoveyTownSocket';
 import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
+import { ICDocServer, MockCDocServer } from './ICDocServer';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
-  private _server: CDocServer = new CDocServer();
+  private _server: ICDocServer = new MockCDocServer();
 
   // TODO: I will duplicate the model state by caching it here and sending it
   // in toModel, and also directly return parts of the model through the handleCommand return
-  private _activeDocument: ICDocDocument;
+  private _activeDocument: ICDocDocument | undefined;
 
   private _ownedDocuments: CDocDocID[];
 
@@ -52,13 +53,37 @@ export default class CDocsArea extends InteractableArea {
     }
     if (command.type === 'GetDoc') {
       const doc = await this._server.getDoc(command.docid);
-      this._activeDocument = doc;
       return { doc } as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetOwnedDocs') {
       const docs = await this._server.getOwnedDocs(command.id);
       this._ownedDocuments = docs;
       return { docs } as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'OpenDoc') {
+      const doc = await this._server.getDoc(command.docid);
+      this._activeDocument = doc;
+      this._emitAreaChanged();
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'CloseDoc') {
+      this._activeDocument = undefined;
+      this._emitAreaChanged();
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'CreateNewUser') {
+      await this._server.createNewUser(command.username, command.password);
+      this._emitAreaChanged();
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'ValidateUser') {
+      const validated: boolean = await this._server.validateUser(command.id, command.password);
+      return { validation: validated } as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'CreateNewDoc') {
+      const doc: ICDocDocument = await this._server.createNewDoc(command.id);
+      this._emitAreaChanged();
+      return { doc } as InteractableCommandReturnType<CommandType>;
     }
     throw new InvalidParametersError(INVALID_COMMAND_MESSAGE);
   }

@@ -20,6 +20,7 @@ import {
   CDocCloseDocCommand,
   ICDocDocument,
   CDocGetDocCommand,
+  CDocPassword,
 } from '../../types/CoveyTownSocket';
 
 import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
@@ -124,10 +125,11 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @param user_id
    * @param password
    */
-  async createNewUser(user_id: CDocUserID) {
+  async createNewUser(user_id: CDocUserID, password: CDocPassword) {
     await this._townController.sendInteractableCommand<CDocCreateNewUserCommand>(this.id, {
       type: 'CreateNewUser',
       username: user_id,
+      password: password,
     });
   }
 
@@ -138,11 +140,14 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @returns
    */
   async addNewDocument(user_id: CDocUserID): Promise<CDocDocID> {
-    await this._townController.sendInteractableCommand<CDocCreateNewDocCommand>(this.id, {
-      type: 'CreateNewDoc',
-      id: user_id,
-    });
-    return 'HOW TO GENERATE A UNIQUE ID EACH TIME?';
+    const { doc } = await this._townController.sendInteractableCommand<CDocCreateNewDocCommand>(
+      this.id,
+      {
+        type: 'CreateNewDoc',
+        id: user_id,
+      },
+    );
+    return doc.boardID;
   }
 
   /**
@@ -153,7 +158,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
   async openDocument(doc_id: CDocDocID) {
     await this._townController.sendInteractableCommand<CDocOpenDocCommand>(this.id, {
       type: 'OpenDoc',
-      id: doc_id,
+      docid: doc_id,
     });
     return;
   }
@@ -165,9 +170,20 @@ export default class CovDocsAreaController extends InteractableAreaController<
    */
   //what is this method used for?
   public async getOpenedDocument(): Promise<string> {
+    if (this._boardArea.activeDocument)
+      return this.getDocByID(this._boardArea.activeDocument.boardID);
+    else throw new Error('No active document');
+  }
+
+  /**
+   * TODO: make a choice between this method and the state machine getOpenedDocument, or use both
+   * @param id
+   * @returns
+   */
+  public async getDocByID(id: CDocDocID): Promise<string> {
     const { doc } = await this._townController.sendInteractableCommand<CDocGetDocCommand>(this.id, {
       type: 'GetDoc',
-      docid: 'INVALID ID',
+      docid: id,
     });
     return doc.content;
   }
@@ -227,7 +243,8 @@ export default class CovDocsAreaController extends InteractableAreaController<
     if (aDocWasOpen) {
       if (oldBoard?.content !== newBoard?.content) {
         //need a different way to measure equality for boards?
-        this.emit('docUpdated', newBoard?.content);
+        if (newBoard) this.emit('docUpdated', newBoard.content);
+        else throw new Error('New board was null');
       }
     }
 

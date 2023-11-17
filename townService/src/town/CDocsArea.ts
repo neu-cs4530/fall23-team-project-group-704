@@ -19,6 +19,7 @@ import {
 import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
 import { ICDocServer, MockCDocServer } from './ICDocServer';
+import CDocActiveDocMap from './CDocActiveDocMap';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
@@ -31,6 +32,8 @@ export default class CDocsArea extends InteractableArea {
 
   private _ownedDocuments: CDocDocID[];
 
+  private _userToDocMap: CDocActiveDocMap;
+
   /**
    * Creates a new ConversationArea
    *
@@ -40,8 +43,16 @@ export default class CDocsArea extends InteractableArea {
    */
   public constructor(id: string, coordinates: BoundingBox, townEmitter: TownEmitter) {
     super(id, coordinates, townEmitter);
+
+    this._userToDocMap = new CDocActiveDocMap();
   }
 
+  /**
+   * See command definitions for documentation per command.
+   * @param command
+   * @param player
+   * @returns
+   */
   public async handleCommand<CommandType extends InteractableCommand>(
     command: CommandType,
     player: Player,
@@ -63,11 +74,13 @@ export default class CDocsArea extends InteractableArea {
     if (command.type === 'OpenDoc') {
       const doc = await this._server.getDoc(command.docid);
       this._activeDocument = doc;
+      this._userToDocMap.setActiveDoc(command.userid, doc.boardID);
       this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'CloseDoc') {
       this._activeDocument = undefined;
+      this._userToDocMap.closeActiveDoc(command.id);
       this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
     }
@@ -100,6 +113,7 @@ export default class CDocsArea extends InteractableArea {
       id: this.id,
       occupants: this.occupantsByID,
       allRegisteredUsers: [],
+      userToDocMap: this._userToDocMap,
     };
     return model;
   }

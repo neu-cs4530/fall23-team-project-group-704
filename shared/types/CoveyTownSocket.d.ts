@@ -90,6 +90,7 @@ export interface ICDocDocument {
  * TODO: find way to return a different model to each user
  */
 export interface ICDocArea extends Interactable {
+  userToDocMap: CDocActiveDocMap;
   activeDocument?: ICDocDocument;
   // until we can selectively send different documents to different users
   // in the area, let's send everything
@@ -229,6 +230,11 @@ export interface CDocWriteDocCommand {
   content: string;
   docid: string;
 }
+
+/**
+ * returns the document specified by the id. 
+ * TODO: add permissions to this
+ */
 export interface CDocGetDocCommand {
    type: 'GetDoc';
    docid: CDocDocID;
@@ -238,11 +244,20 @@ export interface CDocValidateUserCommand { type: 'ValidateUser'; id: CDocUserID;
 export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CDocUserID; password: CDocPassword};
 export interface CDocCreateNewDocCommand { type: 'CreateNewDoc'; id: CDocUserID };
 export interface CDocGetOwnedDocsCommand { type: 'GetOwnedDocs'; id: CDocUserID };
+
+/**
+ * Tells this area to associate this document with the caller.
+ * This document is assumed to be open on the frontend for the user, so
+ * the state changed event will be then fired if this document is changed.
+ */
 export interface CDocOpenDocCommand {
-  type: 'OpenDoc'; docid: string 
+  type: 'OpenDoc'; docid: string; userid: CDocUserID;
 };
+
+/**
+ * Closes the document for this user.
+ */
 export interface CDocCloseDocCommand { type: 'CloseDoc'; id: CDocDocID };
-// some of these can have InteractableCommandReponse as a return from backend?
 
 
 // export interface CDocument {

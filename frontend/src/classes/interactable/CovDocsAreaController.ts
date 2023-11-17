@@ -27,11 +27,10 @@ import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
 
-//TODO: 
-//idea : add a parameter on document that is permissionsOpen? that is a state variable. that way the controller 
-//can control toggling between the permissions and the document editing ui? first see how the current implementation goes and how it 
+//TODO:
+//idea : add a parameter on document that is permissionsOpen? that is a state variable. that way the controller
+//can control toggling between the permissions and the document editing ui? first see how the current implementation goes and how it
 //works to determine if this is a worthwhile change
-
 
 /**
  * The events that a CovDocsAreaController can emit
@@ -88,12 +87,11 @@ export default class CovDocsAreaController extends InteractableAreaController<
     this._activeDocID = this._boardArea.activeDocument?.boardID;
   }
 
-/**
- * Gets the currently active doc
- */
+  /**
+   * Gets the currently active doc
+   */
   public get activeDocID(): CDocDocID | undefined {
     return this._activeDocID;
-
   }
 
   //checks if their is an active document open
@@ -101,10 +99,9 @@ export default class CovDocsAreaController extends InteractableAreaController<
     return this._boardArea.activeDocument !== undefined;
   }
 
-public get activeDocContent(): ICDocDocument | undefined {
-  return this._boardArea.activeDocument;
-}
-
+  public get activeDocContent(): ICDocDocument | undefined {
+    return this._boardArea.activeDocument;
+  }
 
   // Sends a request to server to overwrite document
   public async writeToDoc(newDoc: string) {
@@ -167,10 +164,11 @@ public get activeDocContent(): ICDocDocument | undefined {
    * @param doc_id
    */
   //does this need to return anything?
-  async openDocument(doc_id: CDocDocID) {
+  async openDocument(userid: CDocUserID, doc_id: CDocDocID) {
     await this._townController.sendInteractableCommand<CDocOpenDocCommand>(this.id, {
       type: 'OpenDoc',
       docid: doc_id,
+      userid: userid,
     });
     return;
   }

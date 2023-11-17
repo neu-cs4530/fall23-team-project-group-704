@@ -164,10 +164,11 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @param doc_id
    */
   //does this need to return anything?
-  async openDocument(doc_id: CDocDocID) {
+  async openDocument(userid: CDocUserID, doc_id: CDocDocID) {
     await this._townController.sendInteractableCommand<CDocOpenDocCommand>(this.id, {
       type: 'OpenDoc',
       docid: doc_id,
+      userid: userid,
     });
     return;
   }

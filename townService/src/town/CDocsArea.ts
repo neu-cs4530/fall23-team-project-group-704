@@ -24,7 +24,7 @@ import CDocActiveDocMap from './CDocActiveDocMap';
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
-  private _server: ICDocServer = new MockCDocServer();
+  private _server: ICDocServer = MockCDocServer.getInstance();
 
   // TODO: I will duplicate the model state by caching it here and sending it
   // in toModel, and also directly return parts of the model through the handleCommand return
@@ -45,6 +45,7 @@ export default class CDocsArea extends InteractableArea {
     super(id, coordinates, townEmitter);
 
     this._userToDocMap = new CDocActiveDocMap();
+    this._server.addDocumentEditedListener(this._handleDocumentEdited);
   }
 
   /**
@@ -128,5 +129,11 @@ export default class CDocsArea extends InteractableArea {
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
     return new CDocsArea(name, rect, broadcastEmitter);
+  }
+
+  private _handleDocumentEdited(docid: CDocDocID) {
+    if (this._userToDocMap.isTrackingDoc(docid)) {
+      this._emitAreaChanged();
+    }
   }
 }

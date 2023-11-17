@@ -1,6 +1,10 @@
 import { CDocDocID, CDocUserID } from '../types/CoveyTownSocket';
 
 class CDocActiveDocMap {
+  isTrackingDoc(docid: string): boolean {
+    return this._docMap.find(entry => entry[1] === docid) !== undefined;
+  }
+
   private _docMap: [CDocUserID, CDocDocID][];
 
   constructor() {

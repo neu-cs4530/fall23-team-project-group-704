@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import { listenerCount } from 'process';
 import { CDocDocID, CDocPassword, CDocUserID, ICDocDocument } from '../types/CoveyTownSocket';
 
 export interface ICDocServer {
@@ -8,16 +9,43 @@ export interface ICDocServer {
   getOwnedDocs(id: string): Promise<CDocDocID[]>;
   getDoc(docid: string): Promise<ICDocDocument>;
   writeToDoc(docid: string, content: string): Promise<void>;
+
+  addDocumentEditedListener(listener: (docid: CDocDocID) => void): void;
+  removeDocumentEditedListener(listener: (docid: CDocDocID) => void): void;
 }
 
 export class MockCDocServer implements ICDocServer {
+  private static _instance: MockCDocServer;
+
   private _mockOwnedDocs: ICDocDocument[];
 
   private _users: [CDocUserID, CDocPassword][];
 
-  constructor() {
+  private _listeners: ((docid: CDocDocID) => void)[];
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  private constructor() {
     this._mockOwnedDocs = [];
     this._users = [];
+    this._listeners = [];
+  }
+
+  public addDocumentEditedListener(listener: (docid: string) => void): void {
+    this._listeners.push(listener);
+  }
+
+  public removeDocumentEditedListener(listener: (docid: string) => void): void {
+    this._listeners = this._listeners.filter(l => l !== listener);
+  }
+
+  public documentEdited: (docid: string) => void;
+
+  public static getInstance(): MockCDocServer {
+    if (!MockCDocServer._instance) {
+      MockCDocServer._instance = new MockCDocServer();
+    }
+
+    return MockCDocServer._instance;
   }
 
   async createNewDoc(id: string): Promise<ICDocDocument> {
@@ -60,6 +88,7 @@ export class MockCDocServer implements ICDocServer {
 
     if (i === -1) throw new Error('Tried to write to non existent doc');
     this._mockOwnedDocs[i] = this._changeDocContent(this._mockOwnedDocs[i], content);
+    this._listeners.map(listener => listener(docid));
   }
 
   private _changeDocContent(doc: ICDocDocument, content: string): ICDocDocument {

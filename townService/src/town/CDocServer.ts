@@ -6,6 +6,29 @@ import appDataSource from '../api/datasource';
 // TODO: change ids from numbers to right type
 /** We will do all operations directly to database for now. */
 export default class CDocServer implements ICDocServer {
+  private static _instance: CDocServer;
+
+  private _listeners: ((docid: CDocDocID) => void)[];
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  private constructor() {}
+
+  public addDocumentEditedListener(listener: (docid: string) => void): void {
+    this._listeners.push(listener);
+  }
+
+  public removeDocumentEditedListener(listener: (docid: string) => void): void {
+    this._listeners = this._listeners.filter(l => l !== listener);
+  }
+
+  public static getInstance(): CDocServer {
+    if (!CDocServer._instance) {
+      CDocServer._instance = new CDocServer();
+    }
+
+    return CDocServer._instance;
+  }
+
   async createNewDoc(user_id: string): Promise<ICDocDocument> {
     const newDoc: Document = {
       id: 'invalid',
@@ -20,7 +43,7 @@ export default class CDocServer implements ICDocServer {
       .createQueryBuilder()
       .insert()
       .into(Document)
-      .values([{}])
+      .values([newDoc])
       .returning('id')
       .execute();
     return this.getDoc(newID.generatedMaps[0].id);
@@ -55,6 +78,7 @@ export default class CDocServer implements ICDocServer {
       .set({ data: content })
       .where('id = :id', { id: docid })
       .execute();
+    this._listeners.map(listener => listener(docid));
   }
 
   public async getDoc(docid: CDocDocID): Promise<ICDocDocument> {

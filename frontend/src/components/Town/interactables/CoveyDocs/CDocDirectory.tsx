@@ -1,15 +1,23 @@
-import { CDocument } from '../../../../types/CoveyTownSocket';
+import { ICDocDocument } from '../../../../types/CoveyTownSocket';
 import React from 'react';
-import styled from "styled-components";
+import styled from 'styled-components';
+import { nanoid } from 'nanoid';
+import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table } from '@chakra-ui/react';
 
+const StyledDocument = styled(Tr)`
+  &:hover {
+    box-shadow: 10px 5px 5px gray;
+  }
 
-const StyledDocument = styled.div`
-  background-color: white;
+  :hover {
+    background-color: yellow;
+  }
 `;
 
-const StyledDirectory = styled.div`
+const StyledDirectory = styled(TableContainer)`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  padding: 20px;
 `;
 /**
  * A component that renders a list of documents that they own and/or can view
@@ -22,23 +30,30 @@ const StyledDirectory = styled.div`
  * @returns
  */
 
-export default function CDocDirectory({ documents }: { documents: CDocument[] }): JSX.Element {
-  documents.map(d => {
+export default function CDocDirectory({ documents }: { documents: ICDocDocument[] }): JSX.Element {
+  const cdocs = documents.map((d, index) => {
     return (
       <StyledDocument>
-    <h2>{d.name}</h2>
-        <h4>{d.ownerID}</h4>
-        {/*<h4>View: {d.permissions.view}</h4>*/}
-        <h4>Edit: {d.permissions.edit}</h4>
-        <h4>Last saved: {d.last_saved}</h4>
-        <h4>Last opened by: {d.last_user}</h4>
-        <hr/>
-        </StyledDocument>
-    )
-  })
+        <Td>{d.docName}</Td>
+        <Td>{d.owner}</Td>
+        <Td>{d.createdAt}</Td>
+      </StyledDocument>
+    );
+  });
   return (
     <StyledDirectory>
-    {documents}
+      <Text fontSize='3xl'>Document Directory</Text>
+
+      <Table size='sm'>
+        <Thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th>Owner</Th>
+            <Th isNumeric>Created At</Th>
+          </Tr>
+        </Thead>
+        <Tbody>{cdocs}</Tbody>
+      </Table>
     </StyledDirectory>
   );
 }

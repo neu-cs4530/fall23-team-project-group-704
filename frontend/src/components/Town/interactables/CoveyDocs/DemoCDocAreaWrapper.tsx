@@ -19,10 +19,25 @@ import CovDocsArea from '../CovDocsArea';
 import CDocArea from './CDocArea';
 import { TicTacToeArea } from '../TicTacToe/TicTacToeArea';
 import { Omit_ConversationArea_type_ } from '../../../../generated/client';
+import CDocSignin from './CDocSignin';
+import { nanoid } from 'nanoid';
+import CDocDirectory from './CDocDirectory';
 
 export default function DemoCDocAreaWrapper(): JSX.Element {
   const coveyTownController = useTownController();
   const newConversation = useInteractable('cdocsArea');
+  const document = {
+    createdAt: new Date().toDateString(),
+    owner: nanoid(),
+    docID: nanoid(),
+    docName: 'my first document',
+    editors: [],
+    viewers: [],
+    content: 'string',
+  };
+  const documents = [document, document, document, document];
+  const [signedIn, setSignedIn] = useState(false);
+  const [pages, setPages] = useState(1);
 
   const isOpen = newConversation !== undefined;
 
@@ -40,6 +55,15 @@ export default function DemoCDocAreaWrapper(): JSX.Element {
     }
   }, [coveyTownController, newConversation]);
 
+  const handleSignin = () => {
+    // await sign in/up user
+    setPages(pages + 1);
+  };
+
+  const handleDocument = (docId: string) => {
+    coveyTownController.getCovDocsAreaController().getDocByID(docId);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -49,14 +73,8 @@ export default function DemoCDocAreaWrapper(): JSX.Element {
       }}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Create a conversation in {newConversation?.name} </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
-          <FormControl>
-            <FormLabel htmlFor='topic'>Topic of Conversation</FormLabel>
-            <Input id='topic' placeholder='Share the topic of your conversation' name='topic' />
-          </FormControl>
-        </ModalBody>
+        {pages === 1 && <CDocSignin signIn={handleSignin} />}
+        {pages === 2 && <CDocDirectory documents={documents} />}
         <ModalFooter>
           <Button onClick={closeModal}>Cancel</Button>
         </ModalFooter>

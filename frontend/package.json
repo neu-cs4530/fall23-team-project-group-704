@@ -10,6 +10,7 @@
     "@material-ui/icons": "^4.11.3",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react-hooks": "^8.0.1",
+    "@tinymce/tinymce-react": "^4.3.1",
     "@twilio-labs/plugin-rtc": "^0.8.4",
     "@twilio/conversations": "^2.4.0",
     "@twilio/video-processors": "^1.0.2",

@@ -29,8 +29,8 @@ export default class CovDocsArea extends Interactable {
 
   private async _doACrudeTest() {
     const cDocController = this.townController.getCovDocsAreaController(this);
-    await cDocController.createNewUser('Joseph', 'password');
-    const id = await cDocController.addNewDocument('Joseph');
+    // await cDocController.createNewUser('Ise', 'password');
+    const id = await cDocController.addNewDocument('Ise');
     return cDocController.getDocByID(id);
   }
 

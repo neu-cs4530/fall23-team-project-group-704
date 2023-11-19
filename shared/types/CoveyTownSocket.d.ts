@@ -73,20 +73,20 @@ export interface ViewingArea extends Interactable {
   elapsedTimeSec: number;
 }
 
-/*comments
+/* comments
 */
 export interface ICDocDocument {
-  createdBy: PlayerID;
+  createdAt: Datetime;
   owner: PlayerID;
-  boardID: string;
-  boardName: string;
+  docID: string;
+  docName: string;
   editors: PlayerID[];
   viewers: PlayerID[];
   content: string;
 }
 
 /**
- * Represents the state of the model for one user. 
+ * Represents the state of the model for one user.
  * TODO: find way to return a different model to each user
  */
 export interface ICDocArea extends Interactable {
@@ -203,8 +203,8 @@ interface InteractableCommandBase {
   type: string;
 }
 
-export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand | 
-CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand | 
+export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand |
+CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand |
 CDocCreateNewDocCommand | CDocGetOwnedDocsCommand | CDocGetDocCommand;
 
 export interface ViewingAreaUpdateCommand  {
@@ -239,7 +239,7 @@ export interface CDocCreateNewUserCommand { type: 'CreateNewUser'; username: CDo
 export interface CDocCreateNewDocCommand { type: 'CreateNewDoc'; id: CDocUserID };
 export interface CDocGetOwnedDocsCommand { type: 'GetOwnedDocs'; id: CDocUserID };
 export interface CDocOpenDocCommand {
-  type: 'OpenDoc'; docid: string 
+  type: 'OpenDoc'; docid: string
 };
 export interface CDocCloseDocCommand { type: 'CloseDoc'; id: CDocDocID };
 // some of these can have InteractableCommandReponse as a return from backend?
@@ -262,7 +262,7 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
   CommandType extends CDocWriteDocCommand ? undefined :
   CommandType extends CreateDocCommand ? undefined :
   CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
-  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} : 
+  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} :
   CommandType extends CDocValidateUserCommand ? {validation: boolean} :
   CommandType extends CDocCreateNewDocCommand ? {doc: ICDocDocument} :
   never;

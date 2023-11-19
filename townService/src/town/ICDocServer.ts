@@ -22,13 +22,13 @@ export class MockCDocServer implements ICDocServer {
 
   async createNewDoc(id: string): Promise<ICDocDocument> {
     const i = this._mockOwnedDocs.push({
-      createdBy: id,
       owner: id,
-      boardID: nanoid(),
-      boardName: 'DefaultDoc',
       editors: [],
       viewers: [],
       content: 'this is a freshly created new doc',
+      createdAt: undefined,
+      docID: nanoid(),
+      docName: 'Default name',
     });
     return this._mockOwnedDocs[i - 1];
   }
@@ -44,11 +44,11 @@ export class MockCDocServer implements ICDocServer {
   }
 
   async getOwnedDocs(id: string): Promise<string[]> {
-    return this._mockOwnedDocs.filter(doc => doc.owner === id).map(doc => doc.boardID);
+    return this._mockOwnedDocs.filter(doc => doc.owner === id).map(doc => doc.docID);
   }
 
   async getDoc(docid: string): Promise<ICDocDocument> {
-    const foundDoc = this._mockOwnedDocs.find(doc => doc.boardID === docid);
+    const foundDoc = this._mockOwnedDocs.find(doc => doc.docID === docid);
 
     if (foundDoc) return foundDoc;
     throw new Error('Doc not found');

@@ -9,7 +9,7 @@ export default class DocumentDirectory {
   @Column()
   name: string;
 
-  @OneToMany(() => Document, (d) => d.name)
+  @OneToMany(() => Document, d => d.name)
   Documents: Document[];
 
   // @OneToMany(() => DocumentDirectory, (d) => d.name)

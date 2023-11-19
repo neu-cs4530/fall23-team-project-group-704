@@ -40,6 +40,7 @@ export default function CDocDirectory({ documents }: { documents: ICDocDocument[
       </StyledDocument>
     );
   });
+  q;
   return (
     <StyledDirectory>
       <Text fontSize='3xl'>Document Directory</Text>

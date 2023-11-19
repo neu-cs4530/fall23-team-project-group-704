@@ -13,10 +13,14 @@ export default function CDocument({
   handleBackToDirectory: () => void;
 }): JSX.Element {
   const editorRef = useRef<any>(null);
-  editorRef.current.setContent(document.content);
+
+  if (editorRef.current) editorRef.current.setContent(document.content);
 
   useEffect(() => {
-    const interval = setInterval(() => controller.writeToDoc(editorRef.current.getContent()), 5000);
+    const interval = setInterval(
+      () => editorRef.current && controller.writeToDoc(editorRef.current.getContent()),
+      5000,
+    );
     return () => {
       clearInterval(interval);
     };

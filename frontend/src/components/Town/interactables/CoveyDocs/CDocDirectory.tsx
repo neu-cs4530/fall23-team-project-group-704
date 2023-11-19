@@ -33,14 +33,14 @@ const StyledDirectory = styled(TableContainer)`
 export default function CDocDirectory({ documents }: { documents: ICDocDocument[] }): JSX.Element {
   const cdocs = documents.map((d, index) => {
     return (
-      <StyledDocument>
+      <StyledDocument key={index}>
         <Td>{d.docName}</Td>
         <Td>{d.owner}</Td>
         <Td>{d.createdAt}</Td>
       </StyledDocument>
     );
   });
-  q;
+
   return (
     <StyledDirectory>
       <Text fontSize='3xl'>Document Directory</Text>

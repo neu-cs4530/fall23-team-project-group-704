@@ -2,12 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { ICDocDocument } from '../../../../types/CoveyTownSocket';
 import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
-export default function Document({
+import { Button } from '@chakra-ui/react';
+export default function CDocument({
   document,
   controller,
+  handleBackToDirectory,
 }: {
   document: ICDocDocument;
   controller: CovDocsAreaController;
+  handleBackToDirectory: () => void;
 }): JSX.Element {
   const editorRef = useRef<any>(null);
   editorRef.current.setContent(document.content);
@@ -40,6 +43,7 @@ export default function Document({
           content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
         }}
       />
+      <Button onClick={handleBackToDirectory}>Back</Button>
     </>
   );
 }

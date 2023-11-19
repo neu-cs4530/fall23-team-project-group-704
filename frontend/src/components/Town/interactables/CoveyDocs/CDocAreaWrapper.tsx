@@ -1,31 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useInteractable } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
-import {
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  useToast,
-} from '@chakra-ui/react';
+import { Button, Modal, ModalContent, ModalFooter, ModalOverlay, useToast } from '@chakra-ui/react';
 import CovDocsArea from '../CovDocsArea';
 import CDocArea from './CDocArea';
-import { TicTacToeArea } from '../TicTacToe/TicTacToeArea';
-import { Omit_ConversationArea_type_ } from '../../../../generated/client';
 import CDocSignin from './CDocSignin';
 import { nanoid } from 'nanoid';
 import CDocDirectory from './CDocDirectory';
-
-export default function DemoCDocAreaWrapper(): JSX.Element {
+import CDocument from './CDocument';
+import { ICDocDocument } from '../../../../types/CoveyTownSocket';
+export default function CDocAreaWrapper(): JSX.Element {
   const coveyTownController = useTownController();
-  const newConversation = useInteractable('cdocsArea');
+  const newConversation = useInteractable<CovDocsArea>('cdocsArea');
   const document = {
     createdAt: new Date().toDateString(),
     owner: nanoid(),
@@ -38,6 +24,19 @@ export default function DemoCDocAreaWrapper(): JSX.Element {
   const documents = [document, document, document, document];
   const [signedIn, setSignedIn] = useState(false);
   const [pages, setPages] = useState(1);
+  const [currentDocId, setCurrentDocId] = useState('');
+  const [currentDocument, setCurrentDocument] = useState<ICDocDocument>({
+    createdAt: new Date().toDateString(),
+    owner: '',
+    docID: '',
+    docName: '',
+    editors: [],
+    viewers: [],
+    content: '',
+  });
+  if (newConversation) {
+    const covDocsAreaController = coveyTownController.getCovDocsAreaController(newConversation);
+  }
 
   const isOpen = newConversation !== undefined;
 
@@ -61,8 +60,19 @@ export default function DemoCDocAreaWrapper(): JSX.Element {
   };
 
   const handleDocument = (docId: string) => {
-    coveyTownController.getCovDocsAreaController().getDocByID(docId);
+    setCurrentDocId(docId);
   };
+
+  const handleBackToDirectory = () => {
+    setPages(2);
+  };
+
+  const getDocument = async () => {
+    setCurrentDocument(await covDocsAreaController.getDocByID(currentDocId));
+  };
+  useEffect(() => {
+    getDocument();
+  });
 
   return (
     <Modal
@@ -74,7 +84,13 @@ export default function DemoCDocAreaWrapper(): JSX.Element {
       <ModalOverlay />
       <ModalContent>
         {pages === 1 && <CDocSignin signIn={handleSignin} />}
-        {pages === 2 && <CDocDirectory documents={documents} />}
+        {pages === 2 && <CDocDirectory documents={documents} handleClick={handleDocument} />}
+        {pages === 3 && (
+          <CDocument
+            document={currentDocument}
+            controller={covDocsAreaController}
+            handleBackToDirectory={handleBackToDirectory}></CDocument>
+        )}
         <ModalFooter>
           <Button onClick={closeModal}>Cancel</Button>
         </ModalFooter>

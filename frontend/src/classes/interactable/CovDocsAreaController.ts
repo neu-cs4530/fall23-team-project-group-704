@@ -189,12 +189,12 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @param id
    * @returns
    */
-  public async getDocByID(id: CDocDocID): Promise<string> {
+  public async getDocByID(id: CDocDocID): Promise<ICDocDocument> {
     const { doc } = await this._townController.sendInteractableCommand<CDocGetDocCommand>(this.id, {
       type: 'GetDoc',
       docid: id,
     });
-    return doc.content;
+    return doc;
   }
 
   /**

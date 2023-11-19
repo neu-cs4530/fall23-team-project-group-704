@@ -1,5 +1,5 @@
 import { ICDocDocument } from '../../../../types/CoveyTownSocket';
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { nanoid } from 'nanoid';
 import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table } from '@chakra-ui/react';
@@ -30,10 +30,21 @@ const StyledDirectory = styled(TableContainer)`
  * @returns
  */
 
-export default function CDocDirectory({ documents }: { documents: ICDocDocument[] }): JSX.Element {
+interface clickProps {
+  handleClick: () => void;
+}
+export default function CDocDirectory({
+  documents,
+  handleClick,
+}: {
+  documents: ICDocDocument[];
+  handleClick: (docId: string) => void;
+}): JSX.Element {
+  const [docId, setDocId] = useState('');
+
   const cdocs = documents.map((d, index) => {
     return (
-      <StyledDocument key={index}>
+      <StyledDocument key={index} onClick={() => handleClick(d.docID)}>
         <Td>{d.docName}</Td>
         <Td>{d.owner}</Td>
         <Td>{d.createdAt}</Td>

@@ -14,6 +14,7 @@ import {
   GameMoveCommand,
   GameState,
   ICDocArea,
+  ICDocUserDataMap,
   InteractableID,
   PlayerID,
   WinnableGameState,
@@ -21,9 +22,10 @@ import {
   ICDocDocument,
   CDocGetDocCommand,
   CDocPassword,
+  CDocGetOwnedDocsCommand,
+  InteractableCommandReturnType,
 } from '../../types/CoveyTownSocket';
 
-import { ICDocArea as BoardAreaModel } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
 
@@ -69,9 +71,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
   private _townController: TownController;
 
-  private _boardArea: BoardAreaModel;
-
-  protected _activeDocID?: CDocDocID;
+  private _boardArea: ICDocArea;
 
   /**
    * Constructs a new BoardAreaController, initialized with the state of the
@@ -79,28 +79,19 @@ export default class CovDocsAreaController extends InteractableAreaController<
    *
    * @param boardAreaModel The board area model that this controller should represent
    */
-  constructor(id: InteractableID, boardAreaModel: BoardAreaModel, townController: TownController) {
+  constructor(id: InteractableID, boardAreaModel: ICDocArea, townController: TownController) {
     // super(boardAreaModel.id);
     super(id);
     this._boardArea = boardAreaModel;
     this._townController = townController;
-    this._activeDocID = this._boardArea.activeDocument?.docID;
   }
 
   /**
-   * Gets the currently active doc
+   * Doesn't need to do anything, see TownController
+   * @returns true
    */
-  public get activeDocID(): CDocDocID | undefined {
-    return this._activeDocID;
-  }
-
-  //checks if their is an active document open
   public isActive(): boolean {
-    return this._boardArea.activeDocument !== undefined;
-  }
-
-  public get activeDocContent(): ICDocDocument | undefined {
-    return this._boardArea.activeDocument;
+    return true;
   }
 
   // Sends a request to server to overwrite document
@@ -125,7 +116,9 @@ export default class CovDocsAreaController extends InteractableAreaController<
   // which contains methods only available to validated users?
   //does this need to be async?
   async isARegisteredUser(user_id: CDocUserID): Promise<boolean> {
-    return this._boardArea.allRegisteredUsers.find(user => user === user_id) !== undefined;
+    const isRegistered =
+      this._boardArea.allRegisteredUsers.find(user => user === user_id) !== undefined;
+    return isRegistered;
   }
 
   /**
@@ -179,9 +172,10 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @returns
    */
   //what is this method used for?
-  public async getOpenedDocument(): Promise<string> {
-    if (this._boardArea.activeDocument)
-      return (await this.getDocByID(this._boardArea.activeDocument.docID)).content;
+  public async getOpenedDocument(user_id: CDocUserID): Promise<string> {
+    if (user_id === undefined) throw new Error('Given null user_id in getOpenedDocument');
+    if (this._boardArea.userToDocMap.hasActiveDoc(user_id))
+      return (await this.getDocByID(this._boardArea.userToDocMap.getActiveDoc(user_id))).content;
     else throw new Error('No active document');
   }
 
@@ -210,13 +204,20 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
   //what is this method used for?
   async getOwnedDocs(id: CDocUserID): Promise<CDocDocID[]> {
-    return [];
+    const { docs } = await this._townController.sendInteractableCommand<CDocGetOwnedDocsCommand>(
+      this.id,
+      {
+        type: 'GetOwnedDocs',
+        id: id,
+      },
+    );
+    return docs as CDocDocID[];
   }
 
   /**
    * @returns BoardAreaModel that represents the current state of this BoardAreaController
    */
-  public toInteractableAreaModel(): BoardAreaModel {
+  public toInteractableAreaModel(): ICDocArea {
     return this._boardArea;
   }
 
@@ -226,8 +227,9 @@ export default class CovDocsAreaController extends InteractableAreaController<
    *
    * @param updatedModel
    */
-  protected _updateFrom(updatedModel: BoardAreaModel): void {
-    const oldBoard = this._boardArea.activeDocument;
+  protected _updateFrom(updatedModel: ICDocArea): void {
+    return; // TODO: fix this method
+    const oldBoard = this._userID && this._boardArea.userToDocMap.hasActiveDoc(this._userID);
 
     const aDocWasOpen = oldBoard ? true : false;
 
@@ -235,7 +237,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
     this._boardArea = updatedModel;
 
-    const newBoard = this._boardArea.activeDocument;
+    const newBoard = this._userID && this._boardArea.userToDocMap.hasActiveDoc(this._userID);
 
     const aDocNowOpen = newBoard ? true : false;
 

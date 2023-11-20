@@ -90,13 +90,23 @@ export interface ICDocDocument {
  * TODO: find way to return a different model to each user
  */
 export interface ICDocArea extends Interactable {
-  userToDocMap: CDocActiveDocMap;
-  activeDocument?: ICDocDocument;
-  // until we can selectively send different documents to different users
-  // in the area, let's send everything
-  ownedDocuments: CDocDocID[];
+  userToDocMap: ICDocUserDataMap;
   allRegisteredUsers: PlayerID[];
 }
+/**
+ * Readonly interface.
+ */
+export interface ICDocUserDataMap {
+  isTrackingDoc(docid: string): boolean;
+  hasActiveDoc(userid: CDocUserID): boolean;
+  getActiveDoc(userid: CDocUserID): CDocDocID;
+
+  getOwnedDocs(userid: CDocUserID): CDocDocID[];
+
+  getOwnedDocsOrDefault(userid: CDocUserID): CDocDocID[];
+}
+
+
 
 export type CDocDocID = string;
 export type CDocUserID = string;

@@ -19,20 +19,14 @@ import {
 import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
 import { ICDocServer, MockCDocServer } from './ICDocServer';
-import CDocActiveDocMap from './CDocActiveDocMap';
+import { CDocUserDataMap } from './CDocUserDataMap';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
   private _server: ICDocServer = MockCDocServer.getInstance();
 
-  // TODO: I will duplicate the model state by caching it here and sending it
-  // in toModel, and also directly return parts of the model through the handleCommand return
-  private _activeDocument: ICDocDocument | undefined;
-
-  private _ownedDocuments: CDocDocID[];
-
-  private _userToDocMap: CDocActiveDocMap;
+  private _userToDocMap: CDocUserDataMap;
 
   /**
    * Creates a new ConversationArea
@@ -44,7 +38,7 @@ export default class CDocsArea extends InteractableArea {
   public constructor(id: string, coordinates: BoundingBox, townEmitter: TownEmitter) {
     super(id, coordinates, townEmitter);
 
-    this._userToDocMap = new CDocActiveDocMap();
+    this._userToDocMap = new CDocUserDataMap();
     this._server.addDocumentEditedListener(this._handleDocumentEdited);
   }
 
@@ -69,18 +63,16 @@ export default class CDocsArea extends InteractableArea {
     }
     if (command.type === 'GetOwnedDocs') {
       const docs = await this._server.getOwnedDocs(command.id);
-      this._ownedDocuments = docs;
+      this._userToDocMap.setOwnedDocs(command.id, docs);
       return { docs } as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'OpenDoc') {
       const doc = await this._server.getDoc(command.docid);
-      this._activeDocument = doc;
-      this._userToDocMap.setActiveDoc(command.userid, doc.boardID);
+      this._userToDocMap.setActiveDoc(command.userid, doc.docID);
       this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'CloseDoc') {
-      this._activeDocument = undefined;
       this._userToDocMap.closeActiveDoc(command.id);
       this._emitAreaChanged();
       return undefined as InteractableCommandReturnType<CommandType>;
@@ -96,6 +88,10 @@ export default class CDocsArea extends InteractableArea {
     }
     if (command.type === 'CreateNewDoc') {
       const doc: ICDocDocument = await this._server.createNewDoc(command.id);
+      this._userToDocMap.setOwnedDocs(
+        command.id,
+        this._userToDocMap.getOwnedDocsOrDefault(command.id).concat([doc.docID]),
+      );
       this._emitAreaChanged();
       return { doc } as InteractableCommandReturnType<CommandType>;
     }
@@ -108,8 +104,6 @@ export default class CDocsArea extends InteractableArea {
 
   toModel(): Interactable {
     const model: ICDocArea = {
-      activeDocument: this._activeDocument,
-      ownedDocuments: this._ownedDocuments,
       type: 'CDocsArea',
       id: this.id,
       occupants: this.occupantsByID,

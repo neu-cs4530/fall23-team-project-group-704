@@ -8,6 +8,7 @@ import {
   Center,
   Divider,
   RadioGroup,
+  Menu,
   MenuItem,
   MenuButton,
   MenuList,
@@ -39,7 +40,6 @@ import TownController, {
 import useTownController from '../../../../hooks/useTownController';
 import { CDocDocID, CDocUserID, InteractableID } from '../../../../types/CoveyTownSocket';
 import CovDocsAreaInteractable from '../CovDocsArea';
-import Menu from '../../../VideoCall/VideoFrontend/components/MenuBar/Menu/Menu';
 
 /**
  * The Permissions component allows the user to edit the viewers, editors, and owner of a document. It is embedded within the document
@@ -47,19 +47,23 @@ import Menu from '../../../VideoCall/VideoFrontend/components/MenuBar/Menu/Menu'
  * to the permissions screen. The overall CDocArea UI does not deal directly with the Permissions UI.)
  */
 
-//permissionsWereChanged: ({owner: CDocUserID, editors: CDocUserID[], viewers: CDocUserID[]}) => void
+//permissionsWereChanged: ({theOwner: CDocUserID, theEditors: CDocUserID[], theViewers: CDocUserID[]}) => void
 
 export default function CDocPermissions(props: {
   owner: CDocUserID;
   editors: CDocUserID[];
   viewers: CDocUserID[];
-  permissionsWereChanged: any;
+  permissionsWereChanged: (permissions: {
+    theOwner: CDocUserID;
+    theEditors: CDocUserID[];
+    theViewers: CDocUserID[];
+  }) => void;
 }): JSX.Element {
-  const [viewers, setViewers] = useState<CDocUserID>(props.viewers);
-  const [newViewers, setNewViewers] = useState<CDocUserID>(viewers);
+  const [viewers, setViewers] = useState<CDocUserID[]>(props.viewers);
+  const [newViewers, setNewViewers] = useState<CDocUserID[]>(viewers);
 
-  const [editors, setEditors] = useState<CDocUserID>(props.editors);
-  const [newEditors, setNewEditors] = useState<CDocUserID>(editors);
+  const [editors, setEditors] = useState<CDocUserID[]>(props.editors);
+  const [newEditors, setNewEditors] = useState<CDocUserID[]>(editors);
 
   const [owner, setOwner] = useState<CDocUserID>(props.owner);
   const [newOwner, setNewOwner] = useState(owner);
@@ -197,7 +201,7 @@ export default function CDocPermissions(props: {
           <MenuList>
             {viewers.map((user: CDocUserID) => {
               return (
-                <MenuItem onClick={handleClick(user)} key={user}>
+                <MenuItem onClick={() => handleClick(user)} key={user}>
                   {user}
                 </MenuItem>
               );
@@ -234,12 +238,12 @@ export default function CDocPermissions(props: {
       setOwner(newOwner);
       setEditors(newEditors);
       setViewers(newViewers);
-      props.permissionsWereChanged({ owner: owner, editors: editors, viewers: viewers });
+      props.permissionsWereChanged({ theOwner: owner, theEditors: editors, theViewers: viewers });
     }
 
     return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        <Button onClick={handleSaveClick()}>Save All Changes</Button>
+        <Button onClick={() => handleSaveClick()}>Save All Changes</Button>
       </GridItem>
     );
   }
@@ -253,7 +257,7 @@ export default function CDocPermissions(props: {
     function handleClick() {}
     return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        <Button onClick={handleClick()}>Exit</Button>
+        <Button onClick={handleClick}>Exit</Button>
       </GridItem>
     );
   }

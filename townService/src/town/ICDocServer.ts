@@ -25,10 +25,10 @@ export class MockCDocServer implements ICDocServer {
       owner: id,
       editors: [],
       viewers: [],
-      content: 'this is a freshly created new doc',
-      createdAt: undefined,
+      content: 'this is default content from the mock backend',
+      createdAt: 'some date',
       docID: nanoid(),
-      docName: 'Default name',
+      docName: 'Default Backend Name',
     });
     return this._mockOwnedDocs[i - 1];
   }
@@ -48,14 +48,30 @@ export class MockCDocServer implements ICDocServer {
   }
 
   async getDoc(docid: string): Promise<ICDocDocument> {
+    if (docid === undefined) throw new Error('doc id is udnefined');
     const foundDoc = this._mockOwnedDocs.find(doc => doc.docID === docid);
 
     if (foundDoc) return foundDoc;
-    throw new Error('Doc not found');
+    throw new Error(`doc not found: ${docid}`);
   }
 
   async writeToDoc(docid: string, content: string): Promise<void> {
-    const doc = await this.getDoc(docid);
-    doc.content = content;
+    const i = this._mockOwnedDocs.findIndex(doc => doc.docID === docid);
+
+    if (i === -1) throw new Error('Tried to write to non existent doc');
+    this._mockOwnedDocs[i] = this._changeDocContent(this._mockOwnedDocs[i], content);
+  }
+
+  private _changeDocContent(doc: ICDocDocument, content: string): ICDocDocument {
+    const newDoc: ICDocDocument = {
+      createdAt: doc.createdAt,
+      owner: doc.owner,
+      docID: doc.docID,
+      docName: doc.docName,
+      editors: doc.editors,
+      viewers: doc.viewers,
+      content,
+    };
+    return newDoc;
   }
 }

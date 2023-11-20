@@ -84,7 +84,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
     super(id);
     this._boardArea = boardAreaModel;
     this._townController = townController;
-    this._activeDocID = this._boardArea.activeDocument?.boardID;
+    this._activeDocID = this._boardArea.activeDocument?.docID;
   }
 
   /**
@@ -104,12 +104,12 @@ export default class CovDocsAreaController extends InteractableAreaController<
   }
 
   // Sends a request to server to overwrite document
-  public async writeToDoc(newDoc: string) {
+  public async writeToDoc(docid: CDocDocID, newDoc: string) {
     await this._townController.sendInteractableCommand<CDocWriteDocCommand>(this.id, {
       //add docId param to this command type?
       type: 'WriteDoc',
       content: newDoc,
-      docid: newDoc,
+      docid: docid,
     });
   }
 
@@ -156,7 +156,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
         id: user_id,
       },
     );
-    return doc.boardID;
+    return (doc as ICDocDocument).docID;
   }
 
   /**
@@ -180,7 +180,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
   //what is this method used for?
   public async getOpenedDocument(): Promise<string> {
     if (this._boardArea.activeDocument)
-      return this.getDocByID(this._boardArea.activeDocument.boardID);
+      return (await this.getDocByID(this._boardArea.activeDocument.docID)).content;
     else throw new Error('No active document');
   }
 
@@ -194,7 +194,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
       type: 'GetDoc',
       docid: id,
     });
-    return doc;
+    return doc as ICDocDocument;
   }
 
   /**
@@ -242,8 +242,8 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
     //add emit statements for ui
     if (aDocWasOpen !== aDocNowOpen) {
-      if (aDocNowOpen) {
-        this.emit('docOpened');
+      if (aDocNowOpen && this._activeDocID) {
+        this.emit('docOpened', this._activeDocID);
       } else {
         this.emit('docClosed');
       }

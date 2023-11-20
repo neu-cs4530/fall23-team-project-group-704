@@ -18,19 +18,20 @@ export default function CDocument({
 
   useEffect(() => {
     const interval = setInterval(
-      () => editorRef.current && controller.writeToDoc(editorRef.current.getContent()),
+      () =>
+        editorRef.current && controller.writeToDoc(document.docID, editorRef.current.getContent()),
       5000,
     );
     return () => {
       clearInterval(interval);
     };
-  }, [controller]);
+  }, [controller, document.docID]);
 
   return (
     <>
       <Editor
         onInit={(evt, editor) => (editorRef.current = editor)}
-        initialValue='<p>This is the initial content of the editor.</p>'
+        initialValue={document.content}
         init={{
           height: 500,
           menubar: false,

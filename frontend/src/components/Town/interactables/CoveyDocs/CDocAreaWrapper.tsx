@@ -11,41 +11,45 @@ import CDocument from './CDocument';
 import { CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
 import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
 
+// TODO: hook up to CovDocsAreaController events
+// docUpdated -> need to set the currentDocument to the new one
+// ownedDocsChanged -> change the ownedDocs state variable
+// etc
 export default function CDocAreaWrapper(): JSX.Element {
   const coveyTownController = useTownController();
   const newConversation = useInteractable<CovDocsArea>('cdocsArea');
-  const document = {
+  /** const document = {
     createdAt: new Date().toDateString(),
     owner: nanoid(),
-    docID: nanoid(),
+    docID: 'fake_id',
     docName: 'my first document',
     editors: [],
     viewers: [],
     content: 'string',
-  };
+  };*/
   //  const documents = [document, document, document, document];
   const [signedIn, setSignedIn] = useState(false);
   const [pages, setPages] = useState(1);
-  const [currentDocId, setCurrentDocId] = useState('');
+  const [currentDocId, setCurrentDocId] = useState('fake_frontend_id');
   const [currentDocument, setCurrentDocument] = useState<ICDocDocument>({
     createdAt: new Date().toDateString(),
-    owner: 'Some test name',
-    docID: nanoid(),
+    owner: 'Ise',
+    docID: 'fake_frontend_id',
     docName: 'UI-side default',
     editors: [],
     viewers: [],
     content: 'UI-side default content',
   });
+  const [ownedDocs, setOwnedDocs] = useState<ICDocDocument[]>([]);
   const [userID, setUserID] = useState<CDocUserID>('Ise');
 
-  let covDocsAreaController: CovDocsAreaController | undefined = undefined;
-
-  if (newConversation) {
-    covDocsAreaController = coveyTownController.getCovDocsAreaController(newConversation);
-  }
+  const [cDocAreaController, setCDocAreaController] = useState<CovDocsAreaController | undefined>(
+    undefined,
+  );
 
   const isOpen = newConversation !== undefined;
 
+  // not sure what this does
   useEffect(() => {
     if (newConversation) {
       coveyTownController.pause();
@@ -60,15 +64,24 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
   }, [coveyTownController, newConversation]);
 
+  // callback passed to child component
   const handleSignin = () => {
     // await sign in/up user
     setPages(pages + 1);
   };
 
-  const handleDocument = (docId: string) => {
-    setCurrentDocId(docId);
-    setPages(pages + 1);
-  };
+  // sets the current document and switches to the document editor
+  const handleDocument = useCallback(
+    async (docId: string) => {
+      setCurrentDocId(docId);
+
+      if (cDocAreaController) {
+        setCurrentDocument(await cDocAreaController?.getDocByID(docId));
+        setPages(pages + 1);
+      }
+    },
+    [cDocAreaController, pages],
+  );
 
   const handleBackToDirectory = () => {
     setPages(2);
@@ -84,16 +97,23 @@ export default function CDocAreaWrapper(): JSX.Element {
   }, [currentDocId, getDocument]);*/
 
   const generateTestingDoc = useCallback(async () => {
-    if (covDocsAreaController) {
-      const docid = await covDocsAreaController.addNewDocument(userID);
-      setCurrentDocId(docid);
-      setCurrentDocument(await covDocsAreaController.getDocByID(docid));
+    if (cDocAreaController) {
+      const docid = await cDocAreaController.addNewDocument(userID);
+      const doc = await cDocAreaController.getDocByID(docid);
+      setOwnedDocs([doc]);
     }
-  }, [covDocsAreaController, userID]);
+  }, [cDocAreaController, userID]);
 
+  // generate the testing doc whenever our cdocareacontroller becomes non null
   useEffect(() => {
     generateTestingDoc();
-  }, [covDocsAreaController, generateTestingDoc, userID]);
+  }, [cDocAreaController, generateTestingDoc, userID]);
+
+  // update the cdocareacontroller whenever our newConversation becomes non null
+  useEffect(() => {
+    if (newConversation)
+      setCDocAreaController(coveyTownController.getCovDocsAreaController(newConversation));
+  }, [coveyTownController, newConversation]);
 
   return (
     <Modal
@@ -105,13 +125,11 @@ export default function CDocAreaWrapper(): JSX.Element {
       <ModalOverlay />
       <ModalContent>
         {pages === 1 && <CDocSignin signIn={handleSignin} />}
-        {pages === 2 && (
-          <CDocDirectory documents={[currentDocument]} handleClick={handleDocument} />
-        )}
-        {pages === 3 && covDocsAreaController && (
+        {pages === 2 && <CDocDirectory documents={ownedDocs} handleClick={handleDocument} />}
+        {pages === 3 && cDocAreaController && (
           <CDocument
             document={currentDocument}
-            controller={covDocsAreaController}
+            controller={cDocAreaController}
             handleBackToDirectory={handleBackToDirectory}></CDocument>
         )}
         <ModalFooter>

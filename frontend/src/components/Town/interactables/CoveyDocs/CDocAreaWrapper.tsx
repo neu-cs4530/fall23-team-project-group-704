@@ -123,12 +123,25 @@ export default function CDocAreaWrapper(): JSX.Element {
         const result = await cDocAreaController.getDocByID(currentDocId);
         setCurrentDocument(result);
       };
+      const newDocumentCreated = async () => {
+        //setEditors(cDocAreaController.viewers);
+        //setViewers(cDocAreaController.editors);
+        const docIds = await cDocAreaController.getOwnedDocs(userID);
+        const docs: Promise<ICDocDocument>[] = [];
+        for (const id of docIds) {
+          docs.push(cDocAreaController.getDocByID(id));
+        }
+        setOwnedDocs(await Promise.all(docs));
+      };
       cDocAreaController.addListener('docUpdated', updateDoument);
+      cDocAreaController.addListener('newDocumentCreated', newDocumentCreated);
+
       return () => {
         cDocAreaController.removeListener('docUpdated', updateDoument);
+        cDocAreaController.removeListener('newDocumentCreated', newDocumentCreated);
       };
     }
-  }, [cDocAreaController, coveyTownController, currentDocId, newConversation]);
+  }, [cDocAreaController, coveyTownController, currentDocId, newConversation, userID]);
 
   return (
     <Modal

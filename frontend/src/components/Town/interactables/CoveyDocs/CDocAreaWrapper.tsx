@@ -115,6 +115,21 @@ export default function CDocAreaWrapper(): JSX.Element {
       setCDocAreaController(coveyTownController.getCovDocsAreaController(newConversation));
   }, [coveyTownController, newConversation]);
 
+  useEffect(() => {
+    if (cDocAreaController !== undefined) {
+      const updateDoument = async () => {
+        //setEditors(cDocAreaController.viewers);
+        //setViewers(cDocAreaController.editors);
+        const result = await cDocAreaController.getDocByID(currentDocId);
+        setCurrentDocument(result);
+      };
+      cDocAreaController.addListener('docUpdated', updateDoument);
+      return () => {
+        cDocAreaController.removeListener('docUpdated', updateDoument);
+      };
+    }
+  }, [cDocAreaController, coveyTownController, currentDocId, newConversation]);
+
   return (
     <Modal
       isOpen={isOpen}

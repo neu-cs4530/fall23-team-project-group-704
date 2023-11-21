@@ -23,8 +23,12 @@ const Form = styled.div`
 
 interface SignInProps {
   signUp: () => void;
+  signIn: () => void;
 }
-export default function CDocSignin({ signUp: signUp = () => {} }: SignInProps) {
+export default function CDocSignin({
+  signUp: signUp = () => {},
+  signIn: signIn = () => {},
+}: SignInProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isUser, setIsUser] = useState(false);
@@ -62,7 +66,7 @@ export default function CDocSignin({ signUp: signUp = () => {} }: SignInProps) {
       <Button mt={4} colorScheme='teal' isLoading={false} type='submit' onClick={signUp}>
         Sign up
       </Button>
-      <Button className={'signin'} onClick={() => setIsUser(true)}>
+      <Button className={'signin'} onClick={signIn}>
         Sign in
       </Button>
     </Form>

@@ -1,8 +1,7 @@
 import { ICDocDocument } from '../../../../types/CoveyTownSocket';
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { nanoid } from 'nanoid';
-import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table } from '@chakra-ui/react';
+import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table, Button } from '@chakra-ui/react';
 
 const StyledDocument = styled(Tr)`
   &:hover {
@@ -30,24 +29,24 @@ const StyledDirectory = styled(TableContainer)`
  * @returns
  */
 
-interface clickProps {
-  handleClick: () => void;
-}
 export default function CDocDirectory({
   documents,
   handleClick,
+  handleClickPermissions,
 }: {
   documents: ICDocDocument[];
   handleClick: (docId: string) => void;
+  handleClickPermissions: () => void;
 }): JSX.Element {
-  const [docId, setDocId] = useState('');
-
   const cdocs = documents.map((d, index) => {
     return (
-      <StyledDocument key={index} onClick={() => handleClick(d.docID)}>
-        <Td>{d.docName}</Td>
+      <StyledDocument key={index}>
+        <Td onClick={() => handleClick(d.docID)}>{d.docName}</Td>
         <Td>{d.owner}</Td>
         <Td>{d.createdAt}</Td>
+        <Td>
+          <Button onClick={handleClickPermissions}>Edit Permissions</Button>
+        </Td>
       </StyledDocument>
     );
   });
@@ -62,6 +61,7 @@ export default function CDocDirectory({
             <Th>Name</Th>
             <Th>Owner</Th>
             <Th isNumeric>Created At</Th>
+            <Th>Permissions</Th>
           </Tr>
         </Thead>
         <Tbody>{cdocs}</Tbody>

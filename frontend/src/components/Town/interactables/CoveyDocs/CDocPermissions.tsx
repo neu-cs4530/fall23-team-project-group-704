@@ -12,7 +12,6 @@ import {
   MenuItem,
   MenuButton,
   MenuList,
-  ChevronDownIcon,
   Stack,
   Radio,
   Heading,
@@ -29,6 +28,7 @@ import {
   ModalOverlay,
   useToast,
 } from '@chakra-ui/react';
+// import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
 import React, { useCallback, useEffect, useState } from 'react';
 import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
@@ -58,6 +58,7 @@ export default function CDocPermissions(props: {
     theEditors: CDocUserID[];
     theViewers: CDocUserID[];
   }) => void;
+  handleExit: () => void;
 }): JSX.Element {
   const [viewers, setViewers] = useState<CDocUserID[]>(props.viewers);
   const [newViewers, setNewViewers] = useState<CDocUserID[]>(viewers);
@@ -187,30 +188,28 @@ export default function CDocPermissions(props: {
    * Clicking a user's id through the dropdown menu populates the 'transfer ownership to' field, and ownership is transferred after
    * clicking the save all changes button.
    */
-  function DrawOwnershipBox() {
-    function TransferOwnershipButton() {
-      function handleClick(user: CDocUserID) {
-        setNewOwner(user);
-      }
 
-      return (
-        <Menu>
-          <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-            Transfer Ownership
-          </MenuButton>
-          <MenuList>
-            {viewers.map((user: CDocUserID) => {
-              return (
-                <MenuItem onClick={() => handleClick(user)} key={user}>
-                  {user}
-                </MenuItem>
-              );
-            })}
-          </MenuList>
-        </Menu>
-      );
+  function TransferOwnershipButton() {
+    function handleClick(user: CDocUserID) {
+      setNewOwner(user);
     }
-
+    //rightIcon={<ChevronDownIcon />}
+    return (
+      <Menu>
+        <MenuButton as={Button}>Transfer Ownership</MenuButton>
+        <MenuList>
+          {viewers.map((user: CDocUserID) => {
+            return (
+              <MenuItem onClick={() => handleClick(user)} key={user}>
+                {user}
+              </MenuItem>
+            );
+          })}
+        </MenuList>
+      </Menu>
+    );
+  }
+  function DrawOwnershipBox() {
     return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
         <Box>The Owner of this document is:</Box>
@@ -254,7 +253,9 @@ export default function CDocPermissions(props: {
    */
   function DrawExitButton() {
     //implement this the same way that permissionswerechanged was implemented? first see if that works
-    function handleClick() {}
+    function handleClick() {
+      props.handleExit();
+    }
     return (
       <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
         <Button onClick={handleClick}>Exit</Button>

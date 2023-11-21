@@ -11,6 +11,7 @@ export default function CDocument({
   document: ICDocDocument;
   controller: CovDocsAreaController;
   handleBackToDirectory: () => void;
+  handlePermissions: () => void;
 }): JSX.Element {
   const editorRef = useRef<any>(null);
 

@@ -43,7 +43,9 @@ export type CovDocsEvents = BaseInteractableEventMap & {
   docUpdated: (newContent: string) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
   userLoggedIn: (user_id: CDocUserID) => void;
-  newDocumentCreated: () => void;
+  // sends the id of the new document created, and if it is valid
+  // it isn't valid if we don't know which is the newly created document
+  newDocumentCreated: (docid: CDocDocID, valid_id: boolean) => void;
   userLoggedOut: (user_id: CDocUserID) => void;
   //add one for active users changed and add a field for active users in board area?
 };
@@ -149,6 +151,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
         id: user_id,
       },
     );
+    this.emit('newDocumentCreated', (doc as ICDocDocument).docID, true);
     return (doc as ICDocDocument).docID;
   }
 

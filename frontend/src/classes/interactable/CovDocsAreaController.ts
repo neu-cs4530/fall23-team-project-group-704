@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _, { has } from 'lodash';
 import PlayerController from '../PlayerController';
 import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
@@ -24,6 +24,7 @@ import {
   CDocPassword,
   CDocGetOwnedDocsCommand,
   InteractableCommandReturnType,
+  CDocValidateUserCommand,
 } from '../../types/CoveyTownSocket';
 
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
@@ -73,7 +74,10 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
   private _townController: TownController;
 
+  // a cached state to fire the appropriate update events
   private _boardArea: ICDocArea;
+
+  private _userID: string | undefined;
 
   /**
    * Constructs a new BoardAreaController, initialized with the state of the
@@ -121,6 +125,25 @@ export default class CovDocsAreaController extends InteractableAreaController<
     const isRegistered =
       this._boardArea.allRegisteredUsers.find(user => user === user_id) !== undefined;
     return isRegistered;
+  }
+
+  /**
+   * Tries to sign in the user. If successful, this controller now belongs to that user.
+   * @param userID
+   * @param password
+   * @returns
+   */
+  async signInUser(userID: CDocUserID, password: CDocPassword): Promise<boolean> {
+    const { validation } =
+      await this._townController.sendInteractableCommand<CDocValidateUserCommand>(this.id, {
+        type: 'ValidateUser',
+        id: userID,
+        password: password,
+      });
+
+    if (validation) this._userID = userID;
+
+    return validation as boolean;
   }
 
   /**
@@ -231,43 +254,52 @@ export default class CovDocsAreaController extends InteractableAreaController<
    * @param updatedModel
    */
   protected _updateFrom(updatedModel: ICDocArea): void {
-    return; // TODO: fix this method
-    const oldBoard = this._userID && this._boardArea.userToDocMap.hasActiveDoc(this._userID);
-
-    const aDocWasOpen = oldBoard ? true : false;
-
-    const previousUsers = this._boardArea.allRegisteredUsers;
-
+    const oldBoard = this._boardArea;
     this._boardArea = updatedModel;
 
-    const newBoard = this._userID && this._boardArea.userToDocMap.hasActiveDoc(this._userID);
-
-    const aDocNowOpen = newBoard ? true : false;
-
-    const currentUsers = this._boardArea.allRegisteredUsers;
-
-    //add emit statements for ui
-    if (aDocWasOpen !== aDocNowOpen) {
-      if (aDocNowOpen && this._activeDocID) {
-        this.emit('docOpened', this._activeDocID);
-      } else {
-        this.emit('docClosed');
-      }
-    }
-
-    if (aDocWasOpen) {
-      if (oldBoard?.content !== newBoard?.content) {
-        //need a different way to measure equality for boards?
-        if (newBoard) this.emit('docUpdated', newBoard.content);
-        else throw new Error('New board was null');
-      }
-    }
-
-    if (previousUsers !== currentUsers) {
+    if (oldBoard.allRegisteredUsers !== this._boardArea.allRegisteredUsers) {
       this.emit(
         'newUserRegistered',
         updatedModel.allRegisteredUsers[updatedModel.allRegisteredUsers.length - 1],
       );
     }
+
+    if (this._userID) {
+      const hadOpenDoc = oldBoard.userToDocMap.hasActiveDoc(this._userID);
+      const hasOpenDoc = updatedModel.userToDocMap.hasActiveDoc(this._userID);
+
+      //add emit statements for ui
+      if (!hadOpenDoc && hasOpenDoc) {
+        this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
+      } else if (
+        hadOpenDoc &&
+        hasOpenDoc &&
+        oldBoard.userToDocMap.getActiveDoc(this._userID) !==
+          updatedModel.userToDocMap.getActiveDoc(this._userID)
+      ) {
+        this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
+      } else if (
+        hadOpenDoc &&
+        hasOpenDoc &&
+        oldBoard.userToDocMap.getActiveDoc(this._userID) ===
+          updatedModel.userToDocMap.getActiveDoc(this._userID)
+      ) {
+        this._sendDocUpdated(updatedModel.userToDocMap.getActiveDoc(this._userID));
+      } else if (hadOpenDoc && !hasOpenDoc) {
+        this.emit('docClosed');
+      }
+
+      const prevOwnedDocs = oldBoard.userToDocMap.getOwnedDocs(this._userID);
+      const newOwnedDocs = updatedModel.userToDocMap.getOwnedDocs(this._userID);
+
+      // TODO: this is brittle, what about doc deletion?
+      if (newOwnedDocs.length > prevOwnedDocs.length) {
+        this.emit('newDocumentCreated');
+      }
+    }
+  }
+
+  private async _sendDocUpdated(docID: CDocDocID) {
+    this.emit('docUpdated', (await this.getDocByID(docID)).content);
   }
 }

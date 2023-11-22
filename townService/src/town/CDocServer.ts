@@ -1,7 +1,9 @@
+import { nanoid } from 'nanoid';
 import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
 import { ICDocServer } from './ICDocServer';
 import Document from '../api/document';
 import appDataSource from '../api/datasource';
+import User from '../api/user';
 
 // TODO: change ids from numbers to right type
 /** We will do all operations directly to database for now. */
@@ -12,6 +14,17 @@ export default class CDocServer implements ICDocServer {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {}
+
+  public async validateUser(id: string, password: string): Promise<boolean> {
+    const users = await appDataSource
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.id = :id', { id })
+      .andWhere('user.password = :password', { password })
+      .getMany();
+    return users.length === 1;
+  }
 
   public addDocumentEditedListener(listener: (docid: string) => void): void {
     this._listeners.push(listener);
@@ -29,9 +42,9 @@ export default class CDocServer implements ICDocServer {
     return CDocServer._instance;
   }
 
-  async createNewDoc(user_id: string): Promise<ICDocDocument> {
+  public async createNewDoc(user_id: string): Promise<ICDocDocument> {
     const newDoc: Document = {
-      id: 'invalid',
+      id: nanoid(),
       userId: user_id,
       name: 'Default Doc',
       allowedUsersView: [],
@@ -49,15 +62,25 @@ export default class CDocServer implements ICDocServer {
     return this.getDoc(newID.generatedMaps[0].id);
   }
 
-  validateUser(id: string): Promise<boolean> {
-    throw new Error('Method not implemented.');
+  public async createNewUser(username: string, password: string) {
+    const users = await appDataSource
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.id = :id', { username })
+      .getMany();
+
+    if (users.length !== 0) throw new Error('User already exists');
+
+    const newUser: User = {
+      id: username,
+      userName: username,
+      password,
+    };
+    await appDataSource.createQueryBuilder().insert().into(User).values([newUser]).execute();
   }
 
-  async createNewUser(username: string, password: string) {
-    throw new Error('Method not implemented.');
-  }
-
-  async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
+  public async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
     const docs = await appDataSource
       .createQueryBuilder()
       .select('doc')
@@ -65,10 +88,6 @@ export default class CDocServer implements ICDocServer {
       .where('doc.id = :id', { id: docid })
       .getMany();
     return docs.map(doc => String(doc.id));
-  }
-
-  public loadIfNotLoaded(docid: CDocDocID) {
-    throw new Error('Not implemented');
   }
 
   public async writeToDoc(docid: CDocDocID, content: string) {
@@ -93,13 +112,13 @@ export default class CDocServer implements ICDocServer {
       throw new Error();
     } else {
       const doc: ICDocDocument = {
-        createdBy: document.userId,
-        owner: '',
-        boardID: String(document.id),
-        boardName: document.id,
+        owner: document.userId,
         editors: document.allowedUsersEdit,
         viewers: document.allowedUsersView,
         content: document.data,
+        createdAt: 'need to implement this',
+        docID: document.id,
+        docName: document.name,
       };
       return doc;
     }

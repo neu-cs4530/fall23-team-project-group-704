@@ -520,10 +520,10 @@
                  "y":1056.00016666667
                 }, 
                 {
-                 "type":"CDocsArea",
+                 "type":"ConversationArea",
                  "height":224,
                  "id":31,
-                 "name":"Doc Area",
+                 "name":"Basement Dining Table 2",
                  "rotation":0,
                  "visible":true,
                  "width":164.667,
@@ -540,20 +540,6 @@
                          "name":"video",
                          "type":"string",
                          "value":"https:\/\/www.youtube.com\/watch?v=l40Ef1dg-6s"
-                        }],
-                 "rotation":0,
-                 "visible":true,
-                 "width":141.666666666667,
-                 "x":3248.33333333333,
-                 "y":868.333333333333
-                },
-                {
-                 "type":"CDocsArea",
-                 "height":123.333333333333,
-                 "id":99,
-                 "name":"Doc Area",
-                 "properties":[
-                        {
                         }],
                  "rotation":0,
                  "visible":true,

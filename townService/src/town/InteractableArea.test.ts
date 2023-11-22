@@ -14,9 +14,9 @@ import ConversationArea from './ConversationArea';
 import InteractableArea, { PLAYER_SPRITE_HEIGHT, PLAYER_SPRITE_WIDTH } from './InteractableArea';
 
 class TestInteractableArea extends InteractableArea {
-  public handleCommand<
-    CommandType extends InteractableCommand,
-  >(): InteractableCommandReturnType<CommandType> {
+  public async handleCommand<CommandType extends InteractableCommand>(): Promise<
+    InteractableCommandReturnType<CommandType>
+  > {
     throw new Error('Method not implemented.');
   }
 

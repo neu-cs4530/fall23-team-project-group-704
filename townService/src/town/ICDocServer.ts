@@ -1,5 +1,4 @@
 import { nanoid } from 'nanoid';
-import { listenerCount } from 'process';
 import { CDocDocID, CDocPassword, CDocUserID, ICDocDocument } from '../types/CoveyTownSocket';
 
 export interface ICDocServer {

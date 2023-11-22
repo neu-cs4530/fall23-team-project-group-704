@@ -8,7 +8,7 @@ import CDocSignin from './CDocSignin';
 import { nanoid } from 'nanoid';
 import CDocDirectory from './CDocDirectory';
 import CDocument from './CDocument';
-import { CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
+import { CDocDocID, CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
 import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
 import CDocPermissions from './CDocPermissions';
 
@@ -145,6 +145,40 @@ export default function CDocAreaWrapper(): JSX.Element {
   const handleExitPermissions = () => {
     setPages(3);
   };
+
+  useEffect(() => {
+    if (cDocAreaController !== undefined) {
+      const updateDoument = async () => {
+        //setEditors(cDocAreaController.viewers);
+        //setViewers(cDocAreaController.editors);
+        const result = await cDocAreaController.getDocByID(currentDocId);
+        setCurrentDocument(result);
+      };
+      const newDocumentCreated = async (docid: CDocDocID, valid: boolean) => {
+        //setEditors(cDocAreaController.viewers);
+        //setViewers(cDocAreaController.editors);
+        const docIds = await cDocAreaController.getOwnedDocs(userID);
+        const docs: Promise<ICDocDocument>[] = [];
+        for (const id of docIds) {
+          docs.push(cDocAreaController.getDocByID(id));
+        }
+        setOwnedDocs(await Promise.all(docs));
+
+        if (valid) {
+          setCurrentDocId(docid);
+          setCurrentDocument(await cDocAreaController.getDocByID(docid));
+        }
+      };
+      cDocAreaController.addListener('docUpdated', updateDoument);
+      cDocAreaController.addListener('newDocumentCreated', newDocumentCreated);
+
+      return () => {
+        cDocAreaController.removeListener('docUpdated', updateDoument);
+        cDocAreaController.removeListener('newDocumentCreated', newDocumentCreated);
+      };
+    }
+  }, [cDocAreaController, coveyTownController, currentDocId, newConversation, userID]);
+
   return (
     <Modal
       isOpen={isOpen}

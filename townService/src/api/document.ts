@@ -20,7 +20,4 @@ export default class Document {
 
   @Column()
   data: string;
-
-  @Column()
-  uploaded_data: string[];
 }

@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import Document from './document';
-import DocumentDirectory from './documentdirectory';
 import User from './user';
 
 const appDataSource: DataSource = new DataSource({
@@ -10,7 +9,7 @@ const appDataSource: DataSource = new DataSource({
   username: 'coveydocs_user',
   password: 'BnMjyOzetiuOg8VECO3gWl5KeYp5w4iZ',
   database: 'coveydocs',
-  entities: [Document, DocumentDirectory, User],
+  entities: [Document, User],
 });
 
 export default appDataSource;

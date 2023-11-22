@@ -1,5 +1,5 @@
 import { ICDocDocument } from '../../../../types/CoveyTownSocket';
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table, Button } from '@chakra-ui/react';
 

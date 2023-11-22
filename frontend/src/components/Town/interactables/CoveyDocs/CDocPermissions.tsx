@@ -1,10 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
   Center,
   Divider,
   RadioGroup,
@@ -17,32 +12,17 @@ import {
   Flex,
   Text,
   Heading,
-  ModalFooter,
   Box,
   Button,
   Grid,
   GridItem,
   List,
   ListItem,
-  Modal,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
-  useToast,
 } from '@chakra-ui/react';
 // import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
-import React, { useCallback, useEffect, useState } from 'react';
-import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
-import PlayerController from '../../../../classes/PlayerController';
-import TownController, {
-  useInteractable,
-  useInteractableAreaController,
-} from '../../../../classes/TownController';
-import useTownController from '../../../../hooks/useTownController';
-import { CDocDocID, CDocUserID, InteractableID } from '../../../../types/CoveyTownSocket';
-import CovDocsAreaInteractable from '../CovDocsArea';
+import React, { useState } from 'react';
+import { CDocUserID } from '../../../../../../shared/types/CoveyTownSocket';
 
 /**
  * The Permissions component allows the user to edit the viewers, editors, and owner of a document. It is embedded within the document

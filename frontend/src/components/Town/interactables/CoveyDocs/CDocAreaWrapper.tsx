@@ -10,6 +10,7 @@ import CDocDirectory from './CDocDirectory';
 import CDocument from './CDocument';
 import { CDocDocID, CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
 import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
+import CDocPermissions from './CDocPermissions';
 
 // TODO: hook up to CovDocsAreaController events
 // docUpdated -> need to set the currentDocument to the new one
@@ -47,6 +48,14 @@ export default function CDocAreaWrapper(): JSX.Element {
     undefined,
   );
 
+  const [owner, setOwner] = useState<CDocUserID>(currentDocument ? currentDocument.owner : '');
+  const [editors, setEditors] = useState<CDocUserID[]>(
+    currentDocument ? currentDocument.editors : [],
+  );
+  const [viewers, setViewers] = useState<CDocUserID[]>(
+    currentDocument ? currentDocument.viewers : [],
+  );
+
   const isOpen = newConversation !== undefined;
 
   // not sure what this does
@@ -70,11 +79,15 @@ export default function CDocAreaWrapper(): JSX.Element {
     setPages(pages + 1);
   };
 
+  const handleSignup = () => {
+    setPages(pages + 1);
+  };
+
   // sets the current document and switches to the document editor
   const handleDocument = useCallback(
     async (docId: string) => {
       setCurrentDocId(docId);
-
+      alert('hello');
       if (cDocAreaController) {
         setCurrentDocument(await cDocAreaController?.getDocByID(docId));
         setPages(pages + 1);
@@ -114,6 +127,24 @@ export default function CDocAreaWrapper(): JSX.Element {
     if (newConversation)
       setCDocAreaController(coveyTownController.getCovDocsAreaController(newConversation));
   }, [coveyTownController, newConversation]);
+
+  const handleChangePermissions = (permissions: {
+    theOwner: string;
+    theEditors: string[];
+    theViewers: string[];
+  }) => {
+    setOwner(permissions.theOwner);
+    setEditors(permissions.theEditors);
+    setViewers(permissions.theViewers);
+  };
+
+  const handleClickPermissions = () => {
+    setPages(4);
+  };
+
+  const handleExitPermissions = () => {
+    setPages(3);
+  };
 
   useEffect(() => {
     if (cDocAreaController !== undefined) {
@@ -157,13 +188,27 @@ export default function CDocAreaWrapper(): JSX.Element {
       }}>
       <ModalOverlay />
       <ModalContent>
-        {pages === 1 && <CDocSignin signIn={handleSignin} />}
-        {pages === 2 && <CDocDirectory documents={ownedDocs} handleClick={handleDocument} />}
+        {pages === 1 && <CDocSignin signIn={handleSignin} signUp={handleSignup} />}
+        {pages === 2 && (
+          <CDocDirectory
+            documents={ownedDocs}
+            handleClick={handleDocument}
+            handleClickPermissions={handleClickPermissions}
+          />
+        )}
         {pages === 3 && cDocAreaController && (
           <CDocument
             document={currentDocument}
             controller={cDocAreaController}
             handleBackToDirectory={handleBackToDirectory}></CDocument>
+        )}
+        {pages === 4 && (
+          <CDocPermissions
+            owner={currentDocument.owner}
+            editors={currentDocument.editors}
+            viewers={currentDocument.viewers}
+            permissionsWereChanged={handleChangePermissions}
+            handleExit={handleExitPermissions}></CDocPermissions>
         )}
         <ModalFooter>
           <Button onClick={closeModal}>Cancel</Button>

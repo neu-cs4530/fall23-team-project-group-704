@@ -43,10 +43,12 @@ function CDocArea({ interactableID }: { interactableID: InteractableID }): JSX.E
     //do something with auth0
   }
 
+  function signIn() {}
+
   //renders the initial, login screen
   function DrawLoginScreen() {
     return (
-      <CDocSignin signUp={signUp} />
+      <CDocSignin signIn={signIn} signUp={signUp} />
       // <Grid templateRows='repeat(7, 1fr)' templateColumns='repeat(6, 1fr)' width='500px' gap={4}>
       //   Hello, welcome to CoveyBoards
       //   {<DrawLoginLabel />}

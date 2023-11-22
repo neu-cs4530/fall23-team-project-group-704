@@ -1,5 +1,4 @@
 import Interactable, { KnownInteractableTypes } from '../Interactable';
-import CDocDirectory from './CoveyDocs/CDocDirectory';
 
 export default class CovDocsArea extends Interactable {
   private _isInteracting = false;

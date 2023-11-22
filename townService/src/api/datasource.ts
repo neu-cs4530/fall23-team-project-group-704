@@ -11,11 +11,4 @@ const appDataSource: DataSource = new DataSource({
 
 export default appDataSource;
 
-appDataSource
-  .initialize()
-  .then(() => {
-    console.log('Data Source has been initialized!');
-  })
-  .catch(err => {
-    console.error('Error during Data Source initialization', err);
-  });
+appDataSource.initialize();

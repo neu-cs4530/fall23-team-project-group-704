@@ -1,4 +1,3 @@
-import CovDocsArea from '../components/Town/interactables/CovDocsArea';
 import {
   ConversationArea,
   Interactable,

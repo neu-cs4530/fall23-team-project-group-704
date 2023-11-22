@@ -1,7 +1,5 @@
-import { mock, mockClear } from 'jest-mock-extended';
+import { mock } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
-import { PlayerLocation, WinnableGameState } from '../../types/CoveyTownSocket';
-import PlayerController from '../PlayerController';
 import CovDocsAreaController from './CovDocsAreaController';
 import TownController from '../TownController';
 describe('[T2] CBoardAreaController', () => {

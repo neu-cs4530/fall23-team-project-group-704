@@ -33,10 +33,12 @@ export default function CDocDirectory({
   documents,
   handleClick,
   handleClickPermissions,
+  handleNewDoc,
 }: {
   documents: ICDocDocument[];
   handleClick: (docId: string) => void;
   handleClickPermissions: () => void;
+  handleNewDoc: () => void;
 }): JSX.Element {
   const cdocs = documents.map((d, index) => {
     return (
@@ -66,6 +68,7 @@ export default function CDocDirectory({
         </Thead>
         <Tbody>{cdocs}</Tbody>
       </Table>
+      <Button onClick={handleNewDoc}>New Doc</Button>
     </StyledDirectory>
   );
 }

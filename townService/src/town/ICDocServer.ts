@@ -54,7 +54,7 @@ export class MockCDocServer implements ICDocServer {
       editors: [],
       viewers: [],
       content: 'this is default content from the mock backend',
-      createdAt: 'some date',
+      createdAt: new Date().toLocaleString(),
       docID: nanoid(),
       docName: 'Default Backend Name',
     });

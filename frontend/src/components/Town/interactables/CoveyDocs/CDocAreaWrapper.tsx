@@ -95,6 +95,13 @@ export default function CDocAreaWrapper(): JSX.Element {
     },
     [cDocAreaController, pages],
   );
+  const handleNewDoc = useCallback(async () => {
+    if (cDocAreaController) {
+      const newID = await cDocAreaController.addNewDocument(userID);
+      setCurrentDocument(await cDocAreaController.getDocByID(newID));
+      setPages(pages + 1);
+    }
+  }, [cDocAreaController, pages, userID]);
 
   const handleBackToDirectory = () => {
     setPages(2);
@@ -194,13 +201,17 @@ export default function CDocAreaWrapper(): JSX.Element {
             documents={ownedDocs}
             handleClick={handleDocument}
             handleClickPermissions={handleClickPermissions}
+            handleNewDoc={handleNewDoc}
           />
         )}
         {pages === 3 && cDocAreaController && (
           <CDocument
             document={currentDocument}
             controller={cDocAreaController}
-            handleBackToDirectory={handleBackToDirectory}></CDocument>
+            handleBackToDirectory={handleBackToDirectory}
+            handlePermissions={function (): void {
+              throw new Error('Function not implemented.');
+            }}></CDocument>
         )}
         {pages === 4 && (
           <CDocPermissions

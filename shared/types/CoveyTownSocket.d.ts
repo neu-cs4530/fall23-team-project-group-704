@@ -76,7 +76,7 @@ export interface ViewingArea extends Interactable {
 /* comments
 */
 export interface ICDocDocument {
-  createdAt: Datetime;
+  createdAt: string;
   owner: PlayerID;
   docID: string;
   docName: string;

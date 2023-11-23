@@ -45,14 +45,16 @@ export default class CDocServer implements ICDocServer {
   }
 
   public async createNewDoc(user_id: string): Promise<ICDocDocument> {
-    const newDoc: Document = {
-      id: nanoid(),
-      userId: user_id,
-      name: 'Default Doc',
-      allowedUsersView: [],
-      allowedUsersEdit: [],
-      data: 'this is a default doc',
-    };
+    const newDoc: Document = new Document();
+
+    newDoc.id = nanoid();
+
+    newDoc.userId = user_id;
+    newDoc.name = 'Default Doc';
+    newDoc.allowedUsersView = [];
+    newDoc.allowedUsersEdit = [];
+    newDoc.data = 'this is a default doc';
+
     const newID = await appDataSource
       .createQueryBuilder()
       .insert()
@@ -64,20 +66,20 @@ export default class CDocServer implements ICDocServer {
   }
 
   public async createNewUser(username: string, password: string) {
-    const users = await appDataSource
-      .createQueryBuilder()
-      .select('user')
-      .from(User, 'user')
-      .where('user.id = :id', { username })
-      .getMany();
+    //  const users = await appDataSource
+    // .createQueryBuilder()
+    // .select('user')
+    // .from(User, 'user')
+    // .where('user.id = :id', { username })
+    // .getMany();
 
+    const users = await appDataSource.manager.find(User, {});
     if (users.length !== 0) throw new Error('User already exists');
 
-    const newUser: User = {
-      id: username,
-      userName: username,
-      password,
-    };
+    const newUser: User = new User();
+    newUser.id = username;
+    newUser.userName = username;
+    newUser.password = password;
     await appDataSource.createQueryBuilder().insert().into(User).values([newUser]).execute();
   }
 

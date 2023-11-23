@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
-import Documents from './document';
-import Users from './user';
+import Document from './document';
+import User from './user';
+import 'reflect-metadata';
 
 const appDataSource: DataSource = new DataSource({
   type: 'postgres',
@@ -10,9 +11,8 @@ const appDataSource: DataSource = new DataSource({
   username: 'coveydocs_user',
   password: 'BnMjyOzetiuOg8VECO3gWl5KeYp5w4iZ',
   database: 'coveydocs',
-  entities: [Documents, Users],
+  entities: [Document, User],
   connectTimeoutMS: undefined,
-  // synchronize: true,
 });
 
 appDataSource.initialize();

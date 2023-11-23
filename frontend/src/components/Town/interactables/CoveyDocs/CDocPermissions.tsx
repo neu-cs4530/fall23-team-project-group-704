@@ -19,6 +19,7 @@ import {
 // import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
 import React, { useState } from 'react';
+import { CDocUserID } from '../../../../../../shared/types/CoveyTownSocket';
 
 /**
  * The Permissions component allows the user to edit the viewers, editors, and owner of a document. It is embedded within the document

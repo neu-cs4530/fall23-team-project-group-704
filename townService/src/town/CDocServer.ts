@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
+import { CDocDocID, ICDocDocument, PermissionType } from '../types/CoveyTownSocket';
 import { ICDocServer } from './ICDocServer';
 import Document from '../api/document';
 import appDataSource from '../api/datasource';
@@ -15,6 +15,18 @@ export default class CDocServer implements ICDocServer {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._listeners = [];
+  }
+
+  public async shareDocumentWith(
+    docID: string,
+    userID: string,
+    permissionType: PermissionType,
+  ): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
+  public async removeUserFrom(docID: string, userID: string): Promise<void> {
+    throw new Error('Method not implemented.');
   }
 
   public async validateUser(id: string, password: string): Promise<boolean> {

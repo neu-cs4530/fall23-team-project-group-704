@@ -1,5 +1,12 @@
 import { nanoid } from 'nanoid';
-import { CDocDocID, CDocPassword, CDocUserID, ICDocDocument } from '../types/CoveyTownSocket';
+import {
+  CDocDocID,
+  CDocPassword,
+  CDocUserID,
+  ExtendedPermissionType,
+  ICDocDocument,
+  PermissionType,
+} from '../types/CoveyTownSocket';
 
 export interface ICDocServer {
   createNewDoc(id: string): Promise<ICDocDocument>;
@@ -11,6 +18,30 @@ export interface ICDocServer {
 
   addDocumentEditedListener(listener: (docid: CDocDocID) => void): void;
   removeDocumentEditedListener(listener: (docid: CDocDocID) => void): void;
+
+  addSharedWithListener(
+    listener: (
+      docid: CDocDocID,
+      targetUser: CDocUserID,
+      permissionType: ExtendedPermissionType,
+    ) => void,
+  ): void;
+  removeSharedWithListener(
+    listener: (
+      docid: CDocDocID,
+      targetUser: CDocUserID,
+      permissionType: ExtendedPermissionType,
+    ) => void,
+  ): void;
+
+  shareDocumentWith(
+    docID: CDocDocID,
+    userID: CDocUserID,
+    permissionType: PermissionType,
+  ): Promise<void>;
+  removeUserFrom(docID: CDocDocID, userID: CDocDocID): Promise<void>;
+
+  getSharedWith(userID: CDocUserID, permissionType: PermissionType): Promise<CDocDocID[]>;
 }
 
 export class MockCDocServer implements ICDocServer {
@@ -27,6 +58,50 @@ export class MockCDocServer implements ICDocServer {
     this._mockOwnedDocs = [];
     this._users = [];
     this._listeners = [];
+  }
+
+  public async shareDocumentWith(
+    docID: string,
+    userID: string,
+    permissionType: PermissionType,
+  ): Promise<void> {
+    const i = this._mockOwnedDocs.findIndex(doc => doc.docID === docID);
+
+    if (i === -1) throw new Error('Tried to share non existent doc');
+
+    const oldDoc = this._mockOwnedDocs[i];
+
+    const newDoc: ICDocDocument = {
+      createdAt: oldDoc.createdAt,
+      owner: oldDoc.owner,
+      docID: oldDoc.docID,
+      docName: oldDoc.docName,
+      editors: oldDoc.editors.concat(permissionType === 'EDIT' ? [userID] : []),
+      viewers: oldDoc.viewers.concat(permissionType === 'VIEW' ? [userID] : []),
+      content: oldDoc.content,
+    };
+    this._mockOwnedDocs[i] = newDoc;
+    this._listeners.map(listener => listener(docID));
+  }
+
+  public async removeUserFrom(docID: string, userID: string): Promise<void> {
+    const i = this._mockOwnedDocs.findIndex(doc => doc.docID === docID);
+
+    if (i === -1) throw new Error('Tried to operate non existent doc');
+
+    const oldDoc = this._mockOwnedDocs[i];
+
+    const newDoc: ICDocDocument = {
+      createdAt: oldDoc.createdAt,
+      owner: oldDoc.owner,
+      docID: oldDoc.docID,
+      docName: oldDoc.docName,
+      editors: oldDoc.editors.filter(user => user !== userID),
+      viewers: oldDoc.viewers.filter(user => user !== userID),
+      content: oldDoc.content,
+    };
+    this._mockOwnedDocs[i] = newDoc;
+    this._listeners.map(listener => listener(docID));
   }
 
   public addDocumentEditedListener(listener: (docid: string) => void): void {

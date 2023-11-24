@@ -108,6 +108,8 @@ export interface ICDocUserDataMap {
   getOwnedDocs(userid: CDocUserID): CDocDocID[];
 
   getOwnedDocsOrDefault(userid: CDocUserID): CDocDocID[];
+
+  getSharedDocs(userID: CDocUserID, permissionType: PermissionType): CDocDocID[];
 }
 
 export type CDocDocID = string;
@@ -216,19 +218,9 @@ interface InteractableCommandBase {
   type: string;
 }
 
-export type InteractableCommand =
-  | ViewingAreaUpdateCommand
-  | JoinGameCommand
-  | GameMoveCommand<MoveType>
-  | LeaveGameCommand
-  | CDocWriteDocCommand
-  | CDocOpenDocCommand
-  | CDocCloseDocCommand
-  | CDocValidateUserCommand
-  | CDocCreateNewUserCommand
-  | CDocCreateNewDocCommand
-  | CDocGetOwnedDocsCommand
-  | CDocGetDocCommand;
+export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<MoveType> | LeaveGameCommand |
+CDocWriteDocCommand | CDocOpenDocCommand | CDocCloseDocCommand | CDocValidateUserCommand | CDocCreateNewUserCommand |
+CDocCreateNewDocCommand | CDocGetOwnedDocsCommand | CDocGetDocCommand | CDocShareDocCommand | CDocRemoveUserCommand | CDocGetSharedWithMe;
 
 export interface ViewingAreaUpdateCommand {
   type: "ViewingAreaUpdate";
@@ -281,6 +273,19 @@ export interface CDocGetOwnedDocsCommand {
   id: CDocUserID;
 }
 
+export type PermissionType = 'EDIT' | 'VIEW';
+
+export type ExtendedPermissionType = PermissionType | 'REMOVE';
+
+export interface CDocShareDocCommand {type: 'ShareDoc'; docID: CDocDocID; targetUser: CDocUserID; permissionType: PermissionType}
+
+/**
+ * Removes user from document, but not the owner
+ */
+export interface CDocRemoveUserCommand {type:'RemoveUser'; docID: CDocDocID; targetUser: CDocUserID;}
+
+export interface CDocGetSharedWithMe {type: 'GetSharedWithMe'; userID: CDocUserID; permissionType: PermissionType}
+
 /**
  * Tells this area to associate this document with the caller.
  * This document is assumed to be open on the frontend for the user, so
@@ -309,29 +314,21 @@ export interface CDocCloseDocCommand {
 // }
 
 // we have to modify this too
-export type InteractableCommandReturnType<
-  CommandType extends InteractableCommand,
-> = CommandType extends JoinGameCommand
-  ? { gameID: string }
-  : CommandType extends ViewingAreaUpdateCommand
-    ? undefined
-    : CommandType extends GameMoveCommand<TicTacToeMove>
-      ? undefined
-      : CommandType extends LeaveGameCommand
-        ? undefined
-        : CommandType extends CDocWriteDocCommand
-          ? undefined
-          : CommandType extends CreateDocCommand
-            ? undefined
-            : CommandType extends CDocGetDocCommand
-              ? { doc: ICDocDocument }
-              : CommandType extends CDocsGetOwnedDocs
-                ? { docs: CDocDocID[] }
-                : CommandType extends CDocValidateUserCommand
-                  ? { validation: boolean }
-                  : CommandType extends CDocCreateNewDocCommand
-                    ? { doc: ICDocDocument }
-                    : never;
+export type InteractableCommandReturnType<CommandType extends InteractableCommand> =
+  CommandType extends JoinGameCommand ? { gameID: string}:
+  CommandType extends ViewingAreaUpdateCommand ? undefined :
+  CommandType extends GameMoveCommand<TicTacToeMove> ? undefined :
+  CommandType extends LeaveGameCommand ? undefined :
+  CommandType extends CDocWriteDocCommand ? undefined :
+  CommandType extends CreateDocCommand ? undefined :
+  CommandType extends CDocGetDocCommand ? {doc: ICDocDocument} :
+  CommandType extends CDocsGetOwnedDocs ? {docs: CDocDocID[]} :
+  CommandType extends CDocValidateUserCommand ? {validation: boolean} :
+  CommandType extends CDocCreateNewDocCommand ? {doc: ICDocDocument} :
+  CommandType extends CDocShareDocCommand ? undefined :
+  CommandType extends CDocRemoveUserCommand ? undefined :
+  CommandType extends CDocGetSharedWithMe ? {docs: CDocDocID[]} : 
+  never;
 
 export type InteractableCommandResponse<MessageType> = {
   commandID: CommandID;

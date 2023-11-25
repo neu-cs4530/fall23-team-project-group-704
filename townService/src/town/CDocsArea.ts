@@ -22,7 +22,7 @@ import CDocUserDataMap from './CDocUserDataMap';
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
-  private _server: ICDocServer = CDocServer.getInstance();
+  private _server: ICDocServer;
 
   private _userToDocMap: CDocUserDataMap;
 
@@ -35,11 +35,17 @@ export default class CDocsArea extends InteractableArea {
    * @param coordinates  the bounding box that defines this conversation area
    * @param townEmitter a broadcast emitter that can be used to emit updates to players
    */
-  public constructor(id: string, coordinates: BoundingBox, townEmitter: TownEmitter) {
+  public constructor(
+    id: string,
+    coordinates: BoundingBox,
+    townEmitter: TownEmitter,
+    server: ICDocServer,
+  ) {
     super(id, coordinates, townEmitter);
 
     this._userToDocMap = new CDocUserDataMap();
     this._registeredUsers = [];
+    this._server = server;
     // for some reason we have to pass the callback this._userToDocMap, or we get null error
     this._server.addDocumentEditedListener(doc =>
       this._handleDocumentEdited(doc, this._userToDocMap),
@@ -51,7 +57,14 @@ export default class CDocsArea extends InteractableArea {
   }
 
   /**
-   * See command definitions for documentation per command.
+   * WriteDoc: should tell the model to write the content to the specified doc.
+   * Should also call _emitAreaChanged()
+   *
+   * GetDoc: should ask the server for the given docid and return it
+   *
+   * GetOwnedDocs: same as GetDoc, but also updates the cached state for this user,
+   * such that toModel is now up to date
+   *
    * @param command
    * @param player
    * @returns
@@ -150,13 +163,14 @@ export default class CDocsArea extends InteractableArea {
   public static fromMapObject(
     mapObject: ITiledMapObject,
     broadcastEmitter: TownEmitter,
+    server: ICDocServer,
   ): CDocsArea {
     const { name, width, height } = mapObject;
     if (!width || !height) {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    return new CDocsArea(name, rect, broadcastEmitter);
+    return new CDocsArea(name, rect, broadcastEmitter, server);
   }
 
   private _handleDocumentEdited(docid: CDocDocID, userToDocMap: CDocUserDataMap) {

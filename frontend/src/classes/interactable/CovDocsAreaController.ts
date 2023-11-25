@@ -14,6 +14,11 @@ import {
   CDocPassword,
   CDocGetOwnedDocsCommand,
   CDocValidateUserCommand,
+  PermissionType,
+  CDocShareDocCommand,
+  CDocRemoveUserCommand,
+  CDocGetSharedWithMe,
+  ExtendedPermissionType,
 } from '../../types/CoveyTownSocket';
 
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
@@ -37,6 +42,7 @@ export type CovDocsEvents = BaseInteractableEventMap & {
   // it isn't valid if we don't know which is the newly created document
   newDocumentCreated: (docid: CDocDocID, valid_id: boolean) => void;
   userLoggedOut: (user_id: CDocUserID) => void;
+  sharedWithMeChanged: (docID: CDocDocID, permissionType: ExtendedPermissionType) => void;
   //add one for active users changed and add a field for active users in board area?
 };
 
@@ -229,6 +235,39 @@ export default class CovDocsAreaController extends InteractableAreaController<
     return docs as CDocDocID[];
   }
 
+  public async shareDocWith(docID: CDocDocID, userID: CDocUserID, permissionType: PermissionType) {
+    await this._townController.sendInteractableCommand<CDocShareDocCommand>(this.id, {
+      docID,
+      targetUser: userID,
+      permissionType,
+      type: 'ShareDoc',
+    });
+  }
+
+  public async removeUserFrom(docID: CDocDocID, userID: CDocUserID) {
+    await this._townController.sendInteractableCommand<CDocRemoveUserCommand>(this.id, {
+      type: 'RemoveUser',
+      docID: docID,
+      targetUser: userID,
+    });
+  }
+
+  public async getDocsSharedWith(
+    userID: CDocUserID,
+    permissionType: PermissionType,
+  ): Promise<CDocDocID[]> {
+    const { docs } = await this._townController.sendInteractableCommand<CDocGetSharedWithMe>(
+      this.id,
+      {
+        type: 'GetSharedWithMe',
+        userID: userID,
+        permissionType: permissionType,
+      },
+    );
+
+    return docs as CDocDocID[];
+  }
+
   /**
    * @returns BoardAreaModel that represents the current state of this BoardAreaController
    */
@@ -284,6 +323,19 @@ export default class CovDocsAreaController extends InteractableAreaController<
       // TODO: this is brittle, what about doc deletion?
       if (newOwnedDocs.length > prevOwnedDocs.length) {
         this.emit('newDocumentCreated', 'unknown_id', false);
+      }
+
+      const pTypes: PermissionType[] = ['EDIT', 'VIEW'];
+
+      for (const pType of pTypes) {
+        const prevShared = oldBoard.userToDocMap.getSharedDocs(this._userID, pType);
+        const newShared = updatedModel.userToDocMap.getSharedDocs(this._userID, pType);
+
+        const added = newShared.filter(doc => prevShared.indexOf(doc) < 0);
+        const removed = prevShared.filter(doc => newShared.indexOf(doc) < 0);
+
+        for (const addDoc of added) this.emit('sharedWithMeChanged', addDoc, pType);
+        for (const removeDoc of removed) this.emit('sharedWithMeChanged', removeDoc, 'REMOVE');
       }
     }
   }

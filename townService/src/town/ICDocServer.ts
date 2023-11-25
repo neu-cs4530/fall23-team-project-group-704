@@ -53,11 +53,41 @@ export class MockCDocServer implements ICDocServer {
 
   private _listeners: ((docid: CDocDocID) => void)[];
 
+  private _shareDocListeners: ((
+    docid: CDocDocID,
+    targetUser: CDocUserID,
+    permissionType: ExtendedPermissionType,
+  ) => void)[];
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._mockOwnedDocs = [];
     this._users = [];
     this._listeners = [];
+    this._shareDocListeners = [];
+  }
+
+  addSharedWithListener(
+    listener: (docid: string, targetUser: string, permissionType: ExtendedPermissionType) => void,
+  ): void {
+    this._shareDocListeners.push(listener);
+  }
+
+  removeSharedWithListener(
+    listener: (docid: string, targetUser: string, permissionType: ExtendedPermissionType) => void,
+  ): void {
+    this._shareDocListeners = this._shareDocListeners.filter(l => l !== listener);
+  }
+
+  public async getSharedWith(userID: string, permissionType: PermissionType): Promise<string[]> {
+    let pred = (doc: ICDocDocument) => {};
+
+    if (permissionType === 'EDIT') {
+      pred = (doc: ICDocDocument) => doc.editors.find(editor => editor === userID) !== undefined;
+    } else if (permissionType === 'VIEW') {
+      pred = (doc: ICDocDocument) => doc.viewers.find(viewer => viewer === userID) !== undefined;
+    }
+    return this._mockOwnedDocs.filter(pred).map(doc => doc.docID);
   }
 
   public async shareDocumentWith(

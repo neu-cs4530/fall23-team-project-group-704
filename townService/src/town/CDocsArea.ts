@@ -1,4 +1,3 @@
-import { BroadcastOperator } from 'socket.io';
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
 import InvalidParametersError, { INVALID_COMMAND_MESSAGE } from '../lib/InvalidParametersError';
 import Player from '../lib/Player';
@@ -9,17 +8,14 @@ import {
   InteractableCommandReturnType,
   InteractableType,
   ICDocDocument,
-  CDocUserID,
   CDocDocID,
-  ServerToClientEvents,
-  SocketData,
   TownEmitter,
   BoundingBox,
 } from '../types/CoveyTownSocket';
-import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
-import { ICDocServer, MockCDocServer } from './ICDocServer';
+import { ICDocServer } from './ICDocServer';
 import { CDocUserDataMap } from './CDocUserDataMap';
+import CDocServer from './CDocServer';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user

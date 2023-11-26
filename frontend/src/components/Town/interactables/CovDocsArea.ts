@@ -1,5 +1,4 @@
 import Interactable, { KnownInteractableTypes } from '../Interactable';
-import CDocDirectory from './CoveyDocs/CDocDirectory';
 
 export default class CovDocsArea extends Interactable {
   private _isInteracting = false;
@@ -32,7 +31,7 @@ export default class CovDocsArea extends Interactable {
     await cDocController.createNewUser('Joseph', 'password');
     const id = await cDocController.addNewDocument('Joseph');
     await cDocController.openDocument('Joseph', id);
-    return cDocController.getDocByID(id);
+    return (await cDocController.getDocByID(id)).content;
   }
 
   private async _showInfoBox() {

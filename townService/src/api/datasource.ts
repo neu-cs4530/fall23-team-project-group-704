@@ -13,3 +13,5 @@ const appDataSource: DataSource = new DataSource({
 });
 
 export default appDataSource;
+
+appDataSource.initialize();

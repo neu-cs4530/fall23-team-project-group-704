@@ -1,6 +1,3 @@
-import _, { has } from 'lodash';
-import PlayerController from '../PlayerController';
-import GameAreaController, { GameEventTypes } from './GameAreaController';
 import {
   CDocDocID,
   CDocUserID,
@@ -8,22 +5,14 @@ import {
   CDocOpenDocCommand,
   CDocCreateNewDocCommand,
   CDocCreateNewUserCommand,
-  GameArea,
   GameInstanceID,
-  GameMove,
-  GameMoveCommand,
-  GameState,
   ICDocArea,
-  ICDocUserDataMap,
   InteractableID,
-  PlayerID,
-  WinnableGameState,
   CDocCloseDocCommand,
   ICDocDocument,
   CDocGetDocCommand,
   CDocPassword,
   CDocGetOwnedDocsCommand,
-  InteractableCommandReturnType,
   CDocValidateUserCommand,
 } from '../../types/CoveyTownSocket';
 
@@ -294,7 +283,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
       // TODO: this is brittle, what about doc deletion?
       if (newOwnedDocs.length > prevOwnedDocs.length) {
-        this.emit('newDocumentCreated');
+        this.emit('newDocumentCreated', 'unknown_id', false);
       }
     }
   }

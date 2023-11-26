@@ -13,6 +13,7 @@ export default function CDocument({
   handleBackToDirectory: () => void;
   handlePermissions: () => void;
 }): JSX.Element {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
 
   if (editorRef.current) editorRef.current.setContent(document.content);

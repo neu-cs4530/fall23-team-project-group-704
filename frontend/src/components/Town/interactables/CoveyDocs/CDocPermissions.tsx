@@ -14,7 +14,10 @@ import {
   MenuList,
   Stack,
   Radio,
+  Flex,
+  Text,
   Heading,
+  ModalFooter,
   Box,
   Button,
   Grid,
@@ -69,14 +72,6 @@ export default function CDocPermissions(props: {
   const [owner, setOwner] = useState<CDocUserID>(props.owner);
   const [newOwner, setNewOwner] = useState(owner);
 
-  function DrawPermissionsTitle() {
-    return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        Edit the Permissions of this Document
-      </GridItem>
-    );
-  }
-
   function DrawEditorsBox() {
     const UserRadioGroup = ({ userID }: { userID: CDocUserID }) => {
       const [selectedOption, setSelectedOption] = useState('no selection');
@@ -112,24 +107,29 @@ export default function CDocPermissions(props: {
         </RadioGroup>
       );
     };
+    const fakeEditors = ['ingi59d', 't', 'p'];
 
     return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        People who can edit:
-        <List>
-          {editors.map((user: CDocUserID) => {
-            return (
-              <ListItem key={user}>
-                <Center height='50px'>
-                  {user}
-                  <Divider orientation='vertical' />
-                  <UserRadioGroup userID={user} />
-                </Center>
-              </ListItem>
-            );
-          })}
-        </List>
-      </GridItem>
+      <Box>
+        <Text fontSize='16px' fontWeight={'semibold'} bg='blue.100'>
+          People who can edit:
+        </Text>
+        <Box maxH='100px' overflowY='auto' maxW='250px' overflowX='auto'>
+          <List>
+            {fakeEditors.map((user: CDocUserID) => {
+              return (
+                <ListItem key={user}>
+                  <Center height='50px'>
+                    {user}
+                    <Divider orientation='vertical' />
+                    <UserRadioGroup userID={user} />
+                  </Center>
+                </ListItem>
+              );
+            })}
+          </List>
+        </Box>
+      </Box>
     );
   }
 
@@ -162,24 +162,28 @@ export default function CDocPermissions(props: {
         </RadioGroup>
       );
     };
-
+    const fakeViewers = ['i', 't', 'p'];
     return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        People who can view:
-        <List>
-          {viewers.map((user: CDocUserID) => {
-            return (
-              <ListItem key={user}>
-                <Center height='50px'>
-                  {user}
-                  <Divider orientation='vertical' />
-                  <UserRadioGroup userID={user} />
-                </Center>
-              </ListItem>
-            );
-          })}
-        </List>
-      </GridItem>
+      <Box>
+        <Text fontSize='16px' fontWeight={'semibold'} bg='blue.100'>
+          People who can view:
+        </Text>
+        <Box maxH='100px' overflowY='auto' maxW='250px' overflowX='auto'>
+          <List>
+            {fakeViewers.map((user: CDocUserID) => {
+              return (
+                <ListItem key={user}>
+                  <Center height='50px'>
+                    {user}
+                    <Divider orientation='vertical' />
+                    <UserRadioGroup userID={user} />
+                  </Center>
+                </ListItem>
+              );
+            })}
+          </List>
+        </Box>
+      </Box>
     );
   }
 
@@ -194,11 +198,12 @@ export default function CDocPermissions(props: {
       setNewOwner(user);
     }
     //rightIcon={<ChevronDownIcon />}
+    const fakeViewers = ['i', 't', 'p'];
     return (
       <Menu>
         <MenuButton as={Button}>Transfer Ownership</MenuButton>
         <MenuList>
-          {viewers.map((user: CDocUserID) => {
+          {fakeViewers.map((user: CDocUserID) => {
             return (
               <MenuItem onClick={() => handleClick(user)} key={user}>
                 {user}
@@ -211,20 +216,29 @@ export default function CDocPermissions(props: {
   }
   function DrawOwnershipBox() {
     return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        <Box>The Owner of this document is:</Box>
-        <Box>{owner}</Box>
+      <Box>
+        <Heading size='md' m='2'>
+          The Owner of this document is:
+        </Heading>
+        <Text bg='purple.100' border={'1px'} textAlign='center'>
+          {owner}
+        </Text>
         <Box></Box>
 
-        <Box>
+        <Box m='2'>
           <TransferOwnershipButton></TransferOwnershipButton>
         </Box>
         <Center height='50px'>
-          Transferring ownership to:
+          <Text fontSize='13px' m='1'>
+            Transferring ownership to:
+          </Text>
           <Divider orientation='vertical' />
-          {newOwner}
+          <Text fontSize={'13px'} m='1'>
+            {' '}
+            {newOwner}
+          </Text>
         </Center>
-      </GridItem>
+      </Box>
     );
   }
 
@@ -241,9 +255,9 @@ export default function CDocPermissions(props: {
     }
 
     return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        <Button onClick={() => handleSaveClick()}>Save All Changes</Button>
-      </GridItem>
+      <Button m={'2'} onClick={() => handleSaveClick()}>
+        Save Changes
+      </Button>
     );
   }
 
@@ -264,177 +278,25 @@ export default function CDocPermissions(props: {
   }
 
   return (
-    //right now these are just the same dimensions as exist in the CDocArea file. Can change depending on what works/looks best along
-    //with changing dimensions in CDocArea
-    <Grid templateRows='repeat(7, 1fr)' templateColumns='repeat(6, 1fr)' width='500px' gap={4}>
-      <GridItem rowSpan={4} colSpan={2} bg='green.200'>
-        <DrawPermissionsTitle />
-        <DrawEditorsBox />
-        <DrawViewersBox />
+    <Flex direction='column' justify='space-between' align='center'>
+      <Box bg='purple.100' border='2px'>
+        <Heading size='md' m={2} bg='purple.100'>
+          <Text m='2'>Edit the Permissions of this Document</Text>
+        </Heading>
+      </Box>
+      <Flex direction='row' align='center' m='5'>
+        <Flex direction='column' align='center' m='2'>
+          <DrawEditorsBox />
+          <Box height='20px'> </Box>
+          <DrawViewersBox />
+        </Flex>
         <DrawOwnershipBox />
+      </Flex>
+      <Grid templateColumns='repeat(3, 1fr)' gap={6}>
+        <Box></Box>
+        <Box></Box>
         <DrawSaveButton />
-        <DrawExitButton />
-      </GridItem>
-    </Grid>
+      </Grid>
+    </Flex>
   );
 }
-
-// function DrawLeaderBoard(props: { hist: GameResult[] }) {
-//   const hist = props.hist;
-
-//   return (
-//     <GridItem rowSpan={4} colSpan={2} bg='green.200'>
-//       <Leaderboard results={hist} />
-//     </GridItem>
-//   );
-// }
-
-// function DrawPlayerList(props: { xUser: string; oUser: string }) {
-//   // const controller = props.controller;
-
-//   // const players = props.players;
-//   // let xUser = props.xplayer ? props.xplayer.userName : '(No player yet!)';
-//   // let oUser = props.oplayer ? props.oplayer.userName : '(No player yet!)';
-
-//   const [x, setX] = useState(props.xUser);
-//   const [o, setO] = useState(props.oUser);
-//   useEffect(() => {
-//     setX(props.xUser);
-//     setO(props.oUser);
-//     console.log('updated');
-//     // const setX = controller.x ? controller.x.userName : '(No player yet!)';
-//     // const setO = controller.o ? controller.o.userName : '(No player yet!)';
-//     // setXUser(setX);
-//     // console.log(setX);
-//     // setOUser(setO);
-//     // console.log(setO);
-//   }, [props.xUser, props.oUser]);
-
-//   // const xUser = players[0] ? players[0].userName : '(No player yet!)';
-//   // const oUser = players[1] ? players[1].userName : '(No player yet!)';
-//   console.log(
-//     `gamecontrollerhas x: ${gameAreaController.x?.userName}, x user: ${props.xUser}, gamecontrollerhas o: ${gameAreaController.o?.userName}, o user: ${props.oUser}`,
-//   );
-
-//   return (
-//     <GridItem rowSpan={1} colSpan={5} bg='purple.200'>
-//       <Box bg='purple.400' color='white'>
-//         list of players in the game
-//       </Box>
-//       <List
-//         aria-label='list of players in the game'
-//         style={{ display: 'flex', flexDirection: 'row' }}>
-//         <ListItem style={{ flex: '0 0 auto' }} mr={2}>
-//           X: {x}
-//         </ListItem>
-//         <ListItem style={{ flex: '0 0 auto' }}>O: {o}</ListItem>
-//       </List>
-//     </GridItem>
-//   );
-// }
-
-// function DrawJoinButton(props: { controller: TicTacToeAreaController }) {
-//   const atoast = useToast();
-//   // eslint-disable-next-line react/prop-types
-//   const controller = props.controller;
-//   const [isLoading, setIsLoading] = useState(false);
-//   const toggleButtonOn = () => {
-//     setIsLoading(false);
-//   };
-//   const toggleButtonOff = () => {
-//     setIsLoading(true);
-//   };
-//   const [buttonText, setButtonText] = useState('Join New Game');
-
-//   const updateButtonText = () => {
-//     if (isLoading) {
-//       setButtonText('Loading...');
-//     } else {
-//       setButtonText('Join New Game');
-//     }
-//   };
-
-//   async function handleJoinClick() {
-//     toggleButtonOff();
-//     updateButtonText();
-//     try {
-//       // eslint-disable-next-line react/prop-types
-//       await controller.joinGame();
-//     } catch (err) {
-//       console.error('Error joining the game:', err);
-//       atoast({
-//         title: 'Error',
-//         description: (err as Error).toString(),
-//         status: 'error',
-//         duration: 9000,
-//         isClosable: true,
-//       });
-//     } finally {
-//       toggleButtonOn();
-//       updateButtonText();
-//     }
-//   }
-
-//   const getJoinButtonContent = () => {
-//     if (areaController.status === 'WAITING_TO_START') {
-//       if (areaController.isPlayer) {
-//         return (
-//           <GridItem rowSpan={1} colSpan={2} bg='yellow.200'>
-//             You have joined the game!
-//           </GridItem>
-//         );
-//       } else {
-//         return (
-//           <GridItem
-//             rowSpan={1}
-//             colSpan={2}
-//             bg='yellow.200'
-//             display='flex'
-//             justifyContent='center'
-//             alignItems='center'>
-//             <Button
-//               bg='red.400'
-//               fontSize='sm'
-//               type='submit'
-//               onClick={handleJoinClick}
-//               width={120}
-//               isLoading={isLoading}
-//               disabled={isLoading}>
-//               {buttonText}
-//             </Button>
-//           </GridItem>
-//         );
-//       }
-//     } else if (areaController.status === 'IN_PROGRESS') {
-//       return (
-//         <GridItem rowSpan={1} colSpan={2} bg='yellow.200'>
-//           Game is in progress
-//         </GridItem>
-//       );
-//     } else {
-//       //the game is over, so the button should reappear
-//       return (
-//         <GridItem
-//           rowSpan={1}
-//           colSpan={2}
-//           bg='yellow.200'
-//           display='flex'
-//           justifyContent='center'
-//           alignItems='center'>
-//           <Button
-//             bg='red.400'
-//             fontSize='sm'
-//             type='submit'
-//             onClick={handleJoinClick}
-//             width={120}
-//             isLoading={isLoading}
-//             disabled={isLoading}>
-//             {buttonText}
-//           </Button>
-//         </GridItem>
-//       );
-//     }
-//   };
-
-//   return getJoinButtonContent();
-// }

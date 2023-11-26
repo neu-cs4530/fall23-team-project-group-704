@@ -24,7 +24,7 @@ import { CDocUserDataMap } from './CDocUserDataMap';
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
-  private _server: ICDocServer = MockCDocServer.getInstance();
+  private _server: ICDocServer = CDocServer.getInstance();
 
   private _userToDocMap: CDocUserDataMap;
 

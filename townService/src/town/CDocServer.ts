@@ -13,7 +13,9 @@ export default class CDocServer implements ICDocServer {
   private _listeners: ((docid: CDocDocID) => void)[];
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  private constructor() {}
+  private constructor() {
+    this._listeners = [];
+  }
 
   public async validateUser(id: string, password: string): Promise<boolean> {
     const users = await appDataSource
@@ -50,7 +52,6 @@ export default class CDocServer implements ICDocServer {
       allowedUsersView: [],
       allowedUsersEdit: [],
       data: 'this is a default doc',
-      uploaded_data: [],
     };
     const newID = await appDataSource
       .createQueryBuilder()

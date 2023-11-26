@@ -15,7 +15,7 @@ import {
   Box,
   Button,
   Grid,
-  GridItem,
+  // GridItem,
   List,
   ListItem,
 } from '@chakra-ui/react';
@@ -241,10 +241,9 @@ export default function CDocPermissions(props: {
     );
   }
 
-  /**
+  /** 
    * Displays a button which allows the user to exit the Permissions UI and return to the document.
    * @returns
-   */
   function DrawExitButton() {
     //implement this the same way that permissionswerechanged was implemented? first see if that works
     function handleClick() {
@@ -255,7 +254,7 @@ export default function CDocPermissions(props: {
         <Button onClick={handleClick}>Exit</Button>
       </GridItem>
     );
-  }
+  }*/
 
   return (
     <Flex direction='column' justify='space-between' align='center'>

@@ -5,7 +5,7 @@ import Document from '../api/document';
 import appDataSource from '../api/datasource';
 import User from '../api/user';
 
-// TODO: change ids from numbers to right type
+// TODO: change ids from numbers to right typegit
 /** We will do all operations directly to database for now. */
 export default class CDocServer implements ICDocServer {
   private static _instance: CDocServer;

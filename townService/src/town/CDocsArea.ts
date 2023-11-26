@@ -13,8 +13,9 @@ import {
   BoundingBox,
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
-import { ICDocServer, MockCDocServer } from './ICDocServer';
+import { ICDocServer } from './ICDocServer';
 import { CDocUserDataMap } from './CDocUserDataMap';
+import CDocServer from './CDocServer';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user

@@ -34,7 +34,7 @@ import {
 // import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
 import React, { useCallback, useEffect, useState } from 'react';
-import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
+import CDocsAreaController from '../../../../classes/interactable/CDocsAreaController';
 import PlayerController from '../../../../classes/PlayerController';
 import TownController, {
   useInteractable,
@@ -42,7 +42,7 @@ import TownController, {
 } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
 import { CDocDocID, CDocUserID, InteractableID } from '../../../../types/CoveyTownSocket';
-import CovDocsAreaInteractable from '../CovDocsArea';
+import CovDocsAreaInteractable from '../CDocsArea';
 
 /**
  * The Permissions component allows the user to edit the viewers, editors, and owner of a document. It is embedded within the document

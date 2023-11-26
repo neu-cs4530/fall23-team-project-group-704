@@ -36,7 +36,7 @@ import TownController from '../TownController';
 //works to determine if this is a worthwhile change
 
 /**
- * The events that a CovDocsAreaController can emit
+ * The events that a CDocsAreaController can emit
  */
 export type CovDocsEvents = BaseInteractableEventMap & {
   docOpened: (docID: CDocDocID) => void;
@@ -66,7 +66,7 @@ export type CovDocsCloseDoc = { id: CovDocDocID };
  * A very state machine class. Could it be refactored through advanced design patterns?
  * What if we don't store the signed in user and the opened document here.
  */
-export default class CovDocsAreaController extends InteractableAreaController<
+export default class CDocsAreaController extends InteractableAreaController<
   CovDocsEvents,
   ICDocArea
 > {

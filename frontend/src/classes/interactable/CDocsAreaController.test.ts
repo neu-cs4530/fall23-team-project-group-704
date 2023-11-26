@@ -2,13 +2,13 @@ import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import { PlayerLocation, WinnableGameState } from '../../types/CoveyTownSocket';
 import PlayerController from '../PlayerController';
-import CovDocsAreaController from './CovDocsAreaController';
+import CDocsAreaController from './CDocsAreaController';
 import TownController from '../TownController';
 describe('[T2] CBoardAreaController', () => {
   // A valid ConversationAreaController to be reused within the tests
-  let testArea: CovDocsAreaController;
+  let testArea: CDocsAreaController;
   beforeEach(() => {
-    testArea = new CovDocsAreaController(
+    testArea = new CDocsAreaController(
       nanoid(),
       {
         id: nanoid(),

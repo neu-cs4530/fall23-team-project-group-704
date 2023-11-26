@@ -1,7 +1,7 @@
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 import CDocDirectory from './CoveyDocs/CDocDirectory';
 
-export default class CovDocsArea extends Interactable {
+export default class CDocsArea extends Interactable {
   private _isInteracting = false;
 
   private _infoTextBox: Phaser.GameObjects.Text | undefined;

@@ -1,4 +1,4 @@
-import CovDocsArea from '../components/Town/interactables/CovDocsArea';
+import CDocsArea from '../components/Town/interactables/CDocsArea';
 import {
   ConversationArea,
   Interactable,

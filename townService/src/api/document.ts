@@ -1,22 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import User from './user';
+import { Entity, Column, OneToMany, PrimaryColumn } from 'typeorm';
+import Users from './user';
 
-@Entity()
-export default class Document {
-  @PrimaryGeneratedColumn()
+@Entity({ name: 'Documents' })
+export default class Documents {
+  @PrimaryColumn()
   id: string;
 
   @Column()
-  userId: string;
+  user_id: string;
 
   @Column()
   name: string;
 
-  @OneToMany(() => User, u => u.id)
-  allowedUsersView: string[];
+  @OneToMany(() => Users, u => u.id)
+  allowedusersview: string[];
 
-  @OneToMany(() => User, u => u.id)
-  allowedUsersEdit: string[];
+  @OneToMany(() => Users, u => u.id)
+  allowedusersedit: string[];
 
   @Column()
   data: string;

@@ -5,7 +5,8 @@ import useTownController from '../../hooks/useTownController';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
 import NewConversationModal from './interactables/NewCoversationModal';
 import TownGameScene from './TownGameScene';
-import TicTacToeAreaWrapper from './interactables/TicTacToe/TicTacToeArea';
+import CDocAreaWrapper from './interactables/CoveyDocs/CDocAreaWrapper';
+import { Auth0Provider } from '@auth0/auth0-react';
 
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
@@ -49,7 +50,14 @@ export default function TownMap(): JSX.Element {
   return (
     <div id='app-container'>
       <NewConversationModal />
-      <TicTacToeAreaWrapper />
+      <Auth0Provider
+        domain='{yourDomain}'
+        clientId='{yourClientId}'
+        authorizationParams={{
+          redirect_uri: window.location.origin,
+        }}>
+        <CDocAreaWrapper />
+      </Auth0Provider>
 
       <div id='map-container' />
       <div id='social-container'>

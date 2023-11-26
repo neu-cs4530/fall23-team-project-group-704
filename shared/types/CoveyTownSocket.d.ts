@@ -15,9 +15,13 @@ export type TownJoinResponse = {
   isPubliclyListed: boolean;
   /** Current state of interactables in this town */
   interactables: TypedInteractable[];
-}
+};
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'BoardArea';
+export type InteractableType =
+  | "ConversationArea"
+  | "ViewingArea"
+  | "TicTacToeArea"
+  | "CDocsArea";
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -27,18 +31,18 @@ export interface Interactable {
 export type TownSettingsUpdate = {
   friendlyName?: string;
   isPubliclyListed?: boolean;
-}
+};
 
-export type Direction = 'front' | 'back' | 'left' | 'right';
+export type Direction = "front" | "back" | "left" | "right";
 
 export type PlayerID = string;
 export interface Player {
   id: PlayerID;
   userName: string;
   location: PlayerLocation;
-};
+}
 
-export type XY = { x: number, y: number };
+export type XY = { x: number; y: number };
 
 export interface PlayerLocation {
   /* The CENTER x coordinate of this player's location */
@@ -49,7 +53,7 @@ export interface PlayerLocation {
   rotation: Direction;
   moving: boolean;
   interactableID?: string;
-};
+}
 export type ChatMessage = {
   author: string;
   sid: string;
@@ -59,13 +63,13 @@ export type ChatMessage = {
 
 export interface ConversationArea extends Interactable {
   topic?: string;
-};
+}
 export interface BoundingBox {
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
 export interface ViewingArea extends Interactable {
   video?: string;
@@ -73,41 +77,51 @@ export interface ViewingArea extends Interactable {
   elapsedTimeSec: number;
 }
 
-//represents an image or text component. for images, content is file path  (?)
-export interface component {
-type: 'image' | 'text',
-location: XY,
-size: number
-content: string
-}
-
-/*comments
-*/
-export interface Board {
-  createdBy: PlayerID;
+/* comments
+ */
+export interface ICDocDocument {
+  createdAt: string;
   owner: PlayerID;
-  boardID: string;
-  boardName: string;
+  docID: string;
+  docName: string;
   editors: PlayerID[];
   viewers: PlayerID[];
-  components: component[]
-
+  content: string;
 }
 
-export interface BoardArea extends Interactable {
-  activeDocument?: Board;
-  allDocuments: Board[];
+/**
+ * Represents the state of the model for one user.
+ * TODO: find way to return a different model to each user
+ */
+export interface ICDocArea extends Interactable {
+  userToDocMap: ICDocUserDataMap;
   allRegisteredUsers: PlayerID[];
+}
+/**
+ * Readonly interface.
+ */
+export interface ICDocUserDataMap {
+  isTrackingDoc(docid: string): boolean;
+  hasActiveDoc(userid: CDocUserID): boolean;
+  getActiveDoc(userid: CDocUserID): CDocDocID;
 
+  getOwnedDocs(userid: CDocUserID): CDocDocID[];
+
+  getOwnedDocsOrDefault(userid: CDocUserID): CDocDocID[];
 }
 
-export type GameStatus = 'IN_PROGRESS' | 'WAITING_TO_START' | 'OVER';
+export type CDocDocID = string;
+export type CDocUserID = string;
+export type CDocHTMLContent = string;
+export type CDocPassword = string;
+
+export type GameStatus = "IN_PROGRESS" | "WAITING_TO_START" | "OVER";
 /**
  * Base type for the state of a game
  */
 export interface GameState {
   status: GameStatus;
-} 
+}
 
 /**
  * Type for the state of a game that can be won
@@ -131,7 +145,7 @@ export type TicTacToeGridPosition = 0 | 1 | 2;
  * Type for a move in TicTacToe
  */
 export interface TicTacToeMove {
-  gamePiece: 'X' | 'O';
+  gamePiece: "X" | "O";
   row: TicTacToeGridPosition;
   col: TicTacToeGridPosition;
 }
@@ -202,36 +216,129 @@ interface InteractableCommandBase {
   type: string;
 }
 
-export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<TicTacToeMove> | LeaveGameCommand;
-export interface ViewingAreaUpdateCommand  {
-  type: 'ViewingAreaUpdate';
+export type InteractableCommand =
+  | ViewingAreaUpdateCommand
+  | JoinGameCommand
+  | GameMoveCommand<MoveType>
+  | LeaveGameCommand
+  | CDocWriteDocCommand
+  | CDocOpenDocCommand
+  | CDocCloseDocCommand
+  | CDocValidateUserCommand
+  | CDocCreateNewUserCommand
+  | CDocCreateNewDocCommand
+  | CDocGetOwnedDocsCommand
+  | CDocGetDocCommand;
+
+export interface ViewingAreaUpdateCommand {
+  type: "ViewingAreaUpdate";
   update: ViewingArea;
 }
 export interface JoinGameCommand {
-  type: 'JoinGame';
+  type: "JoinGame";
 }
 export interface LeaveGameCommand {
-  type: 'LeaveGame';
+  type: "LeaveGame";
   gameID: GameInstanceID;
 }
 export interface GameMoveCommand<MoveType> {
-  type: 'GameMove';
+  type: "GameMove";
   gameID: GameInstanceID;
   move: MoveType;
 }
-export type InteractableCommandReturnType<CommandType extends InteractableCommand> = 
-  CommandType extends JoinGameCommand ? { gameID: string}:
-  CommandType extends ViewingAreaUpdateCommand ? undefined :
-  CommandType extends GameMoveCommand<TicTacToeMove> ? undefined :
-  CommandType extends LeaveGameCommand ? undefined :
-  never;
+
+export interface CDocWriteDocCommand {
+  type: "WriteDoc";
+  content: string;
+  docid: string;
+}
+
+/**
+ * returns the document specified by the id.
+ * TODO: add permissions to this
+ */
+export interface CDocGetDocCommand {
+  type: "GetDoc";
+  docid: CDocDocID;
+}
+
+export interface CDocValidateUserCommand {
+  type: "ValidateUser";
+  id: CDocUserID;
+  password: CDocPassword;
+}
+export interface CDocCreateNewUserCommand {
+  type: "CreateNewUser";
+  username: CDocUserID;
+  password: CDocPassword;
+}
+export interface CDocCreateNewDocCommand {
+  type: "CreateNewDoc";
+  id: CDocUserID;
+}
+export interface CDocGetOwnedDocsCommand {
+  type: "GetOwnedDocs";
+  id: CDocUserID;
+}
+
+/**
+ * Tells this area to associate this document with the caller.
+ * This document is assumed to be open on the frontend for the user, so
+ * the state changed event will be then fired if this document is changed.
+ */
+export interface CDocOpenDocCommand {
+  type: "OpenDoc";
+  docid: string;
+  userid: CDocUserID;
+}
+
+/**
+ * Closes the document for this user.
+ */
+export interface CDocCloseDocCommand {
+  type: "CloseDoc";
+  id: CDocDocID;
+}
+
+// export interface CDocument {
+//   name: string;
+//   ownerID: string;
+//   permissions: {view: boolean, edit: boolean};
+//   last_saved: string
+//   last_user: string;
+// }
+
+// we have to modify this too
+export type InteractableCommandReturnType<
+  CommandType extends InteractableCommand,
+> = CommandType extends JoinGameCommand
+  ? { gameID: string }
+  : CommandType extends ViewingAreaUpdateCommand
+    ? undefined
+    : CommandType extends GameMoveCommand<TicTacToeMove>
+      ? undefined
+      : CommandType extends LeaveGameCommand
+        ? undefined
+        : CommandType extends CDocWriteDocCommand
+          ? undefined
+          : CommandType extends CreateDocCommand
+            ? undefined
+            : CommandType extends CDocGetDocCommand
+              ? { doc: ICDocDocument }
+              : CommandType extends CDocsGetOwnedDocs
+                ? { docs: CDocDocID[] }
+                : CommandType extends CDocValidateUserCommand
+                  ? { validation: boolean }
+                  : CommandType extends CDocCreateNewDocCommand
+                    ? { doc: ICDocDocument }
+                    : never;
 
 export type InteractableCommandResponse<MessageType> = {
   commandID: CommandID;
   interactableID: InteractableID;
   error?: string;
   payload?: InteractableCommandResponseMap[MessageType];
-}
+};
 
 export interface ServerToClientEvents {
   playerMoved: (movedPlayer: Player) => void;
@@ -249,5 +356,7 @@ export interface ClientToServerEvents {
   chatMessage: (message: ChatMessage) => void;
   playerMovement: (movementData: PlayerLocation) => void;
   interactableUpdate: (update: Interactable) => void;
-  interactableCommand: (command: InteractableCommand & InteractableCommandBase) => void;
+  interactableCommand: (
+    command: InteractableCommand & InteractableCommandBase,
+  ) => void;
 }

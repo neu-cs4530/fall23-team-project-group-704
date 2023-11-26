@@ -9,6 +9,7 @@ import Interactable from '../components/Town/Interactable';
 import ConversationArea from '../components/Town/interactables/ConversationArea';
 import GameArea from '../components/Town/interactables/GameArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
+import CovDocsArea from '../components/Town/interactables/CovDocsArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
@@ -26,7 +27,7 @@ import {
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
+import { isCDocArea, isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
 import GameAreaController, { GameEventTypes } from './interactable/GameAreaController';
 import InteractableAreaController, {
@@ -35,6 +36,7 @@ import InteractableAreaController, {
 import TicTacToeAreaController from './interactable/TicTacToeAreaController';
 import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
+import CovDocsAreaController from './interactable/CovDocsAreaController';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -330,6 +332,13 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return ret as GameAreaController<GameState, GameEventTypes>[];
   }
 
+  public get covDocsAreas() {
+    const ret = this._interactableControllers.filter(
+      eachInteractable => eachInteractable instanceof CovDocsAreaController,
+    );
+    return ret as CovDocsAreaController[];
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
@@ -605,6 +614,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
             );
+          } //need to add a case for boardarea?
+          else if (isCDocArea(eachInteractable)) {
+            this._interactableControllers.push(
+              new CovDocsAreaController(eachInteractable.id, eachInteractable, this),
+            );
           }
         });
         this._userID = initialData.userID;
@@ -665,6 +679,23 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       return existingController as GameAreaController<GameType, EventsType>;
     } else {
       throw new Error('Game area controller not created');
+    }
+  }
+
+  /**
+   * Retrieve the CovDoc area controller that corresponds to a cdocAreaModel, creating one if necessary
+   *
+   * @param covDocsArea
+   * @returns
+   */
+  public getCovDocsAreaController(covDocsArea: CovDocsArea): CovDocsAreaController {
+    const existingController = this._interactableControllers.find(
+      eachExistingArea => eachExistingArea.id === covDocsArea.name,
+    );
+    if (existingController instanceof CovDocsAreaController) {
+      return existingController;
+    } else {
+      throw new Error(`No such covDocs area controller ${existingController}`);
     }
   }
 

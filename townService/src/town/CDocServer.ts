@@ -54,7 +54,16 @@ export default class CDocServer implements ICDocServer {
   }
 
   async createNewUser(username: string, password: string) {
-    throw new Error('Method not implemented.');
+    const insertQuery = 'INSERT INTO users(' +username+','+'password'+') VALUES($1, $2) RETURNING *';
+
+    // Execute the query with parameters
+    appDataSource.one(insertQuery, [username, password])
+      .then((result) => {
+        console.log('User created successfully:', result);
+      })
+      .catch((error) => {
+        console.error('Error creating user:', error);
+      });
   }
 
   async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {

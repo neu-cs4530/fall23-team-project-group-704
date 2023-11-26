@@ -4,6 +4,9 @@ describe('placeholder_test', () => {
     expect(true).toBeTruthy();
   });
 });
+
+// Daniel?
+
 /** import { mock } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import CovDocsAreaController from './CovDocsAreaController';

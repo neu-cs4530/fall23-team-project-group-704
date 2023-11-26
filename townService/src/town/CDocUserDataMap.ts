@@ -4,6 +4,12 @@ interface CDocUserData {
   activeDoc: CDocDocID | undefined;
   ownedDocs: CDocDocID[];
 }
+
+/**
+ * Maps users to their active documents (opened documents) as well as
+ * owned and shared with them documents.
+ * Need this class to cache data from the database and give to the frontend.
+ */
 export class CDocUserDataMap implements ICDocUserDataMap {
   public isTrackingDoc(docid: string): boolean {
     if (!docid) throw new Error('Given null string in isTrackingDoc');

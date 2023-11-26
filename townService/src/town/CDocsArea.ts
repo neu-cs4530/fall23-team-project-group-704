@@ -65,6 +65,12 @@ export default class CDocsArea extends InteractableArea {
    * GetOwnedDocs: same as GetDoc, but also updates the cached state for this user,
    * such that toModel is now up to date
    *
+   * OpenDoc: sets the given doc as 'active' for the user, and emits an area change event
+   * the new toModel() value should indicate the given doc as active
+   *
+   * CloseDoc: should remove the given doc as the active doc if it is active, and
+   * also emit an area change event
+   *
    * @param command
    * @param player
    * @returns

@@ -1,17 +1,20 @@
 import { DataSource } from 'typeorm';
-import Document from './document';
-import User from './user';
+import Documents from './document';
+import Users from './user';
 
 const appDataSource: DataSource = new DataSource({
   type: 'postgres',
-  host: 'dpg-clbtekccu2es738mmif0-a',
+  host: 'dpg-clbtekccu2es738mmif0-a.oregon-postgres.render.com',
+  ssl: true,
   port: 5432,
   username: 'coveydocs_user',
   password: 'BnMjyOzetiuOg8VECO3gWl5KeYp5w4iZ',
   database: 'coveydocs',
-  entities: [Document, User],
+  entities: [Documents, Users],
+  connectTimeoutMS: undefined,
+  // synchronize: true,
 });
 
-export default appDataSource;
-
 appDataSource.initialize();
+
+export default appDataSource;

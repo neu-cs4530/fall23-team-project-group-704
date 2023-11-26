@@ -1,12 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn } from 'typeorm';
 
-@Entity()
-export default class User {
-  @PrimaryGeneratedColumn()
+@Entity({ name: 'Users' })
+export default class Users {
+  @PrimaryColumn()
   id: string;
 
   @Column()
-  userName: string;
+  username: string;
 
   @Column({ select: false })
   password: string;

@@ -1,9 +1,9 @@
 import { nanoid } from 'nanoid';
 import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
 import { ICDocServer } from './ICDocServer';
-import Document from '../api/document';
+import Documents from '../api/document';
 import appDataSource from '../api/datasource';
-import User from '../api/user';
+import Users from '../api/user';
 
 // TODO: change ids from numbers to right typegit
 /** We will do all operations directly to database for now. */
@@ -18,14 +18,14 @@ export default class CDocServer implements ICDocServer {
   }
 
   public async validateUser(id: string, password: string): Promise<boolean> {
-    const users = await appDataSource
+    const foundUsers = await appDataSource
       .createQueryBuilder()
       .select('user')
-      .from(User, 'user')
+      .from(Users, 'user')
       .where('user.id = :id', { id })
       .andWhere('user.password = :password', { password })
       .getMany();
-    return users.length === 1;
+    return foundUsers.length === 1;
   }
 
   public addDocumentEditedListener(listener: (docid: string) => void): void {
@@ -45,20 +45,19 @@ export default class CDocServer implements ICDocServer {
   }
 
   public async createNewDoc(user_id: string): Promise<ICDocDocument> {
-    const newDoc: Document = new Document();
+    const newDoc: Documents = new Documents();
 
-    newDoc.id = nanoid();
-
-    newDoc.userId = user_id;
-    newDoc.name = 'Default Doc';
-    newDoc.allowedUsersView = [];
-    newDoc.allowedUsersEdit = [];
+    newDoc.user_id = user_id;
+    newDoc.name = 'New Document';
+    newDoc.allowedusersview = [];
+    newDoc.allowedusersedit = [];
     newDoc.data = 'this is a default doc';
+    newDoc.id = nanoid();
 
     const newID = await appDataSource
       .createQueryBuilder()
       .insert()
-      .into(Document)
+      .into(Documents)
       .values([newDoc])
       .returning('id')
       .execute();
@@ -73,30 +72,32 @@ export default class CDocServer implements ICDocServer {
     // .where('user.id = :id', { username })
     // .getMany();
 
-    const users = await appDataSource.manager.find(User, {});
-    if (users.length !== 0) throw new Error('User already exists');
+    const foundUsers = await appDataSource.manager.find(Users, { where: { id: username } });
+    if (foundUsers.length !== 0) throw new Error('User already exists');
 
-    const newUser: User = new User();
+    if (username === undefined || password === undefined)
+      throw new Error('Username or password was null');
+    const newUser: Users = new Users();
     newUser.id = username;
-    newUser.userName = username;
+    newUser.username = username;
     newUser.password = password;
-    await appDataSource.createQueryBuilder().insert().into(User).values([newUser]).execute();
+    await appDataSource.createQueryBuilder().insert().into(Users).values([newUser]).execute();
   }
 
   public async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
     const docs = await appDataSource
       .createQueryBuilder()
       .select('doc')
-      .from(Document, 'doc')
+      .from(Documents, 'doc')
       .where('doc.id = :id', { id: docid })
       .getMany();
-    return docs.map(doc => String(doc.id));
+    return docs.map(doc => String(doc.name));
   }
 
   public async writeToDoc(docid: CDocDocID, content: string) {
     await appDataSource
       .createQueryBuilder()
-      .update(Document)
+      .update(Documents)
       .set({ data: content })
       .where('id = :id', { id: docid })
       .execute();
@@ -107,19 +108,19 @@ export default class CDocServer implements ICDocServer {
     const document = await appDataSource
       .createQueryBuilder()
       .select('doc')
-      .from(Document, 'doc')
+      .from(Documents, 'doc')
       .where('doc.id = :id', { id: docid })
       .getOne();
 
     if (document === null) {
-      throw new Error();
+      throw new Error('Document not found');
     } else {
       const doc: ICDocDocument = {
-        owner: document.userId,
-        editors: document.allowedUsersEdit,
-        viewers: document.allowedUsersView,
+        owner: document.user_id,
+        editors: document.allowedusersedit,
+        viewers: document.allowedusersview,
         content: document.data,
-        createdAt: 'need to implement this',
+        createdAt: 'Missing in database',
         docID: document.id,
         docName: document.name,
       };

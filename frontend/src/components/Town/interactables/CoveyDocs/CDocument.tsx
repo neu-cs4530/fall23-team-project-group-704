@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { ICDocDocument } from '../../../../types/CoveyTownSocket';
-import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
+import CDocsAreaController from '../../../../classes/interactable/CDocsAreaController';
 import { Button } from '@chakra-ui/react';
 export default function CDocument({
   document,
@@ -9,7 +9,7 @@ export default function CDocument({
   handleBackToDirectory,
 }: {
   document: ICDocDocument;
-  controller: CovDocsAreaController;
+  controller: CDocsAreaController;
   handleBackToDirectory: () => void;
   handlePermissions: () => void;
 }): JSX.Element {

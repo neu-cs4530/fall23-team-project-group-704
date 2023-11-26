@@ -2,21 +2,21 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useInteractable } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
 import { Button, Modal, ModalContent, ModalFooter, ModalOverlay } from '@chakra-ui/react';
-import CovDocsArea from '../CovDocsArea';
 import CDocSignin from './CDocSignin';
 import CDocDirectory from './CDocDirectory';
 import CDocument from './CDocument';
 import { CDocDocID, CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
-import CovDocsAreaController from '../../../../classes/interactable/CovDocsAreaController';
+import CDocsAreaController from '../../../../classes/interactable/CDocsAreaController';
 import CDocPermissions from './CDocPermissions';
+import CDocsArea from '../CDocsArea';
 
-// TODO: hook up to CovDocsAreaController events
+// TODO: hook up to CDocsAreaController events
 // docUpdated -> need to set the currentDocument to the new one
 // ownedDocsChanged -> change the ownedDocs state variable
 // etc
 export default function CDocAreaWrapper(): JSX.Element {
   const coveyTownController = useTownController();
-  const newConversation = useInteractable<CovDocsArea>('cdocsArea');
+  const newConversation = useInteractable<CDocsArea>('cdocsArea');
   /** const document = {
     createdAt: new Date().toDateString(),
     owner: nanoid(),
@@ -39,10 +39,11 @@ export default function CDocAreaWrapper(): JSX.Element {
     viewers: [],
     content: 'UI-side default content',
   });
+  const toast = useToast();
   const [ownedDocs, setOwnedDocs] = useState<ICDocDocument[]>([]);
   const [userID, setUserID] = useState<CDocUserID>('Ise');
 
-  const [cDocAreaController, setCDocAreaController] = useState<CovDocsAreaController | undefined>(
+  const [cDocAreaController, setCDocAreaController] = useState<CDocsAreaController | undefined>(
     undefined,
   );
 
@@ -72,13 +73,40 @@ export default function CDocAreaWrapper(): JSX.Element {
   }, [coveyTownController, newConversation]);
 
   // callback passed to child component
-  const handleSignin = () => {
+  const handleSignin = async (username: string, password: string) => {
     // await sign in/up user
-    setPages(pages + 1);
+    setSignedIn((await cDocAreaController?.signInUser(username, password)) || false);
+
+    if (signedIn) {
+      setUserID(username);
+      setPages(pages + 1);
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Unable to sign in',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
   };
 
-  const handleSignup = () => {
-    setPages(pages + 1);
+  const handleSignup = async (username: string, password: string) => {
+    try {
+      setSignedIn((await cDocAreaController?.createNewUser(username, password)) || false);
+      if (signedIn) {
+        setUserID(username);
+        setPages(pages + 1);
+      }
+    } catch (e) {
+      toast({
+        title: 'Error',
+        description: e,
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
   };
 
   // sets the current document and switches to the document editor

@@ -110,5 +110,84 @@ describe('[T2] CBoardAreaController', () => {
       expect(await testArea.openDocument(id2)).toThrow(new Error());
     });
   });
+  describe('getOpenedDocument', () => {
+    it('return current open document'){
+      const id1 = await testArea.addNewDocument();
+      await testArea.openDocument(id1);
+      await testArea.writeToDoc('doc1');
+      expect(await testArea.getOpenedDocument()).toEqual('doc1');
+    }
+    it('throws exception if no document is open', async () => {
+      expect(async () => testArea.getOpenedDocument()).toThrow(new Error());
+    });
+  });
+  describe('getDocByID', () => {
+    it('should return the right document', async () => {
+      const id1 = await testArea.addNewDocument();
+      const id2 = await testArea.addNewDocument();
+      await testArea.openDocument(id1);
+      await testArea.writeToDoc('doc1');
+      await testArea.closeDocument();
+      await testArea.openDocument(id2);
+      await testArea.writeToDoc('doc2');
+      await testArea.closeDocument();
+
+      expect(await testArea.getDocByID(id1)).toEqual('doc1');
+    });
+    it('should throw exception if document does not exist', async () => {
+      const id1 = await testArea.addNewDocument();
+      const id2 = await testArea.addNewDocument();
+      await testArea.openDocument(id1);
+      await testArea.writeToDoc('doc1');
+      await testArea.closeDocument();
+      await testArea.openDocument(id2);
+      await testArea.writeToDoc('doc2');
+      await testArea.closeDocument();
+
+      expect(async () => testArea.getDocByID('')).toThrow(new Error());
+    });
+  });
+  describe('closeDocument', () => {
+    it('should close the right document', async () => {
+      const id1 = await testArea.addNewDocument();
+      const id2 = await testArea.addNewDocument();
+      await testArea.openDocument(id1);
+      await testArea.writeToDoc('doc1');
+      await testArea.closeDocument();
+      await testArea.openDocument(id2);
+      await testArea.writeToDoc('doc2');
+      await testArea.closeDocument();
+
+      await testArea.openDocument(id1);
+      await testArea.closeDocument();
+
+      expect(await testArea.getOpenedDocument()).toThrow(new Error());
+    });
+    it('should throw exception if no document is open', async () => {
+      expect(async () => testArea.closeDocument()).toThrow(new Error());
+    });
+  });
+  describe('getOwnedDocs', () => { /*
+    it('should return the right documents', async () => {
+      const id1 = await testArea.addNewDocument();
+      const id2 = await testArea.addNewDocument();
+      const id3 = await testArea.addNewDocument();
+      await testArea.openDocument(id1);
+      await testArea.writeToDoc('doc1');
+      await testArea.closeDocument();
+      await testArea.openDocument(id2);
+      await testArea.writeToDoc('doc2');
+      await testArea.closeDocument();
+      await testArea.openDocument(id3);
+      await testArea.writeToDoc('doc3');
+      await testArea.closeDocument();
+
+      expect(await testArea.getOwnedDocs()).toEqual([id1, id2, id3]);
+    });
+    */
+    it('should return empty list if no documents are owned by the user', async () => {
+      expect(async () => testArea.getOwnedDocs('1234')).totoEqual([]);
+    });
+  });
 });
 */

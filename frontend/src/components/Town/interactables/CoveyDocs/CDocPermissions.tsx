@@ -43,10 +43,10 @@ export default function CDocPermissions(props: {
   }) => void;
   handleExit: () => void;
 }): JSX.Element {
-  const [viewers, setViewers] = useState<CDocUserID[]>(props.viewers);
+  const [viewers, setViewers] = useState<CDocUserID[]>(props.viewers ? props.viewers : []);
   const [newViewers, setNewViewers] = useState<CDocUserID[]>(viewers);
 
-  const [editors, setEditors] = useState<CDocUserID[]>(props.editors);
+  const [editors, setEditors] = useState<CDocUserID[]>(props.editors ? props.editors : []);
   const [newEditors, setNewEditors] = useState<CDocUserID[]>(editors);
 
   const [owner, setOwner] = useState<CDocUserID>(props.owner);

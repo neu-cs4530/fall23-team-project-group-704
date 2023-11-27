@@ -200,6 +200,15 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
   }, [cDocAreaController, coveyTownController, currentDocId, newConversation, userID]);
 
+  function handlePermissionsChanged(permissions: {
+    theOwner: string;
+    theEditors: string[];
+    theViewers: string[];
+  }): void {
+    viewers = theViewers;
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <Modal
       isOpen={isOpen}
@@ -232,7 +241,7 @@ export default function CDocAreaWrapper(): JSX.Element {
             owner={currentDocument.owner}
             editors={currentDocument.editors}
             viewers={currentDocument.viewers}
-            permissionsWereChanged={handleClickPermissions}
+            permissionsWereChanged={handlePermissionsChanged} //change this to a handlepermissionschanged
             handleExit={handleExitPermissions}></CDocPermissions>
         )}
         <ModalFooter>

@@ -32,7 +32,7 @@ export default class CDocServer implements ICDocServer {
     this._listeners = [];
     this._shareDocListeners = [];
     this._userCreatedListeners = [];
-    this._debugDeleteAll();
+    // this._debugDeleteAll();
   }
 
   private async _debugDeleteAll() {
@@ -84,6 +84,9 @@ export default class CDocServer implements ICDocServer {
 
     if (perms.length !== 0)
       throw new Error('User already has permissions on doc, remove them first');
+
+    const foundUsers = await appDataSource.manager.find(Users, { where: { id: userID } });
+    if (foundUsers.length === 0) throw new Error('User does not exist');
 
     const perm: Permissions = new Permissions();
     perm.docID = docID;

@@ -14,7 +14,7 @@ const appDataSource: DataSource = new DataSource({
   database: 'coveydocs',
   entities: [Documents, Users, Permissions],
   connectTimeoutMS: undefined,
-  synchronize: true,
+  // synchronize: true,
 });
 
 appDataSource.initialize();

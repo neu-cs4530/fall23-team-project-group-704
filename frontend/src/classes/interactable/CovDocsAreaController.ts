@@ -351,7 +351,6 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
     const docs = await Promise.all([oldDoc, newDoc]);
 
-    alert('send doc updates');
     this.emit('docUpdated', docs[1]);
   }
 }

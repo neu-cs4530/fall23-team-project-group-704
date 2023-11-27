@@ -220,7 +220,7 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
 
     //for every user that should be given edit access
-    for (const editor in permissions.theEditors) {
+    for (const editor of permissions.theEditors) {
       //if the person was previously a viewer, remove their permission and add back as an editor
       if (
         currentDocument.viewers.find(user => user === editor) !== undefined ||
@@ -234,7 +234,7 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
 
     //for every user that should be given view access
-    for (const viewer in permissions.theViewers) {
+    for (const viewer of permissions.theViewers) {
       //if the person was previously an editor, remove their permission and add back as a viewer
       if (
         currentDocument.editors.find(user => user === viewer) !== undefined ||

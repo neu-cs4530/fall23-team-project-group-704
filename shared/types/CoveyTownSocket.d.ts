@@ -81,11 +81,11 @@ export interface ViewingArea extends Interactable {
  */
 export interface ICDocDocument {
   createdAt: string;
-  owner: PlayerID;
+  owner: CDocUserID;
   docID: string;
   docName: string;
-  editors: PlayerID[];
-  viewers: PlayerID[];
+  editors: CDocUserID[];
+  viewers: CDocUserID[];
   content: string;
 }
 

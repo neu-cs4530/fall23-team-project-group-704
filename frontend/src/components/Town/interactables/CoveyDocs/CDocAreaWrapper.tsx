@@ -155,6 +155,8 @@ export default function CDocAreaWrapper(): JSX.Element {
   const handleClickPermissions = async (docID: CDocDocID) => {
     if (cDocAreaController) {
       await cDocAreaController.openDocument(userID, docID);
+      setCurrentDocId(docID);
+      setCurrentDocument(await cDocAreaController.getDocByID(docID));
       setPages(4);
     }
   };
@@ -166,7 +168,6 @@ export default function CDocAreaWrapper(): JSX.Element {
   useEffect(() => {
     if (cDocAreaController !== undefined) {
       const updateDoument = (doc: ICDocDocument) => {
-        alert('DOC updated');
         //setEditors(cDocAreaController.viewers);
         //setViewers(cDocAreaController.editors);
         setCurrentDocument(doc);

@@ -138,8 +138,7 @@ export class CDocUserDataMap implements ICDocUserDataMap {
           foundEntry[1].sharedDocsView.concat(permissionType === 'VIEW' ? [docID] : []),
         );
       }
-    }
-    throw new Error('User not found');
+    } else throw new Error('User not found');
   }
 
   private _setUserData(

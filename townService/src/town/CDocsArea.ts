@@ -26,6 +26,8 @@ export default class CDocsArea extends InteractableArea {
 
   private _userToDocMap: CDocUserDataMap;
 
+  private _registeredUsers: CDocUserID[];
+
   /**
    * Creates a new ConversationArea
    *
@@ -37,11 +39,15 @@ export default class CDocsArea extends InteractableArea {
     super(id, coordinates, townEmitter);
 
     this._userToDocMap = new CDocUserDataMap();
+    this._registeredUsers = [];
     // for some reason we have to pass the callback this._userToDocMap, or we get null error
     this._server.addDocumentEditedListener(doc =>
       this._handleDocumentEdited(doc, this._userToDocMap),
     );
-    this._server.addSharedWithListener(this._handleSharedWith);
+    this._server.addSharedWithListener((docID, targetUser, permissionType) =>
+      this._handleSharedWith(docID, targetUser, permissionType, this._userToDocMap),
+    );
+    this._setUpRegisteredUsers();
   }
 
   /**
@@ -103,12 +109,17 @@ export default class CDocsArea extends InteractableArea {
         command.targetUser,
         command.permissionType,
       );
-      this._handleSharedWith(command.docID, command.targetUser, command.permissionType);
+      this._handleSharedWith(
+        command.docID,
+        command.targetUser,
+        command.permissionType,
+        this._userToDocMap,
+      );
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'RemoveUser') {
       await this._server.removeUserFrom(command.docID, command.targetUser);
-      this._handleSharedWith(command.docID, command.targetUser, 'REMOVE');
+      this._handleSharedWith(command.docID, command.targetUser, 'REMOVE', this._userToDocMap);
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetSharedWithMe') {
@@ -130,7 +141,7 @@ export default class CDocsArea extends InteractableArea {
       type: 'CDocsArea',
       id: this.id,
       occupants: this.occupantsByID,
-      allRegisteredUsers: [],
+      allRegisteredUsers: this._registeredUsers,
       userToDocMap: this._userToDocMap,
     };
     return model;
@@ -158,10 +169,17 @@ export default class CDocsArea extends InteractableArea {
     docID: CDocDocID,
     userID: CDocUserID,
     permissionType: ExtendedPermissionType,
+    userToDocMap: CDocUserDataMap,
   ) {
-    if (this._userToDocMap.isTrackingUser(userID)) {
-      this._userToDocMap.shareWith(docID, userID, permissionType);
+    if (userToDocMap.isTrackingUser(userID)) {
+      userToDocMap.shareWith(docID, userID, permissionType);
       this._emitAreaChanged();
     }
+  }
+
+  private async _setUpRegisteredUsers() {
+    this._registeredUsers = await this._server.getAllRegisteredUsers();
+    this._server.addNewUserRegisteredListener(userID => this._registeredUsers.push(userID));
+    this._emitAreaChanged();
   }
 }

@@ -55,8 +55,6 @@ export default function CDocPermissions(props: {
   handleExit: () => void;
 }): JSX.Element {
   const [newOwner, setNewOwner] = useState('');
-  if (props.editors.length !== 0 || props.viewers.length !== 0) alert('YAY!');
-
   function DrawEditorsBox(cfg: { permissionType: PermissionType }) {
     const UserRadioGroup = ({ userID }: { userID: CDocUserID }) => {
       const [selectedOption, setSelectedOption] = useState('no selection');
@@ -260,8 +258,6 @@ export default function CDocPermissions(props: {
         newViewers = newViewers.filter((aUser: CDocUserID) => aUser !== formData.username);
       }
 
-      alert(`len edit ${newEditors.length}`);
-      alert(`len view ${newViewers.length}`);
       //  e.preventDefault();
       props.permissionsWereChanged({
         theOwner: props.owner,

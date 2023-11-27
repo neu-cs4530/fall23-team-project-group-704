@@ -44,7 +44,7 @@ export class CDocUserDataMap implements ICDocUserDataMap {
   }
 
   public hasActiveDoc(userid: CDocUserID): boolean {
-    if (!userid) throw new Error('Given null string in hasActiveDoc');
+    // if (!userid) throw new Error('Given null string in hasActiveDoc');
     return this._docMap.find(entry => entry[0] === userid) !== undefined;
   }
 
@@ -101,6 +101,12 @@ export class CDocUserDataMap implements ICDocUserDataMap {
     return [];
   }
 
+  /**
+   * Share the given doc with the given person by modifying their list of shared with me documents.
+   * @param docID
+   * @param userID
+   * @param permissionType
+   */
   public shareWith(docID: CDocDocID, userID: CDocUserID, permissionType: ExtendedPermissionType) {
     const foundEntry = this._docMap.find(entry => entry[0] === userID);
 
@@ -133,7 +139,7 @@ export class CDocUserDataMap implements ICDocUserDataMap {
     sharedEdit: CDocDocID[],
     sharedView: CDocDocID[],
   ) {
-    this._docMap.filter(entry => entry[0] !== userid);
+    this._docMap = this._docMap.filter(entry => entry[0] !== userid);
     const newData: CDocUserData = {
       activeDoc,
       ownedDocs,

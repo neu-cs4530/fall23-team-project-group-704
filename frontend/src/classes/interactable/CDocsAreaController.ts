@@ -35,13 +35,11 @@ import TownController from '../TownController';
 export type CovDocsEvents = BaseInteractableEventMap & {
   docOpened: (docID: CDocDocID) => void;
   docClosed: () => void;
-  docUpdated: (newContent: string) => void;
+  docUpdated: (doc: ICDocDocument) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
-  userLoggedIn: (user_id: CDocUserID) => void;
   // sends the id of the new document created, and if it is valid
   // it isn't valid if we don't know which is the newly created document
   newDocumentCreated: (docid: CDocDocID, valid_id: boolean) => void;
-  userLoggedOut: (user_id: CDocUserID) => void;
   sharedWithMeChanged: (docID: CDocDocID, permissionType: ExtendedPermissionType) => void;
   //add one for active users changed and add a field for active users in board area?
 };
@@ -292,10 +290,13 @@ export default class CDocsAreaController extends InteractableAreaController<
       );
     }
 
-    if (this._userID) {
+    alert(`outside outside`);
+    if (this._userID !== undefined) {
+      alert(`outside`);
       const hadOpenDoc = oldBoard.userToDocMap.hasActiveDoc(this._userID);
       const hasOpenDoc = updatedModel.userToDocMap.hasActiveDoc(this._userID);
 
+      alert(`inside`);
       //add emit statements for ui
       if (!hadOpenDoc && hasOpenDoc) {
         this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
@@ -312,7 +313,10 @@ export default class CDocsAreaController extends InteractableAreaController<
         oldBoard.userToDocMap.getActiveDoc(this._userID) ===
           updatedModel.userToDocMap.getActiveDoc(this._userID)
       ) {
-        this._sendDocUpdated(updatedModel.userToDocMap.getActiveDoc(this._userID));
+        this._sendDocUpdated(
+          oldBoard.userToDocMap.getActiveDoc(this._userID),
+          updatedModel.userToDocMap.getActiveDoc(this._userID),
+        );
       } else if (hadOpenDoc && !hasOpenDoc) {
         this.emit('docClosed');
       }
@@ -340,7 +344,13 @@ export default class CDocsAreaController extends InteractableAreaController<
     }
   }
 
-  private async _sendDocUpdated(docID: CDocDocID) {
-    this.emit('docUpdated', (await this.getDocByID(docID)).content);
+  private async _sendDocUpdated(oldID: CDocDocID, docID: CDocDocID) {
+    const oldDoc = this.getDocByID(oldID);
+    const newDoc = this.getDocByID(docID);
+
+    const docs = await Promise.all([oldDoc, newDoc]);
+
+    alert('send doc updates');
+    this.emit('docUpdated', docs[1]);
   }
 }

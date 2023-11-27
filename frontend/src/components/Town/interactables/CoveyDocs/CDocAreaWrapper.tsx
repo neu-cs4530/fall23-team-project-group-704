@@ -115,15 +115,17 @@ export default function CDocAreaWrapper(): JSX.Element {
     async (docId: string) => {
       setCurrentDocId(docId);
       if (cDocAreaController) {
-        setCurrentDocument(await cDocAreaController?.getDocByID(docId));
+        await cDocAreaController.openDocument(userID, docId);
+        setCurrentDocument(await cDocAreaController.getDocByID(docId));
         setPages(pages + 1);
       }
     },
-    [cDocAreaController, pages],
+    [cDocAreaController, pages, userID],
   );
   const handleNewDoc = useCallback(async () => {
     if (cDocAreaController) {
       const newID = await cDocAreaController.addNewDocument(userID);
+      await cDocAreaController.openDocument(userID, newID);
       setCurrentDocument(await cDocAreaController.getDocByID(newID));
       setOwnedDocs(
         await Promise.all(
@@ -160,7 +162,7 @@ export default function CDocAreaWrapper(): JSX.Element {
   // generate the testing doc whenever our cdocareacontroller becomes non null
   // useEffect(() => {
   // setUserID('Ise');
-  // generateTestingDoc();
+  //generateTestingDoc();
   //}, [cDocAreaController, generateTestingDoc, userID]);
 
   // update the cdocareacontroller whenever our newConversation becomes non null
@@ -179,21 +181,24 @@ export default function CDocAreaWrapper(): JSX.Element {
     //setViewers(permissions.theViewers);
   };*/
 
-  const handleClickPermissions = () => {
-    setPages(4);
+  const handleClickPermissions = async (docID: CDocDocID) => {
+    if (cDocAreaController) {
+      await cDocAreaController.openDocument(userID, docID);
+      setPages(4);
+    }
   };
 
   const handleExitPermissions = () => {
-    setPages(3);
+    setPages(2);
   };
 
   useEffect(() => {
     if (cDocAreaController !== undefined) {
-      const updateDoument = async () => {
+      const updateDoument = (doc: ICDocDocument) => {
+        alert('DOC updated');
         //setEditors(cDocAreaController.viewers);
         //setViewers(cDocAreaController.editors);
-        const result = await cDocAreaController.getDocByID(currentDocId);
-        setCurrentDocument(result);
+        setCurrentDocument(doc);
       };
       const newDocumentCreated = async (docid: CDocDocID, valid: boolean) => {
         //setEditors(cDocAreaController.viewers);
@@ -210,8 +215,13 @@ export default function CDocAreaWrapper(): JSX.Element {
           setCurrentDocument(await cDocAreaController.getDocByID(docid));
         }
       };
+      const signIn = async () => {
+        const signed = await cDocAreaController.signInUser('Ise', 'password');
+      };
       cDocAreaController.addListener('docUpdated', updateDoument);
       cDocAreaController.addListener('newDocumentCreated', newDocumentCreated);
+
+      signIn();
 
       return () => {
         cDocAreaController.removeListener('docUpdated', updateDoument);

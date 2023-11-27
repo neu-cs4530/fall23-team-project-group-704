@@ -32,7 +32,7 @@ export default function CDocAreaWrapper(): JSX.Element {
     content: 'string',
   };*/
   //  const documents = [document, document, document, document];
-  //  const [signedIn, setSignedIn] = useState(false);
+   const [signedIn, setSignedIn] = useState(false);
   const [pages, setPages] = useState(1);
   const [currentDocId, setCurrentDocId] = useState('fake_frontend_id');
   const [currentDocument, setCurrentDocument] = useState<ICDocDocument>({

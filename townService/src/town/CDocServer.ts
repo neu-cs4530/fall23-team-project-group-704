@@ -32,6 +32,16 @@ export default class CDocServer implements ICDocServer {
     this._listeners = [];
     this._shareDocListeners = [];
     this._userCreatedListeners = [];
+    this._debugDeleteAll();
+  }
+
+  private async _debugDeleteAll() {
+    await appDataSource
+      .createQueryBuilder()
+      .delete()
+      .from(Documents)
+      .where('user_id = :userID', { userID: 'Ise' })
+      .execute();
   }
 
   addNewUserRegisteredListener(listener: (userID: string) => void): void {

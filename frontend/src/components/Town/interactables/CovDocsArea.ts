@@ -28,6 +28,7 @@ export default class CovDocsArea extends Interactable {
   }
 
   private async _doACrudeTest() {
+    return 'here is a doc area';
     const cDocController = this.townController.getCovDocsAreaController(this);
     const user = nanoid();
     await cDocController.createNewUser(user, 'password');

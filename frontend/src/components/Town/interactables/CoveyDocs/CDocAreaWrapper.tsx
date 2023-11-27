@@ -85,7 +85,6 @@ export default function CDocAreaWrapper(): JSX.Element {
   const handleDocument = useCallback(
     async (docId: string) => {
       setCurrentDocId(docId);
-      alert('hello');
       if (cDocAreaController) {
         setCurrentDocument(await cDocAreaController?.getDocByID(docId));
         setPages(pages + 1);
@@ -121,19 +120,19 @@ export default function CDocAreaWrapper(): JSX.Element {
     getDocument();
   }, [currentDocId, getDocument]);*/
 
-  const generateTestingDoc = useCallback(async () => {
+  /**  const generateTestingDoc = useCallback(async () => {
     if (cDocAreaController) {
       const docid = await cDocAreaController.addNewDocument(userID);
       const doc = await cDocAreaController.getDocByID(docid);
       setOwnedDocs([doc]);
     }
-  }, [cDocAreaController, userID]);
+  }, [cDocAreaController, userID]);*/
 
   // generate the testing doc whenever our cdocareacontroller becomes non null
-  useEffect(() => {
-    setUserID('Ise');
-    generateTestingDoc();
-  }, [cDocAreaController, generateTestingDoc, userID]);
+  // useEffect(() => {
+  // setUserID('Ise');
+  // generateTestingDoc();
+  //}, [cDocAreaController, generateTestingDoc, userID]);
 
   // update the cdocareacontroller whenever our newConversation becomes non null
   useEffect(() => {
@@ -213,13 +212,11 @@ export default function CDocAreaWrapper(): JSX.Element {
     //for every user that should be given edit access
     for (const editor in permissions.theEditors) {
       //if the person was previously a viewer, remove their permission and add back as an editor
-      if (currentDocument.viewers.filter(user => user === editor).length !== 0) {
+      if (
+        currentDocument.viewers.find(user => user === editor) !== undefined ||
+        currentDocument.editors.find(user => user === editor) !== undefined
+      ) {
         await cDocAreaController.removeUserFrom(currentDocId, editor);
-        await cDocAreaController.shareDocWith(currentDocId, editor, 'EDIT');
-      }
-      //if the person was previously an editor, do nothing
-      else if (currentDocument.editors.filter(user => user === editor).length !== 0) {
-        //do nothing
       }
       //if the person previously previously had no access, add them as an editor
       //still have to implement this option through permissions ui
@@ -229,17 +226,15 @@ export default function CDocAreaWrapper(): JSX.Element {
     //for every user that should be given view access
     for (const viewer in permissions.theViewers) {
       //if the person was previously an editor, remove their permission and add back as a viewer
-      if (currentDocument.editors.filter(user => user === viewer).length !== 0) {
+      if (
+        currentDocument.editors.find(user => user === viewer) !== undefined ||
+        currentDocument.viewers.find(user => user === viewer) !== undefined
+      ) {
         await cDocAreaController.removeUserFrom(currentDocId, viewer);
-        await cDocAreaController.shareDocWith(currentDocId, viewer, 'VIEW');
-      }
-      //if the person was previously a viewer, do nothing
-      else if (currentDocument.viewers.filter(user => user === viewer).length !== 0) {
-        //do nothing
       }
       //if the person previously previously had no access, add them as an viewer
       //still have to implement this option through permissions ui
-      cDocAreaController.shareDocWith(currentDocId, viewer, 'VIEW');
+      await cDocAreaController.shareDocWith(currentDocId, viewer, 'VIEW');
     }
 
     //handling of transferring ownership -- keep?

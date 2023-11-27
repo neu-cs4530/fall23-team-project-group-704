@@ -79,7 +79,7 @@ export default function CDocAreaWrapper(): JSX.Element {
 
     if (signedIn) {
       setUserID(username);
-      setPages(pages + 1);
+      setPages(2);
     } else {
       toast({
         title: 'Error',
@@ -92,21 +92,24 @@ export default function CDocAreaWrapper(): JSX.Element {
   };
 
   const handleSignup = async (username: string, password: string) => {
-    try {
-      await cDocAreaController?.createNewUser(username, password);
-      setSignedIn((await cDocAreaController?.signInUser(username, password)) || false);
-      if (signedIn) {
-        setUserID(username);
-        setPages(pages + 1);
+    if (cDocAreaController) {
+      try {
+        await cDocAreaController.createNewUser(username, password);
+        const success = await cDocAreaController.signInUser(username, password);
+        setSignedIn(success);
+        if (success) {
+          setUserID(username);
+          setPages(2);
+        }
+      } catch (e) {
+        toast({
+          title: 'Error',
+          description: e,
+          status: 'error',
+          duration: 9000,
+          isClosable: true,
+        });
       }
-    } catch (e) {
-      toast({
-        title: 'Error',
-        description: e,
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      });
     }
   };
 
@@ -216,13 +219,8 @@ export default function CDocAreaWrapper(): JSX.Element {
           setCurrentDocument(await cDocAreaController.getDocByID(docid));
         }
       };
-      const signIn = async () => {
-        const signed = await cDocAreaController.signInUser('Ise', 'password');
-      };
       cDocAreaController.addListener('docUpdated', updateDoument);
       cDocAreaController.addListener('newDocumentCreated', newDocumentCreated);
-
-      signIn();
 
       return () => {
         cDocAreaController.removeListener('docUpdated', updateDoument);

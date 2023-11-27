@@ -173,8 +173,8 @@ export default class CDocsArea extends InteractableArea {
   ) {
     if (userToDocMap.isTrackingUser(userID)) {
       userToDocMap.shareWith(docID, userID, permissionType);
-      this._emitAreaChanged();
     }
+    this._emitAreaChanged();
   }
 
   private async _setUpRegisteredUsers() {

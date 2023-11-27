@@ -94,7 +94,7 @@ export interface ICDocDocument {
  * TODO: find way to return a different model to each user
  */
 export interface ICDocArea extends Interactable {
-  userToDocMap: ICDocUserDataMap;
+  docMap: [CDocUserID, CDocUserData][];
   allRegisteredUsers: PlayerID[];
 }
 /**

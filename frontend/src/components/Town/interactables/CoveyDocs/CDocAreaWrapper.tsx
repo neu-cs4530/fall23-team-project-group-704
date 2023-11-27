@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useInteractable } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
-import { Button, Modal, ModalContent, ModalFooter, ModalOverlay } from '@chakra-ui/react';
+import { Button, Modal, ModalContent, ModalFooter, ModalOverlay, useToast } from '@chakra-ui/react';
 import CDocSignin from './CDocSignin';
 import CDocDirectory from './CDocDirectory';
 import CDocument from './CDocument';
@@ -27,7 +27,7 @@ export default function CDocAreaWrapper(): JSX.Element {
     content: 'string',
   };*/
   //  const documents = [document, document, document, document];
-   const [signedIn, setSignedIn] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [pages, setPages] = useState(1);
   const [currentDocId, setCurrentDocId] = useState('fake_frontend_id');
   const [currentDocument, setCurrentDocument] = useState<ICDocDocument>({
@@ -93,7 +93,8 @@ export default function CDocAreaWrapper(): JSX.Element {
 
   const handleSignup = async (username: string, password: string) => {
     try {
-      setSignedIn((await cDocAreaController?.createNewUser(username, password)) || false);
+      await cDocAreaController?.createNewUser(username, password);
+      setSignedIn((await cDocAreaController?.signInUser(username, password)) || false);
       if (signedIn) {
         setUserID(username);
         setPages(pages + 1);
@@ -141,20 +142,6 @@ export default function CDocAreaWrapper(): JSX.Element {
   useEffect(() => {
     getDocument();
   }, [currentDocId, getDocument]);*/
-
-  const generateTestingDoc = useCallback(async () => {
-    if (cDocAreaController) {
-      const docid = await cDocAreaController.addNewDocument(userID);
-      const doc = await cDocAreaController.getDocByID(docid);
-      setOwnedDocs([doc]);
-    }
-  }, [cDocAreaController, userID]);
-
-  // generate the testing doc whenever our cdocareacontroller becomes non null
-  useEffect(() => {
-    setUserID('Ise');
-    generateTestingDoc();
-  }, [cDocAreaController, generateTestingDoc, userID]);
 
   // update the cdocareacontroller whenever our newConversation becomes non null
   useEffect(() => {

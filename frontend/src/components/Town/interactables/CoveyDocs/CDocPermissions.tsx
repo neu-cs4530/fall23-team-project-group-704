@@ -241,20 +241,22 @@ export default function CDocPermissions(props: {
     );
   }
 
-  /** 
+  /**
    * Displays a button which allows the user to exit the Permissions UI and return to the document.
    * @returns
+   * */
   function DrawExitButton() {
     //implement this the same way that permissionswerechanged was implemented? first see if that works
     function handleClick() {
       props.handleExit();
     }
+
     return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        <Button onClick={handleClick}>Exit</Button>
-      </GridItem>
+      <Button m={'2'} onClick={() => handleClick()}>
+        Exit
+      </Button>
     );
-  }*/
+  }
 
   return (
     <Flex direction='column' justify='space-between' align='center'>
@@ -273,8 +275,8 @@ export default function CDocPermissions(props: {
       </Flex>
       <Grid templateColumns='repeat(3, 1fr)' gap={6}>
         <Box></Box>
-        <Box></Box>
         <DrawSaveButton />
+        <DrawExitButton />
       </Grid>
     </Flex>
   );

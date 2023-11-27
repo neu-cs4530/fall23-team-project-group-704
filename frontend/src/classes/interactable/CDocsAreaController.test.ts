@@ -153,15 +153,11 @@ describe('[T2] CBoardAreaController', () => {
       const id2 = await testArea.addNewDocument();
       await testArea.openDocument(id1);
       await testArea.writeToDoc('doc1');
-      await testArea.closeDocument();
       await testArea.openDocument(id2);
       await testArea.writeToDoc('doc2');
-      await testArea.closeDocument();
-
-      await testArea.openDocument(id1);
-      await testArea.closeDocument();
-
-      expect(await testArea.getOpenedDocument()).toThrow(new Error());
+      await testArea.closeDocument(id2);
+      
+      expect(await testArea.getOpenedDocument(id1)).toThrow(new Error());
     });
     it('should throw exception if no document is open', async () => {
       expect(async () => testArea.closeDocument()).toThrow(new Error());

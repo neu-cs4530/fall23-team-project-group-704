@@ -15,9 +15,15 @@ import {
   Box,
   Button,
   Grid,
+  ChakraProvider,
+  FormControl,
+  FormLabel,
+  InputGroup,
+  InputLeftAddon,
   // GridItem,
   List,
   ListItem,
+  Input,
 } from '@chakra-ui/react';
 // import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
@@ -87,7 +93,7 @@ export default function CDocPermissions(props: {
         </RadioGroup>
       );
     };
-    const fakeEditors = ['ingi59d', 't', 'p'];
+    // const fakeEditors = ['ingi59d', 't', 'p'];
 
     return (
       <Box>
@@ -96,7 +102,7 @@ export default function CDocPermissions(props: {
         </Text>
         <Box maxH='100px' overflowY='auto' maxW='250px' overflowX='auto'>
           <List>
-            {fakeEditors.map((user: CDocUserID) => {
+            {editors.map((user: CDocUserID) => {
               return (
                 <ListItem key={user}>
                   <Center height='50px'>
@@ -142,7 +148,8 @@ export default function CDocPermissions(props: {
         </RadioGroup>
       );
     };
-    const fakeViewers = ['i', 't', 'p'];
+    // const fakeViewers = ['i', 't', 'p'];
+    //jo = []
     return (
       <Box>
         <Text fontSize='16px' fontWeight={'semibold'} bg='blue.100'>
@@ -150,7 +157,7 @@ export default function CDocPermissions(props: {
         </Text>
         <Box maxH='100px' overflowY='auto' maxW='250px' overflowX='auto'>
           <List>
-            {fakeViewers.map((user: CDocUserID) => {
+            {viewers.map((user: CDocUserID) => {
               return (
                 <ListItem key={user}>
                   <Center height='50px'>
@@ -222,6 +229,86 @@ export default function CDocPermissions(props: {
     );
   }
 
+  //to add: when clicking submit button, validate that the input user id is a real user
+  //disable the buttons if the form is empty
+  //allow the buttons to be unclicked
+  //make it so that clicking the other button doesnt clear the form
+  function AddUserField() {
+    const AddUserRadioGroup = ({ userID }: { userID: CDocUserID }) => {
+      const [selectedOption, setSelectedOption] = useState('no selection');
+
+      const isMakeEditorDisabled = false;
+      // how to check if this user is an editor?
+
+      const handleSelectChange = (value: string) => {
+        setSelectedOption(value === selectedOption ? '' : value);
+        if (selectedOption === 'editor') {
+          setNewEditors([...newEditors, userID]);
+          setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
+        } else if (selectedOption === 'viewer') {
+          setNewViewers([...newViewers, userID]);
+          setNewEditors(newEditors.filter((aUser: CDocUserID) => aUser !== userID));
+        } else if (selectedOption === '') {
+          setNewEditors(newEditors.filter((aUser: CDocUserID) => aUser !== userID));
+          setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
+        }
+      };
+
+      return (
+        <RadioGroup onChange={handleSelectChange} value={selectedOption}>
+          <Stack direction='row'>
+            <Radio value='editor' isDisabled={isMakeEditorDisabled}>
+              Add as Editor
+            </Radio>
+            <Radio value='viewer'>Add as Viewer</Radio>
+          </Stack>
+        </RadioGroup>
+      );
+    };
+
+    const [formData, setFormData] = useState({ username: '' });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleFormDataChange = (e: any) => {
+      const { name, value } = e.target;
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value,
+      }));
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleSubmit = (e: any) => {
+      e.preventDefault();
+      alert('hello!');
+      setEditors(newEditors);
+      setViewers(newViewers);
+      props.permissionsWereChanged({ theOwner: owner, theEditors: editors, theViewers: viewers });
+      console.log(formData);
+    };
+
+    return (
+      <Box m='2'>
+        <Text>Add a New User</Text>
+        <ChakraProvider>
+          <form onSubmit={handleSubmit}>
+            <FormControl>
+              <FormLabel>User ID:</FormLabel>
+              <Input
+                type='text'
+                name='username'
+                value={formData.username}
+                onChange={handleFormDataChange}
+              />
+            </FormControl>
+            <AddUserRadioGroup userID={formData.username} />
+            <Button type='submit'>Submit</Button>
+          </form>
+        </ChakraProvider>
+      </Box>
+    );
+  }
+
   /**
    * Renders the save button, which saves all changes currently selected.
    * @returns
@@ -274,7 +361,7 @@ export default function CDocPermissions(props: {
         <DrawOwnershipBox />
       </Flex>
       <Grid templateColumns='repeat(3, 1fr)' gap={6}>
-        <Box></Box>
+        <AddUserField />
         <DrawSaveButton />
         <DrawExitButton />
       </Grid>

@@ -193,6 +193,15 @@ export default function CDocAreaWrapper(): JSX.Element {
     if (cDocAreaController === undefined) {
       throw new Error('no controller defined.');
     }
+    if (currentDocument.viewers === undefined) {
+      throw new Error('viewers array is undefined.');
+    }
+    if (currentDocument.editors === undefined) {
+      throw new Error('editors array is undefined.');
+    }
+    if (currentDocument.owner === undefined) {
+      throw new Error('owner is undefined.');
+    }
 
     //for every user that should be given edit access
     for (const editor in permissions.theEditors) {

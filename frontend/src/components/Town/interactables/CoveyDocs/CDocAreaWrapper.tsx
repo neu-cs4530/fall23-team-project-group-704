@@ -72,22 +72,40 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
   }, [coveyTownController, newConversation]);
 
+  const updateOwnedDocs = useCallback(
+    async (user: CDocUserID) => {
+      if (cDocAreaController) {
+        const docIds = await cDocAreaController.getOwnedDocs(user);
+        const docs: Promise<ICDocDocument>[] = [];
+        for (const id of docIds) {
+          docs.push(cDocAreaController.getDocByID(id));
+        }
+        setOwnedDocs(await Promise.all(docs));
+      }
+    },
+    [cDocAreaController],
+  );
+
   // callback passed to child component
   const handleSignin = async (username: string, password: string) => {
     // await sign in/up user
-    setSignedIn((await cDocAreaController?.signInUser(username, password)) || false);
+    if (cDocAreaController) {
+      const success = await cDocAreaController.signInUser(username, password);
+      setSignedIn(success);
 
-    if (signedIn) {
-      setUserID(username);
-      setPages(2);
-    } else {
-      toast({
-        title: 'Error',
-        description: 'Unable to sign in',
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      });
+      if (success) {
+        setUserID(username);
+        await updateOwnedDocs(username);
+        setPages(2);
+      } else {
+        toast({
+          title: 'Unable to sign in - check credentials',
+          description: 'Unable to sign in',
+          status: 'error',
+          duration: 9000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -95,15 +113,10 @@ export default function CDocAreaWrapper(): JSX.Element {
     if (cDocAreaController) {
       try {
         await cDocAreaController.createNewUser(username, password);
-        const success = await cDocAreaController.signInUser(username, password);
-        setSignedIn(success);
-        if (success) {
-          setUserID(username);
-          setPages(2);
-        }
+        await handleSignin(username, password);
       } catch (e) {
         toast({
-          title: 'Error',
+          title: 'Unable to sign up - username may already be taken',
           description: e,
           status: 'error',
           duration: 9000,
@@ -207,12 +220,7 @@ export default function CDocAreaWrapper(): JSX.Element {
       const newDocumentCreated = async (docid: CDocDocID, valid: boolean) => {
         //setEditors(cDocAreaController.viewers);
         //setViewers(cDocAreaController.editors);
-        const docIds = await cDocAreaController.getOwnedDocs(userID);
-        const docs: Promise<ICDocDocument>[] = [];
-        for (const id of docIds) {
-          docs.push(cDocAreaController.getDocByID(id));
-        }
-        setOwnedDocs(await Promise.all(docs));
+        await updateOwnedDocs(userID);
 
         if (valid) {
           setCurrentDocId(docid);
@@ -227,7 +235,14 @@ export default function CDocAreaWrapper(): JSX.Element {
         cDocAreaController.removeListener('newDocumentCreated', newDocumentCreated);
       };
     }
-  }, [cDocAreaController, coveyTownController, currentDocId, newConversation, userID]);
+  }, [
+    cDocAreaController,
+    coveyTownController,
+    currentDocId,
+    newConversation,
+    updateOwnedDocs,
+    userID,
+  ]);
 
   async function handlePermissionsChanged(permissions: {
     theOwner: string;

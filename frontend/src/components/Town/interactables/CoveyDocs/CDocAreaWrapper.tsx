@@ -185,13 +185,49 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
   }, [cDocAreaController, coveyTownController, currentDocId, newConversation, userID]);
 
-  function handlePermissionsChanged(permissions: {
+  async function handlePermissionsChanged(permissions: {
     theOwner: string;
     theEditors: string[];
     theViewers: string[];
-  }): void {
-    viewers = theViewers;
-    throw new Error('Function not implemented.');
+  }): Promise<void> {
+    if (cDocAreaController === undefined) {
+      throw new Error('no controller defined.');
+    }
+
+    //for every user that should be given edit access
+    for (const editor in permissions.theEditors) {
+      //if the person was previously a viewer, remove their permission and add back as an editor
+      if (currentDocument.viewers.filter(user => user === editor).length !== 0) {
+        await cDocAreaController.removeUserFrom(currentDocId, editor);
+        await cDocAreaController.shareDocWith(currentDocId, editor, 'EDIT');
+      }
+      //if the person was previously an editor, do nothing
+      else if (currentDocument.editors.filter(user => user === editor).length !== 0) {
+        //do nothing
+      }
+      //if the person previously previously had no access, add them as an editor
+      //still have to implement this option through permissions ui
+      else await cDocAreaController.shareDocWith(currentDocId, editor, 'EDIT');
+    }
+
+    //for every user that should be given view access
+    for (const viewer in permissions.theViewers) {
+      //if the person was previously an editor, remove their permission and add back as a viewer
+      if (currentDocument.editors.filter(user => user === viewer).length !== 0) {
+        await cDocAreaController.removeUserFrom(currentDocId, viewer);
+        await cDocAreaController.shareDocWith(currentDocId, viewer, 'VIEW');
+      }
+      //if the person was previously a viewer, do nothing
+      else if (currentDocument.viewers.filter(user => user === viewer).length !== 0) {
+        //do nothing
+      }
+      //if the person previously previously had no access, add them as an viewer
+      //still have to implement this option through permissions ui
+      cDocAreaController.shareDocWith(currentDocId, viewer, 'VIEW');
+    }
+
+    //handling of transferring ownership -- keep?
+    currentDocument.owner = permissions.theOwner; //have owndership?
   }
 
   return (
@@ -226,7 +262,7 @@ export default function CDocAreaWrapper(): JSX.Element {
             owner={currentDocument.owner}
             editors={currentDocument.editors}
             viewers={currentDocument.viewers}
-            permissionsWereChanged={handlePermissionsChanged} //change this to a handlepermissionschanged
+            permissionsWereChanged={handlePermissionsChanged}
             handleExit={handleExitPermissions}></CDocPermissions>
         )}
         <ModalFooter>

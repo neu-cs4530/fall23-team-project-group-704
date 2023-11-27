@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 
-export default class CovDocsArea extends Interactable {
+export default class CDocsArea extends Interactable {
   private _isInteracting = false;
 
   private _infoTextBox: Phaser.GameObjects.Text | undefined;

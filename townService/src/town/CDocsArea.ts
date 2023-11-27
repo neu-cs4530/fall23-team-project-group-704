@@ -11,6 +11,8 @@ import {
   CDocDocID,
   TownEmitter,
   BoundingBox,
+  ExtendedPermissionType,
+  CDocUserID,
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 import { ICDocServer } from './ICDocServer';
@@ -39,6 +41,7 @@ export default class CDocsArea extends InteractableArea {
     this._server.addDocumentEditedListener(doc =>
       this._handleDocumentEdited(doc, this._userToDocMap),
     );
+    this._server.addSharedWithListener(this._handleSharedWith);
   }
 
   /**
@@ -53,7 +56,7 @@ export default class CDocsArea extends InteractableArea {
   ): Promise<InteractableCommandReturnType<CommandType>> {
     if (command.type === 'WriteDoc') {
       await this._server.writeToDoc(command.docid, command.content);
-      this._emitAreaChanged();
+      this._handleDocumentEdited(command.docid, this._userToDocMap);
       return undefined as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'GetDoc') {
@@ -94,6 +97,27 @@ export default class CDocsArea extends InteractableArea {
       this._emitAreaChanged();
       return { doc } as InteractableCommandReturnType<CommandType>;
     }
+    if (command.type === 'ShareDoc') {
+      await this._server.shareDocumentWith(
+        command.docID,
+        command.targetUser,
+        command.permissionType,
+      );
+      this._handleSharedWith(command.docID, command.targetUser, command.permissionType);
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'RemoveUser') {
+      await this._server.removeUserFrom(command.docID, command.targetUser);
+      this._handleSharedWith(command.docID, command.targetUser, 'REMOVE');
+      return undefined as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'GetSharedWithMe') {
+      const docs: CDocDocID[] = await this._server.getSharedWith(
+        command.userID,
+        command.permissionType,
+      );
+      return { docs } as InteractableCommandReturnType<CommandType>;
+    }
     throw new InvalidParametersError(INVALID_COMMAND_MESSAGE);
   }
 
@@ -126,6 +150,17 @@ export default class CDocsArea extends InteractableArea {
 
   private _handleDocumentEdited(docid: CDocDocID, userToDocMap: CDocUserDataMap) {
     if (userToDocMap.isTrackingDoc(docid)) {
+      this._emitAreaChanged();
+    }
+  }
+
+  private _handleSharedWith(
+    docID: CDocDocID,
+    userID: CDocUserID,
+    permissionType: ExtendedPermissionType,
+  ) {
+    if (this._userToDocMap.isTrackingUser(userID)) {
+      this._userToDocMap.shareWith(docID, userID, permissionType);
       this._emitAreaChanged();
     }
   }

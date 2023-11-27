@@ -1,5 +1,11 @@
 import { nanoid } from 'nanoid';
-import { CDocDocID, ICDocDocument } from '../types/CoveyTownSocket';
+import {
+  CDocDocID,
+  CDocUserID,
+  ExtendedPermissionType,
+  ICDocDocument,
+  PermissionType,
+} from '../types/CoveyTownSocket';
 import { ICDocServer } from './ICDocServer';
 import Documents from '../api/document';
 import appDataSource from '../api/datasource';
@@ -12,9 +18,51 @@ export default class CDocServer implements ICDocServer {
 
   private _listeners: ((docid: CDocDocID) => void)[];
 
+  private _shareDocListeners: ((
+    docid: CDocDocID,
+    targetUser: CDocUserID,
+    permissionType: ExtendedPermissionType,
+  ) => void)[];
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._listeners = [];
+  }
+
+  public addSharedWithListener(
+    listener: (
+      docid: CDocDocID,
+      targetUser: CDocUserID,
+      permissionType: ExtendedPermissionType,
+    ) => void,
+  ): void {
+    this._shareDocListeners.push(listener);
+  }
+
+  public removeSharedWithListener(
+    listener: (
+      docid: CDocDocID,
+      targetUser: CDocUserID,
+      permissionType: ExtendedPermissionType,
+    ) => void,
+  ): void {
+    this._shareDocListeners = this._shareDocListeners.filter(l => l !== listener);
+  }
+
+  public getSharedWith(userID: string, permissionType: PermissionType): Promise<string[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  public async shareDocumentWith(
+    docID: string,
+    userID: string,
+    permissionType: PermissionType,
+  ): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
+  public async removeUserFrom(docID: string, userID: string): Promise<void> {
+    throw new Error('Method not implemented.');
   }
 
   public async validateUser(id: string, password: string): Promise<boolean> {

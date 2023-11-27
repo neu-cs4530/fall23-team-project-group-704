@@ -23,6 +23,7 @@ import {
 
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
+import CDocUserDataMap from './CDocUserDataMap';
 
 //TODO:
 //idea : add a parameter on document that is permissionsOpen? that is a state variable. that way the controller
@@ -70,6 +71,8 @@ export default class CDocsAreaController extends InteractableAreaController<
   // a cached state to fire the appropriate update events
   private _boardArea: ICDocArea;
 
+  private _userDataMap: CDocUserDataMap;
+
   private _userID: string | undefined;
 
   /**
@@ -82,6 +85,7 @@ export default class CDocsAreaController extends InteractableAreaController<
     // super(boardAreaModel.id);
     super(id);
     this._boardArea = boardAreaModel;
+    this._userDataMap = CDocUserDataMap.fromData(boardAreaModel.docMap);
     this._townController = townController;
   }
 
@@ -193,8 +197,8 @@ export default class CDocsAreaController extends InteractableAreaController<
   //what is this method used for?
   public async getOpenedDocument(user_id: CDocUserID): Promise<string> {
     if (user_id === undefined) throw new Error('Given null user_id in getOpenedDocument');
-    if (this._boardArea.userToDocMap.hasActiveDoc(user_id))
-      return (await this.getDocByID(this._boardArea.userToDocMap.getActiveDoc(user_id))).content;
+    if (this._userDataMap.hasActiveDoc(user_id))
+      return (await this.getDocByID(this._userDataMap.getActiveDoc(user_id))).content;
     else throw new Error('No active document');
   }
 
@@ -281,7 +285,9 @@ export default class CDocsAreaController extends InteractableAreaController<
    */
   protected _updateFrom(updatedModel: ICDocArea): void {
     const oldBoard = this._boardArea;
+    const oldMap = this._userDataMap;
     this._boardArea = updatedModel;
+    this._userDataMap = CDocUserDataMap.fromData(updatedModel.docMap);
 
     if (oldBoard.allRegisteredUsers !== this._boardArea.allRegisteredUsers) {
       this.emit(
@@ -290,39 +296,34 @@ export default class CDocsAreaController extends InteractableAreaController<
       );
     }
 
-    alert(`outside outside`);
     if (this._userID !== undefined) {
-      alert(`outside`);
-      const hadOpenDoc = oldBoard.userToDocMap.hasActiveDoc(this._userID);
-      const hasOpenDoc = updatedModel.userToDocMap.hasActiveDoc(this._userID);
+      const hadOpenDoc = oldMap.hasActiveDoc(this._userID);
+      const hasOpenDoc = this._userDataMap.hasActiveDoc(this._userID);
 
-      alert(`inside`);
       //add emit statements for ui
       if (!hadOpenDoc && hasOpenDoc) {
-        this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
+        this.emit('docOpened', this._userDataMap.getActiveDoc(this._userID));
       } else if (
         hadOpenDoc &&
         hasOpenDoc &&
-        oldBoard.userToDocMap.getActiveDoc(this._userID) !==
-          updatedModel.userToDocMap.getActiveDoc(this._userID)
+        oldMap.getActiveDoc(this._userID) !== this._userDataMap.getActiveDoc(this._userID)
       ) {
-        this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
+        this.emit('docOpened', this._userDataMap.getActiveDoc(this._userID));
       } else if (
         hadOpenDoc &&
         hasOpenDoc &&
-        oldBoard.userToDocMap.getActiveDoc(this._userID) ===
-          updatedModel.userToDocMap.getActiveDoc(this._userID)
+        oldMap.getActiveDoc(this._userID) === this._userDataMap.getActiveDoc(this._userID)
       ) {
         this._sendDocUpdated(
-          oldBoard.userToDocMap.getActiveDoc(this._userID),
-          updatedModel.userToDocMap.getActiveDoc(this._userID),
+          oldMap.getActiveDoc(this._userID),
+          this._userDataMap.getActiveDoc(this._userID),
         );
       } else if (hadOpenDoc && !hasOpenDoc) {
         this.emit('docClosed');
       }
 
-      const prevOwnedDocs = oldBoard.userToDocMap.getOwnedDocs(this._userID);
-      const newOwnedDocs = updatedModel.userToDocMap.getOwnedDocs(this._userID);
+      const prevOwnedDocs = oldMap.getOwnedDocs(this._userID);
+      const newOwnedDocs = this._userDataMap.getOwnedDocs(this._userID);
 
       // TODO: this is brittle, what about doc deletion?
       if (newOwnedDocs.length > prevOwnedDocs.length) {
@@ -332,8 +333,8 @@ export default class CDocsAreaController extends InteractableAreaController<
       const pTypes: PermissionType[] = ['EDIT', 'VIEW'];
 
       for (const pType of pTypes) {
-        const prevShared = oldBoard.userToDocMap.getSharedDocs(this._userID, pType);
-        const newShared = updatedModel.userToDocMap.getSharedDocs(this._userID, pType);
+        const prevShared = oldMap.getSharedDocs(this._userID, pType);
+        const newShared = this._userDataMap.getSharedDocs(this._userID, pType);
 
         const added = newShared.filter(doc => prevShared.indexOf(doc) < 0);
         const removed = prevShared.filter(doc => newShared.indexOf(doc) < 0);

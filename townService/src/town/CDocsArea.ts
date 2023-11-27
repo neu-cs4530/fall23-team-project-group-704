@@ -16,8 +16,8 @@ import {
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 import { ICDocServer } from './ICDocServer';
-import { CDocUserDataMap } from './CDocUserDataMap';
 import CDocServer from './CDocServer';
+import CDocUserDataMap from './CDocUserDataMap';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
@@ -142,7 +142,7 @@ export default class CDocsArea extends InteractableArea {
       id: this.id,
       occupants: this.occupantsByID,
       allRegisteredUsers: this._registeredUsers,
-      userToDocMap: this._userToDocMap,
+      docMap: this._userToDocMap.toData(),
     };
     return model;
   }

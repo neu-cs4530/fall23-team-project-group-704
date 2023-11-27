@@ -32,7 +32,7 @@ export default class CDocServer implements ICDocServer {
     this._listeners = [];
     this._shareDocListeners = [];
     this._userCreatedListeners = [];
-    //  this._debugDeleteAll();
+    this._debugDeleteAll();
   }
 
   private async _debugDeleteAll() {
@@ -216,7 +216,7 @@ export default class CDocServer implements ICDocServer {
         editors: await this._getCollaboratorsFor(docid, 'EDIT'),
         viewers: await this._getCollaboratorsFor(docid, 'VIEW'),
         content: document.data,
-        createdAt: document.date.toDateString(),
+        createdAt: document.date.toISOString(),
         docID: document.id,
         docName: document.name,
       };

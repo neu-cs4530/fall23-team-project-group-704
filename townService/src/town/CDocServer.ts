@@ -27,6 +27,7 @@ export default class CDocServer implements ICDocServer {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._listeners = [];
+    this._shareDocListeners = [];
   }
 
   public addSharedWithListener(

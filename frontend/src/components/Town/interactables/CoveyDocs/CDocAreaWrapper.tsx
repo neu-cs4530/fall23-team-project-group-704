@@ -97,6 +97,13 @@ export default function CDocAreaWrapper(): JSX.Element {
     if (cDocAreaController) {
       const newID = await cDocAreaController.addNewDocument(userID);
       setCurrentDocument(await cDocAreaController.getDocByID(newID));
+      setOwnedDocs(
+        await Promise.all(
+          (
+            await cDocAreaController.getOwnedDocs(userID)
+          ).map(id => cDocAreaController.getDocByID(id)),
+        ),
+      );
       setPages(pages + 1);
     }
   }, [cDocAreaController, pages, userID]);

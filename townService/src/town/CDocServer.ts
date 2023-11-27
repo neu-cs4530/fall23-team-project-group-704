@@ -10,6 +10,7 @@ import { ICDocServer } from './ICDocServer';
 import Documents from '../api/document';
 import appDataSource from '../api/datasource';
 import Users from '../api/user';
+import Permissions from '../api/permissions';
 
 // TODO: change ids from numbers to right typegit
 /** We will do all operations directly to database for now. */
@@ -61,43 +62,45 @@ export default class CDocServer implements ICDocServer {
     throw new Error('Method not implemented.');
   }
 
+  // Only does something if the document is not shared with this person, else fails
   public async shareDocumentWith(
     docID: string,
     userID: string,
     permissionType: PermissionType,
   ): Promise<void> {
-    const doc = await this.getDoc(docID);
+    const perms = await appDataSource.manager.find(Permissions, {
+      where: { userID, docID },
+    });
 
-    if (permissionType === 'EDIT') {
-      await appDataSource
-        .createQueryBuilder()
-        .update(Documents)
-        .set({ editors: this._addIfNotThere(doc.editors, userID) })
-        .where('id = :id', { id: docID })
-        .execute();
-    } else if (permissionType === 'VIEW') {
-      await appDataSource
-        .createQueryBuilder()
-        .update(Documents)
-        .set({ viewers: this._addIfNotThere(doc.viewers, userID) })
-        .where('id = :id', { id: docID })
-        .execute();
-    }
+    if (perms.length !== 0)
+      throw new Error('User already has permissions on doc, remove them first');
+
+    const perm: Permissions = new Permissions();
+    perm.docID = docID;
+    perm.userID = userID;
+    perm.permissionType = permissionType;
+
+    await appDataSource.createQueryBuilder().insert().into(Permissions).values([perm]).execute();
+
     this._shareDocListeners.map(listener => listener(docID, userID, permissionType));
   }
 
   public async removeUserFrom(docID: string, userID: string): Promise<void> {
-    const doc = await this.getDoc(docID);
+    const perms = await appDataSource.manager.find(Permissions, {
+      where: { userID, docID },
+    });
+
+    if (perms.length !== 0)
+      throw new Error('User already has permissions on doc, remove them first');
 
     await appDataSource
       .createQueryBuilder()
-      .update(Documents)
-      .set({
-        editors: doc.editors.filter(elem => elem !== userID),
-        viewers: doc.viewers.filter(elem => elem !== userID),
-      })
-      .where('id = :id', { id: docID })
+      .delete()
+      .from(Permissions)
+      .where('docID = :docID', { docID })
+      .andWhere('userID = :userID', { userID })
       .execute();
+
     this._shareDocListeners.map(listener => listener(docID, userID, 'REMOVE'));
   }
 
@@ -133,8 +136,6 @@ export default class CDocServer implements ICDocServer {
 
     newDoc.user_id = user_id;
     newDoc.name = 'New Document';
-    newDoc.allowedusersview = [];
-    newDoc.allowedusersedit = [];
     newDoc.data = 'this is a default doc';
     newDoc.id = nanoid();
 
@@ -169,14 +170,21 @@ export default class CDocServer implements ICDocServer {
     await appDataSource.createQueryBuilder().insert().into(Users).values([newUser]).execute();
   }
 
-  public async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
+  public async getOwnedDocs(userID: CDocUserID): Promise<CDocDocID[]> {
     const docs = await appDataSource
       .createQueryBuilder()
       .select('doc')
       .from(Documents, 'doc')
-      .where('doc.id = :id', { id: docid })
+      .where('doc.user_id = :userID', { userID })
       .getMany();
-    return docs.map(doc => String(doc.name));
+
+    // await appDataSource
+    // .createQueryBuilder()
+    // .delete()
+    // .from(Documents)
+    // .where('user_id = :userID', { userID: 'Ise' })
+    // .execute();
+    return docs.map(doc => doc.id);
   }
 
   public async writeToDoc(docid: CDocDocID, content: string) {
@@ -202,10 +210,10 @@ export default class CDocServer implements ICDocServer {
     } else {
       const doc: ICDocDocument = {
         owner: document.user_id,
-        editors: document.allowedusersedit,
-        viewers: document.allowedusersview,
+        editors: await this._getCollaboratorsFor(docid, 'EDIT'),
+        viewers: await this._getCollaboratorsFor(docid, 'VIEW'),
         content: document.data,
-        createdAt: 'Missing in database',
+        createdAt: document.date.toDateString(),
         docID: document.id,
         docName: document.name,
       };
@@ -221,5 +229,17 @@ export default class CDocServer implements ICDocServer {
   private _addIfNotThere<Type>(list: Type[], item: Type): Type[] {
     if (list.find(elem => elem === item) !== undefined) return list;
     return list.concat([item]);
+  }
+
+  private async _getCollaboratorsFor(docID: CDocDocID, permissionType: PermissionType) {
+    const collaborators = await appDataSource
+      .createQueryBuilder()
+      .select('perm')
+      .from(Permissions, 'perm')
+      .where('perm.docID = :docID', { docID })
+      .andWhere('perm.permissionType = :permissionType', { permissionType })
+      .getMany();
+
+    return collaborators.map(perm => perm.userID);
   }
 }

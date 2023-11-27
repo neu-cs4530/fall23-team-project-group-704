@@ -24,10 +24,17 @@ export default class CDocServer implements ICDocServer {
     permissionType: ExtendedPermissionType,
   ) => void)[];
 
+  private _userCreatedListeners: ((userID: CDocUserID) => void)[];
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._listeners = [];
     this._shareDocListeners = [];
+    this._userCreatedListeners = [];
+  }
+
+  addNewUserRegisteredListener(listener: (userID: string) => void): void {
+    this._userCreatedListeners.push(listener);
   }
 
   public addSharedWithListener(
@@ -59,11 +66,39 @@ export default class CDocServer implements ICDocServer {
     userID: string,
     permissionType: PermissionType,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    const doc = await this.getDoc(docID);
+
+    if (permissionType === 'EDIT') {
+      await appDataSource
+        .createQueryBuilder()
+        .update(Documents)
+        .set({ editors: this._addIfNotThere(doc.editors, userID) })
+        .where('id = :id', { id: docID })
+        .execute();
+    } else if (permissionType === 'VIEW') {
+      await appDataSource
+        .createQueryBuilder()
+        .update(Documents)
+        .set({ viewers: this._addIfNotThere(doc.viewers, userID) })
+        .where('id = :id', { id: docID })
+        .execute();
+    }
+    this._shareDocListeners.map(listener => listener(docID, userID, permissionType));
   }
 
   public async removeUserFrom(docID: string, userID: string): Promise<void> {
-    throw new Error('Method not implemented.');
+    const doc = await this.getDoc(docID);
+
+    await appDataSource
+      .createQueryBuilder()
+      .update(Documents)
+      .set({
+        editors: doc.editors.filter(elem => elem !== userID),
+        viewers: doc.viewers.filter(elem => elem !== userID),
+      })
+      .where('id = :id', { id: docID })
+      .execute();
+    this._shareDocListeners.map(listener => listener(docID, userID, 'REMOVE'));
   }
 
   public async validateUser(id: string, password: string): Promise<boolean> {
@@ -110,6 +145,7 @@ export default class CDocServer implements ICDocServer {
       .values([newDoc])
       .returning('id')
       .execute();
+
     return this.getDoc(newID.generatedMaps[0].id);
   }
 
@@ -175,5 +211,15 @@ export default class CDocServer implements ICDocServer {
       };
       return doc;
     }
+  }
+
+  public async getAllRegisteredUsers(): Promise<CDocUserID[]> {
+    const foundUsers = await appDataSource.manager.find(Users, { where: {} });
+    return foundUsers.map(user => user.id);
+  }
+
+  private _addIfNotThere<Type>(list: Type[], item: Type): Type[] {
+    if (list.find(elem => elem === item) !== undefined) return list;
+    return list.concat([item]);
   }
 }

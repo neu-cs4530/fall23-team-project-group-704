@@ -75,10 +75,13 @@ export default function CDocAreaWrapper(): JSX.Element {
   const updateOwnedDocs = useCallback(
     async (user: CDocUserID) => {
       if (cDocAreaController) {
-        const docIds = await cDocAreaController.getOwnedDocs(user);
+        const docIds = cDocAreaController.getOwnedDocs(user);
+        const getEdit = cDocAreaController.getDocsSharedWith(user, 'EDIT');
+        const getView = cDocAreaController.getDocsSharedWith(user, 'VIEW');
+        const allDocIDS = await Promise.all([docIds, getEdit, getView]);
         const docs: Promise<ICDocDocument>[] = [];
-        for (const id of docIds) {
-          docs.push(cDocAreaController.getDocByID(id));
+        for (const idList of allDocIDS) {
+          for (const id of idList) docs.push(cDocAreaController.getDocByID(id));
         }
         setOwnedDocs(await Promise.all(docs));
       }
@@ -143,16 +146,10 @@ export default function CDocAreaWrapper(): JSX.Element {
       const newID = await cDocAreaController.addNewDocument(userID);
       await cDocAreaController.openDocument(userID, newID);
       setCurrentDocument(await cDocAreaController.getDocByID(newID));
-      setOwnedDocs(
-        await Promise.all(
-          (
-            await cDocAreaController.getOwnedDocs(userID)
-          ).map(id => cDocAreaController.getDocByID(id)),
-        ),
-      );
+      await updateOwnedDocs(userID);
       setPages(pages + 1);
     }
-  }, [cDocAreaController, pages, userID]);
+  }, [cDocAreaController, pages, updateOwnedDocs, userID]);
 
   const handleBackToDirectory = () => {
     setPages(2);

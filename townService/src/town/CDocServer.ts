@@ -68,8 +68,16 @@ export default class CDocServer implements ICDocServer {
     this._shareDocListeners = this._shareDocListeners.filter(l => l !== listener);
   }
 
-  public getSharedWith(userID: string, permissionType: PermissionType): Promise<string[]> {
-    throw new Error('Method not implemented.');
+  public async getSharedWith(userID: string, permissionType: PermissionType): Promise<string[]> {
+    const docs = await appDataSource
+      .createQueryBuilder()
+      .select('perm')
+      .from(Permissions, 'perm')
+      .where('perm.userID = :userID', { userID })
+      .andWhere('perm.permissionType = :permissionType', { permissionType })
+      .getMany();
+
+    return docs.map(perm => perm.docID);
   }
 
   // Only does something if the document is not shared with this person, else fails

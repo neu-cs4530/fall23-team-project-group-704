@@ -1,4 +1,3 @@
-import { BroadcastOperator } from 'socket.io';
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
 import InvalidParametersError, { INVALID_COMMAND_MESSAGE } from '../lib/InvalidParametersError';
 import Player from '../lib/Player';
@@ -9,17 +8,14 @@ import {
   InteractableCommandReturnType,
   InteractableType,
   ICDocDocument,
-  CDocUserID,
   CDocDocID,
-  ServerToClientEvents,
-  SocketData,
   TownEmitter,
   BoundingBox,
 } from '../types/CoveyTownSocket';
-import CDocServer from './CDocServer';
 import InteractableArea from './InteractableArea';
-import { ICDocServer, MockCDocServer } from './ICDocServer';
+import { ICDocServer } from './ICDocServer';
 import { CDocUserDataMap } from './CDocUserDataMap';
+import CDocServer from './CDocServer';
 
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
@@ -39,7 +35,10 @@ export default class CDocsArea extends InteractableArea {
     super(id, coordinates, townEmitter);
 
     this._userToDocMap = new CDocUserDataMap();
-    this._server.addDocumentEditedListener(this._handleDocumentEdited);
+    // for some reason we have to pass the callback this._userToDocMap, or we get null error
+    this._server.addDocumentEditedListener(doc =>
+      this._handleDocumentEdited(doc, this._userToDocMap),
+    );
   }
 
   /**
@@ -125,8 +124,8 @@ export default class CDocsArea extends InteractableArea {
     return new CDocsArea(name, rect, broadcastEmitter);
   }
 
-  private _handleDocumentEdited(docid: CDocDocID) {
-    if (this._userToDocMap.isTrackingDoc(docid)) {
+  private _handleDocumentEdited(docid: CDocDocID, userToDocMap: CDocUserDataMap) {
+    if (userToDocMap.isTrackingDoc(docid)) {
       this._emitAreaChanged();
     }
   }

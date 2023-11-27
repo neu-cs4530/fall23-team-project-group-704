@@ -1,7 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useInteractable } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
+<<<<<<< HEAD
 import { Button, Modal, ModalContent, ModalFooter, ModalOverlay, useToast } from '@chakra-ui/react';
+=======
+import { Button, Modal, ModalContent, ModalFooter, ModalOverlay } from '@chakra-ui/react';
+import CovDocsArea from '../CovDocsArea';
+>>>>>>> main
 import CDocSignin from './CDocSignin';
 import CDocDirectory from './CDocDirectory';
 import CDocument from './CDocument';
@@ -27,7 +32,7 @@ export default function CDocAreaWrapper(): JSX.Element {
     content: 'string',
   };*/
   //  const documents = [document, document, document, document];
-  const [signedIn, setSignedIn] = useState(false);
+  //  const [signedIn, setSignedIn] = useState(false);
   const [pages, setPages] = useState(1);
   const [currentDocId, setCurrentDocId] = useState('fake_frontend_id');
   const [currentDocument, setCurrentDocument] = useState<ICDocDocument>({
@@ -47,13 +52,13 @@ export default function CDocAreaWrapper(): JSX.Element {
     undefined,
   );
 
-  const [owner, setOwner] = useState<CDocUserID>(currentDocument ? currentDocument.owner : '');
+  /**  const [owner, setOwner] = useState<CDocUserID>(currentDocument ? currentDocument.owner : '');
   const [editors, setEditors] = useState<CDocUserID[]>(
     currentDocument ? currentDocument.editors : [],
   );
   const [viewers, setViewers] = useState<CDocUserID[]>(
     currentDocument ? currentDocument.viewers : [],
-  );
+  );*/
 
   const isOpen = newConversation !== undefined;
 
@@ -152,6 +157,7 @@ export default function CDocAreaWrapper(): JSX.Element {
 
   // generate the testing doc whenever our cdocareacontroller becomes non null
   useEffect(() => {
+    setUserID('Ise');
     generateTestingDoc();
   }, [cDocAreaController, generateTestingDoc, userID]);
 
@@ -161,15 +167,15 @@ export default function CDocAreaWrapper(): JSX.Element {
       setCDocAreaController(coveyTownController.getCovDocsAreaController(newConversation));
   }, [coveyTownController, newConversation]);
 
-  const handleChangePermissions = (permissions: {
+  /**const handleChangePermissions = (permissions: {
     theOwner: string;
     theEditors: string[];
     theViewers: string[];
   }) => {
-    setOwner(permissions.theOwner);
-    setEditors(permissions.theEditors);
-    setViewers(permissions.theViewers);
-  };
+    //  setOwner(permissions.theOwner);
+    //setEditors(permissions.theEditors);
+    //setViewers(permissions.theViewers);
+  };*/
 
   const handleClickPermissions = () => {
     setPages(4);
@@ -244,7 +250,7 @@ export default function CDocAreaWrapper(): JSX.Element {
             owner={currentDocument.owner}
             editors={currentDocument.editors}
             viewers={currentDocument.viewers}
-            permissionsWereChanged={handleChangePermissions}
+            permissionsWereChanged={handleClickPermissions}
             handleExit={handleExitPermissions}></CDocPermissions>
         )}
         <ModalFooter>

@@ -1,5 +1,5 @@
+import { nanoid } from 'nanoid';
 import Interactable, { KnownInteractableTypes } from '../Interactable';
-import CDocDirectory from './CoveyDocs/CDocDirectory';
 
 export default class CDocsArea extends Interactable {
   private _isInteracting = false;
@@ -29,10 +29,12 @@ export default class CDocsArea extends Interactable {
 
   private async _doACrudeTest() {
     const cDocController = this.townController.getCovDocsAreaController(this);
-    await cDocController.createNewUser('Joseph', 'password');
-    const id = await cDocController.addNewDocument('Joseph');
-    await cDocController.openDocument('Joseph', id);
-    return cDocController.getDocByID(id);
+    const user = nanoid();
+    await cDocController.createNewUser(user, 'password');
+    const id = await cDocController.addNewDocument(user);
+    await cDocController.openDocument(user, id);
+    await cDocController.writeToDoc(id, 'new content for this doc');
+    return (await cDocController.getDocByID(id)).content;
   }
 
   private async _showInfoBox() {

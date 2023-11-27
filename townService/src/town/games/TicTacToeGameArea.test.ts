@@ -75,8 +75,8 @@ describe('TicTacToeGameArea', () => {
   describe('handleCommand', () => {
     describe('[T3.1] when given a JoinGame command', () => {
       describe('when there is no game in progress', () => {
-        it('should create a new game and call _emitAreaChanged', () => {
-          const { gameID } = gameArea.handleCommand({ type: 'JoinGame' }, player1);
+        it('should create a new game and call _emitAreaChanged', async () => {
+          const { gameID } = await gameArea.handleCommand({ type: 'JoinGame' }, player1);
           expect(gameID).toBeDefined();
           if (!game) {
             throw new Error('Game was not created by the first call to join');
@@ -86,15 +86,15 @@ describe('TicTacToeGameArea', () => {
         });
       });
       describe('when there is a game in progress', () => {
-        it('should dispatch the join command to the game and call _emitAreaChanged', () => {
-          const { gameID } = gameArea.handleCommand({ type: 'JoinGame' }, player1);
+        it('should dispatch the join command to the game and call _emitAreaChanged', async () => {
+          const { gameID } = await gameArea.handleCommand({ type: 'JoinGame' }, player1);
           if (!game) {
             throw new Error('Game was not created by the first call to join');
           }
           expect(interactableUpdateSpy).toHaveBeenCalledTimes(1);
 
           const joinSpy = jest.spyOn(game, 'join');
-          const gameID2 = gameArea.handleCommand({ type: 'JoinGame' }, player2).gameID;
+          const gameID2 = (await gameArea.handleCommand({ type: 'JoinGame' }, player2)).gameID;
           expect(joinSpy).toHaveBeenCalledWith(player2);
           expect(gameID).toEqual(gameID2);
           expect(interactableUpdateSpy).toHaveBeenCalledTimes(2);
@@ -128,8 +128,8 @@ describe('TicTacToeGameArea', () => {
       });
       describe('when there is a game in progress', () => {
         let gameID: GameInstanceID;
-        beforeEach(() => {
-          gameID = gameArea.handleCommand({ type: 'JoinGame' }, player1).gameID;
+        beforeEach(async () => {
+          gameID = (await gameArea.handleCommand({ type: 'JoinGame' }, player1)).gameID;
           gameArea.handleCommand({ type: 'JoinGame' }, player2);
           interactableUpdateSpy.mockClear();
         });
@@ -246,8 +246,8 @@ describe('TicTacToeGameArea', () => {
           ).toThrowError(GAME_ID_MISSMATCH_MESSAGE);
           expect(interactableUpdateSpy).not.toHaveBeenCalled();
         });
-        it('should dispatch the leave command to the game and call _emitAreaChanged', () => {
-          const { gameID } = gameArea.handleCommand({ type: 'JoinGame' }, player1);
+        it('should dispatch the leave command to the game and call _emitAreaChanged', async () => {
+          const { gameID } = await gameArea.handleCommand({ type: 'JoinGame' }, player1);
           if (!game) {
             throw new Error('Game was not created by the first call to join');
           }
@@ -272,8 +272,8 @@ describe('TicTacToeGameArea', () => {
           expect(leaveSpy).toHaveBeenCalledWith(player1);
           expect(interactableUpdateSpy).not.toHaveBeenCalled();
         });
-        it('should update the history if the game is over', () => {
-          const { gameID } = gameArea.handleCommand({ type: 'JoinGame' }, player1);
+        it('should update the history if the game is over', async () => {
+          const { gameID } = await gameArea.handleCommand({ type: 'JoinGame' }, player1);
           gameArea.handleCommand({ type: 'JoinGame' }, player2);
           interactableUpdateSpy.mockClear();
           jest.spyOn(game, 'leave').mockImplementationOnce(() => {

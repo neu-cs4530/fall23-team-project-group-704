@@ -31,7 +31,8 @@ export default function CDocSignin({
 }: SignInProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isUser, setIsUser] = useState(false);
+  // const [isUser, setIsUser] = useState(false);
+  const isUser = false;
   const isValidUsername = username !== ''; // or already exists
   const isValidPassword = username !== '';
 

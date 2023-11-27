@@ -1,4 +1,3 @@
-import CDocsArea from '../components/Town/interactables/CDocsArea';
 import {
   ConversationArea,
   Interactable,

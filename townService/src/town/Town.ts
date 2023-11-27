@@ -412,7 +412,7 @@ export default class Town {
       .filter(eachObject => eachObject.type === 'CDocsArea')
       .map(eachGameAreaObj => CDocsArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
 
-    if (cDocAreas.length <= 0) throw new Error('no cdocareas');
+    //  if (cDocAreas.length <= 0) throw new Error('no cdocareas');
 
     this._interactables = this._interactables
       .concat(viewingAreas)

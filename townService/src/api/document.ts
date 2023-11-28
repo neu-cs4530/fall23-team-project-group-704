@@ -1,5 +1,4 @@
-import { Entity, Column, OneToMany, PrimaryColumn, CreateDateColumn } from 'typeorm';
-import Users from './user';
+import { Entity, Column, PrimaryColumn, CreateDateColumn } from 'typeorm';
 
 @Entity({ name: 'Documents' })
 export default class Documents {

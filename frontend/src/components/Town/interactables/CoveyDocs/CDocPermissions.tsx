@@ -3,10 +3,6 @@ import {
   Center,
   Divider,
   RadioGroup,
-  Menu,
-  MenuItem,
-  MenuButton,
-  MenuList,
   Stack,
   Radio,
   Flex,
@@ -18,14 +14,11 @@ import {
   ChakraProvider,
   FormControl,
   FormLabel,
-  InputGroup,
-  InputLeftAddon,
   // GridItem,
   List,
   ListItem,
   Input,
 } from '@chakra-ui/react';
-import { flowRight } from 'lodash';
 // import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
 import React, { useState } from 'react';
@@ -54,7 +47,6 @@ export default function CDocPermissions(props: {
   }) => void;
   handleExit: () => void;
 }): JSX.Element {
-  const [newOwner, setNewOwner] = useState('');
   function DrawEditorsBox(cfg: { permissionType: PermissionType }) {
     const UserRadioGroup = ({ userID }: { userID: CDocUserID }) => {
       const [selectedOption, setSelectedOption] = useState('no selection');
@@ -114,7 +106,7 @@ export default function CDocPermissions(props: {
    * clicking the save all changes button.
    */
 
-  function TransferOwnershipButton() {
+  /**   function TransferOwnershipButton() {
     function handleClick(user: CDocUserID) {
       setNewOwner(user);
     }
@@ -134,8 +126,8 @@ export default function CDocPermissions(props: {
         </MenuList>
       </Menu>
     );
-  }
-  function DrawOwnershipBox() {
+  }*/
+  /**function DrawOwnershipBox() {
     return (
       <Box>
         <Heading size='md' m='2'>
@@ -162,7 +154,7 @@ export default function CDocPermissions(props: {
       </Box>
     );
   }
-
+**/
   const [selectedOption, setSelectedOption] = useState<ExtendedPermissionType>('VIEW');
 
   //to add: when clicking submit button, validate that the input user id is a real user
@@ -199,7 +191,7 @@ export default function CDocPermissions(props: {
     const [formData, setFormData] = useState('');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleFormDataChange = (e: any) => {
-      const { name, value } = e.target;
+      const value = e.target.value;
       setFormData(value);
     };
 
@@ -238,11 +230,11 @@ export default function CDocPermissions(props: {
       </Box>
     );
   }
-
+  /** 
   /**
    * Renders the save button, which saves all changes currently selected.
    * @returns
-   */
+   
   function DrawSaveButton() {
     function handleSaveClick() {
       let newEditors: CDocUserID[] = [];
@@ -272,7 +264,7 @@ export default function CDocPermissions(props: {
         Save Changes
       </Button>
     );
-  }
+  }*/
 
   /**
    * Displays a button which allows the user to exit the Permissions UI and return to the document.

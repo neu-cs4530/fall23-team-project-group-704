@@ -1,4 +1,4 @@
-import { CDocDocID, CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
+import { CDocDocID, ICDocDocument } from '../../../../types/CoveyTownSocket';
 import React from 'react';
 import styled from 'styled-components';
 import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table, Button } from '@chakra-ui/react';

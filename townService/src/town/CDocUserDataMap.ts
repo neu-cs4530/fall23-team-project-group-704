@@ -12,7 +12,7 @@ interface CDocUserData {
   sharedDocsEdit: CDocDocID[];
   sharedDocsView: CDocDocID[];
 }
-export class CDocUserDataMap implements ICDocUserDataMap {
+class CDocUserDataMap implements ICDocUserDataMap {
   public isTrackingDoc(docid: string): boolean {
     if (!docid) throw new Error('Given null string in isTrackingDoc');
 

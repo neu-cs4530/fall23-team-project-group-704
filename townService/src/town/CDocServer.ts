@@ -11,8 +11,9 @@ import Documents from '../api/document';
 import appDataSource from '../api/datasource';
 import Users from '../api/user';
 
-// TODO: change ids from numbers to right typegit
-/** We will do all operations directly to database for now. */
+/**
+ * Class that executes database queries. See ICDocServer.ts for documentation.
+ */
 export default class CDocServer implements ICDocServer {
   private static _instance: CDocServer;
 

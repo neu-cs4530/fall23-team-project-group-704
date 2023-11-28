@@ -5,6 +5,7 @@ import { T } from 'ramda';
 import Player from '../lib/Player';
 import {
   CDocCloseDocCommand,
+  CDocCreateNewUserCommand,
   CDocDocID,
   CDocGetDocCommand,
   CDocGetOwnedDocsCommand,
@@ -166,6 +167,22 @@ describe('CDocsArea', () => {
         expect(() =>
           (testArea.toModel() as ICDocArea).userToDocMap.getActiveDoc('test_user'),
         ).toThrowError('User has no active doc');
+        expect(townEmitter.emit).toHaveBeenCalledTimes(1);
+      });
+    });
+    describe('CreateUser', () => {
+      it('create given user and fire area change event', async () => {
+        mockClear(townEmitter.emit);
+        mockClear(mockServer.createNewUser);
+        await testArea.handleCommand<CDocCreateNewUserCommand>(
+          {
+            type: 'CreateNewUser',
+            username: 'new_user',
+            password: 'password',
+          },
+          newPlayer,
+        );
+        expect(mockServer.createNewUser).toHaveBeenCalledWith('new_user', 'password');
         expect(townEmitter.emit).toHaveBeenCalledTimes(1);
       });
     });

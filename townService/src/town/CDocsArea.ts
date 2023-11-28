@@ -71,6 +71,10 @@ export default class CDocsArea extends InteractableArea {
    * CloseDoc: should remove the given doc as the active doc if it is active, and
    * also emit an area change event
    *
+   * CreateNewUser: creates the user with given username and password
+   * throw error if given username is taken
+   * also emit area change event
+   *
    * @param command
    * @param player
    * @returns

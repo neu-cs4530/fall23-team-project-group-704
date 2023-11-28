@@ -1,5 +1,4 @@
-import { Entity, Column, OneToMany, PrimaryColumn } from 'typeorm';
-import Users from './user';
+import { Entity, Column, PrimaryColumn, CreateDateColumn } from 'typeorm';
 
 @Entity({ name: 'Documents' })
 export default class Documents {
@@ -12,12 +11,9 @@ export default class Documents {
   @Column()
   name: string;
 
-  @OneToMany(() => Users, u => u.id)
-  allowedusersview: string[];
-
-  @OneToMany(() => Users, u => u.id)
-  allowedusersedit: string[];
-
   @Column()
   data: string;
+
+  @CreateDateColumn()
+  date: Date;
 }

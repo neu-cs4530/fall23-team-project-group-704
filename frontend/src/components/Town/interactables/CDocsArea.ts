@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 
-export default class CovDocsArea extends Interactable {
+export default class CDocsArea extends Interactable {
   private _isInteracting = false;
 
   private _infoTextBox: Phaser.GameObjects.Text | undefined;
@@ -28,6 +28,7 @@ export default class CovDocsArea extends Interactable {
   }
 
   private async _doACrudeTest() {
+    return 'here is a doc area';
     const cDocController = this.townController.getCovDocsAreaController(this);
     const user = nanoid();
     await cDocController.createNewUser(user, 'password');

@@ -22,13 +22,10 @@ const Form = styled.div`
 `;
 
 interface SignInProps {
-  signUp: () => void;
-  signIn: () => void;
+  signUp: (username: string, password: string) => void;
+  signIn: (username: string, password: string) => void;
 }
-export default function CDocSignin({
-  signUp: signUp = () => {},
-  signIn: signIn = () => {},
-}: SignInProps) {
+export default function CDocSignin(props: SignInProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   // const [isUser, setIsUser] = useState(false);
@@ -64,10 +61,15 @@ export default function CDocSignin({
         <Input type='password' value={password} onChange={e => setPassword(e.target.value)} />
         {/*<FormHelperText>We'll never share your email.</FormHelperText>*/}
       </FormControl>
-      <Button mt={4} colorScheme='teal' isLoading={false} type='submit' onClick={signUp}>
+      <Button
+        mt={4}
+        colorScheme='teal'
+        isLoading={false}
+        type='submit'
+        onClick={() => props.signUp(username, password)}>
         Sign up
       </Button>
-      <Button className={'signin'} onClick={signIn}>
+      <Button className={'signin'} onClick={() => props.signIn(username, password)}>
         Sign in
       </Button>
     </Form>

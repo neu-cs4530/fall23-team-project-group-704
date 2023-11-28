@@ -9,7 +9,7 @@ import Interactable from '../components/Town/Interactable';
 import ConversationArea from '../components/Town/interactables/ConversationArea';
 import GameArea from '../components/Town/interactables/GameArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
-import CovDocsArea from '../components/Town/interactables/CovDocsArea';
+import CDocsArea from '../components/Town/interactables/CDocsArea';
 import { LoginController } from '../contexts/LoginControllerContext';
 import { TownsService, TownsServiceClient } from '../generated/client';
 import useTownController from '../hooks/useTownController';
@@ -36,7 +36,7 @@ import InteractableAreaController, {
 import TicTacToeAreaController from './interactable/TicTacToeAreaController';
 import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
-import CovDocsAreaController from './interactable/CovDocsAreaController';
+import CDocsAreaController from './interactable/CDocsAreaController';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -334,9 +334,9 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
   public get covDocsAreas() {
     const ret = this._interactableControllers.filter(
-      eachInteractable => eachInteractable instanceof CovDocsAreaController,
+      eachInteractable => eachInteractable instanceof CDocsAreaController,
     );
-    return ret as CovDocsAreaController[];
+    return ret as CDocsAreaController[];
   }
 
   /**
@@ -617,7 +617,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           } //need to add a case for boardarea?
           else if (isCDocArea(eachInteractable)) {
             this._interactableControllers.push(
-              new CovDocsAreaController(eachInteractable.id, eachInteractable, this),
+              new CDocsAreaController(eachInteractable.id, eachInteractable, this),
             );
           }
         });
@@ -688,11 +688,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    * @param covDocsArea
    * @returns
    */
-  public getCovDocsAreaController(covDocsArea: CovDocsArea): CovDocsAreaController {
+  public getCovDocsAreaController(covDocsArea: CDocsArea): CDocsAreaController {
     const existingController = this._interactableControllers.find(
       eachExistingArea => eachExistingArea.id === covDocsArea.name,
     );
-    if (existingController instanceof CovDocsAreaController) {
+    if (existingController instanceof CDocsAreaController) {
       return existingController;
     } else {
       throw new Error(`No such covDocs area controller ${existingController}`);

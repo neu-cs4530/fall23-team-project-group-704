@@ -3,10 +3,6 @@ import {
   Center,
   Divider,
   RadioGroup,
-  Menu,
-  MenuItem,
-  MenuButton,
-  MenuList,
   Stack,
   Radio,
   Flex,
@@ -15,14 +11,22 @@ import {
   Box,
   Button,
   Grid,
+  ChakraProvider,
+  FormControl,
+  FormLabel,
   // GridItem,
   List,
   ListItem,
+  Input,
 } from '@chakra-ui/react';
 // import { ChevronDownIcon } from '@chakra-ui/icons';
 //import EventEmitter from 'events';
 import React, { useState } from 'react';
-import { CDocUserID } from '../../../../../../shared/types/CoveyTownSocket';
+import {
+  CDocUserID,
+  ExtendedPermissionType,
+  PermissionType,
+} from '../../../../../../shared/types/CoveyTownSocket';
 
 /**
  * The Permissions component allows the user to edit the viewers, editors, and owner of a document. It is embedded within the document
@@ -33,6 +37,7 @@ import { CDocUserID } from '../../../../../../shared/types/CoveyTownSocket';
 //permissionsWereChanged: ({theOwner: CDocUserID, theEditors: CDocUserID[], theViewers: CDocUserID[]}) => void
 
 export default function CDocPermissions(props: {
+  userID: CDocUserID;
   owner: CDocUserID;
   editors: CDocUserID[];
   viewers: CDocUserID[];
@@ -40,45 +45,47 @@ export default function CDocPermissions(props: {
     theOwner: CDocUserID;
     theEditors: CDocUserID[];
     theViewers: CDocUserID[];
+    removed: CDocUserID[];
   }) => void;
   handleExit: () => void;
 }): JSX.Element {
-  const [viewers, setViewers] = useState<CDocUserID[]>(props.viewers);
-  const [newViewers, setNewViewers] = useState<CDocUserID[]>(viewers);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = (e: any, userName: CDocUserID, permissionType: ExtendedPermissionType) => {
+    let newEditors: CDocUserID[] = [];
+    let newViewers: CDocUserID[] = [];
+    newEditors = props.editors.filter((aUser: CDocUserID) => aUser !== userName);
+    newViewers = props.viewers.filter((aUser: CDocUserID) => aUser !== userName);
+    if (permissionType === 'EDIT') {
+      newEditors = [...newEditors, userName];
+    } else if (permissionType === 'VIEW') newViewers = [...newViewers, userName];
 
-  const [editors, setEditors] = useState<CDocUserID[]>(props.editors);
-  const [newEditors, setNewEditors] = useState<CDocUserID[]>(editors);
+    e.preventDefault();
+    props.permissionsWereChanged({
+      theOwner: props.owner,
+      theEditors: newEditors,
+      theViewers: newViewers,
+      removed: permissionType === 'REMOVE' ? [userName] : [],
+    });
+  };
 
-  const [owner, setOwner] = useState<CDocUserID>(props.owner);
-  const [newOwner, setNewOwner] = useState(owner);
-
-  function DrawEditorsBox() {
-    const UserRadioGroup = ({ userID }: { userID: CDocUserID }) => {
+  function DrawEditorsBox(cfg: { permissionType: PermissionType }) {
+    /**const UserRadioGroup = () => {
       const [selectedOption, setSelectedOption] = useState('no selection');
 
-      const isMakeViewerDisabled = userID !== owner;
-      const isRemoveAccessDisabled = userID !== owner;
+      const isMakeViewerDisabled = props.userID !== props.owner;
+      const isRemoveAccessDisabled = props.userID !== props.owner;
 
       const handleSelectChange = (value: string) => {
         setSelectedOption(value === selectedOption ? '' : value);
-
-        if (selectedOption === 'viewer') {
-          setNewViewers([...newViewers, userID]);
-          setNewEditors(newEditors.filter((aUser: CDocUserID) => aUser !== userID));
-        } else if (selectedOption === '') {
-          setNewEditors([...new Set([...newEditors, userID])]);
-          setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
-        } else if (selectedOption === 'remove') {
-          setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
-          setNewEditors(newEditors.filter((aUser: CDocUserID) => aUser !== userID));
-        }
       };
 
       return (
         <RadioGroup onChange={handleSelectChange} value={selectedOption}>
           <Stack direction='row'>
-            <Radio value='viewer' isDisabled={isMakeViewerDisabled}>
-              Make viewer
+            <Radio
+              value={cfg.permissionType === 'EDIT' ? 'editor' : 'viewer'}
+              isDisabled={isMakeViewerDisabled}>
+              Make {cfg.permissionType === 'EDIT' ? 'editor' : 'viewer'}
             </Radio>
             <Radio value='remove' isDisabled={isRemoveAccessDisabled}>
               Remove access
@@ -86,94 +93,37 @@ export default function CDocPermissions(props: {
           </Stack>
         </RadioGroup>
       );
-    };
-    const fakeEditors = ['ingi59d', 't', 'p'];
+    };*/
+    // const fakeEditors = ['ingi59d', 't', 'p'];
 
     return (
       <Box>
         <Text fontSize='16px' fontWeight={'semibold'} bg='blue.100'>
-          People who can edit:
+          People who can {cfg.permissionType === 'VIEW' ? 'view' : 'edit'}:
         </Text>
         <Box maxH='100px' overflowY='auto' maxW='250px' overflowX='auto'>
           <List>
-            {fakeEditors.map((user: CDocUserID) => {
-              return (
-                <ListItem key={user}>
-                  <Center height='50px'>
-                    {user}
-                    <Divider orientation='vertical' />
-                    <UserRadioGroup userID={user} />
-                  </Center>
-                </ListItem>
-              );
-            })}
+            {(cfg.permissionType === 'VIEW' ? props.viewers : props.editors).map(
+              (user: CDocUserID) => {
+                return (
+                  <ListItem key={user}>
+                    <Center height='50px'>{user}</Center>
+                  </ListItem>
+                );
+              },
+            )}
           </List>
         </Box>
       </Box>
     );
   }
-
-  function DrawViewersBox() {
-    const UserRadioGroup = ({ userID }: { userID: CDocUserID }) => {
-      const [selectedOption, setSelectedOption] = useState('no selection');
-
-      const isMakeEditorDisabled =
-        viewers.find((user: CDocUserID) => user === userID) !== undefined;
-      const isRemoveAccessDisabled = userID !== owner;
-
-      const handleSelectChange = (value: string) => {
-        setSelectedOption(value === selectedOption ? '' : value);
-        if (selectedOption === 'editor') {
-          setNewEditors([...newEditors, userID]);
-          setNewViewers(newViewers.filter((aUser: CDocUserID) => aUser !== userID));
-        }
-      };
-
-      return (
-        <RadioGroup onChange={handleSelectChange} value={selectedOption}>
-          <Stack direction='row'>
-            <Radio value='editor' isDisabled={isMakeEditorDisabled}>
-              Make editor
-            </Radio>
-            <Radio value='remove' isDisabled={isRemoveAccessDisabled}>
-              Remove access
-            </Radio>
-          </Stack>
-        </RadioGroup>
-      );
-    };
-    const fakeViewers = ['i', 't', 'p'];
-    return (
-      <Box>
-        <Text fontSize='16px' fontWeight={'semibold'} bg='blue.100'>
-          People who can view:
-        </Text>
-        <Box maxH='100px' overflowY='auto' maxW='250px' overflowX='auto'>
-          <List>
-            {fakeViewers.map((user: CDocUserID) => {
-              return (
-                <ListItem key={user}>
-                  <Center height='50px'>
-                    {user}
-                    <Divider orientation='vertical' />
-                    <UserRadioGroup userID={user} />
-                  </Center>
-                </ListItem>
-              );
-            })}
-          </List>
-        </Box>
-      </Box>
-    );
-  }
-
   /**
    * Displays the id of the current owner of the document as well as an option to choose another user to transfer ownership to.
    * Clicking a user's id through the dropdown menu populates the 'transfer ownership to' field, and ownership is transferred after
    * clicking the save all changes button.
    */
 
-  function TransferOwnershipButton() {
+  /**   function TransferOwnershipButton() {
     function handleClick(user: CDocUserID) {
       setNewOwner(user);
     }
@@ -193,15 +143,15 @@ export default function CDocPermissions(props: {
         </MenuList>
       </Menu>
     );
-  }
-  function DrawOwnershipBox() {
+  }*/
+  /**function DrawOwnershipBox() {
     return (
       <Box>
         <Heading size='md' m='2'>
           The Owner of this document is:
         </Heading>
         <Text bg='purple.100' border={'1px'} textAlign='center'>
-          {owner}
+          {props.owner}
         </Text>
         <Box></Box>
 
@@ -221,17 +171,89 @@ export default function CDocPermissions(props: {
       </Box>
     );
   }
+**/
+  const [selectedOption, setSelectedOption] = useState<ExtendedPermissionType>('VIEW');
 
+  //to add: when clicking submit button, validate that the input user id is a real user
+  //disable the buttons if the form is empty
+  //allow the buttons to be unclicked
+  //make it so that clicking the other button doesnt clear the form
+  function AddUserField() {
+    const AddUserRadioGroup = () => {
+      const handleSelectChange = (value: string) => {
+        if (value === 'EDIT') {
+          setSelectedOption('EDIT');
+        } else if (value === 'VIEW') {
+          setSelectedOption('VIEW');
+        } else if (value === 'REMOVE') {
+          setSelectedOption('REMOVE');
+        }
+      };
+
+      return (
+        <RadioGroup onChange={handleSelectChange} value={selectedOption}>
+          <Stack direction='row'>
+            <Radio value='EDIT'>Add as Editor</Radio>
+            <Radio value='VIEW'>Add as Viewer</Radio>
+            <Radio value='REMOVE'>Remove</Radio>
+          </Stack>
+        </RadioGroup>
+      );
+    };
+
+    const [formData, setFormData] = useState('');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleFormDataChange = (e: any) => {
+      const value = e.target.value;
+      setFormData(value);
+    };
+
+    return (
+      <Box m='2'>
+        <Text>Add a New User</Text>
+        <ChakraProvider>
+          <form
+            onSubmit={(e: React.FormEvent<HTMLFormElement>) =>
+              handleSubmit(e, formData, selectedOption)
+            }>
+            <FormControl>
+              <FormLabel>User ID:</FormLabel>
+              <Input type='text' name='username' value={formData} onChange={handleFormDataChange} />
+            </FormControl>
+            <AddUserRadioGroup />
+            <Button type='submit'>Submit</Button>
+          </form>
+        </ChakraProvider>
+      </Box>
+    );
+  }
+  /** 
   /**
    * Renders the save button, which saves all changes currently selected.
    * @returns
-   */
+   
   function DrawSaveButton() {
     function handleSaveClick() {
-      setOwner(newOwner);
-      setEditors(newEditors);
-      setViewers(newViewers);
-      props.permissionsWereChanged({ theOwner: owner, theEditors: editors, theViewers: viewers });
+      let newEditors: CDocUserID[] = [];
+      let newViewers: CDocUserID[] = [];
+      if (selectedOption === 'EDIT') {
+        newEditors = [...newEditors, formData.username];
+        newViewers = newViewers.filter((aUser: CDocUserID) => aUser !== formData.username);
+      } else if (selectedOption === 'VIEW') {
+        newViewers = [...newViewers, formData.username];
+        newEditors = newEditors.filter((aUser: CDocUserID) => aUser !== formData.username);
+      } else if (selectedOption === 'REMOVE') {
+        newEditors = newEditors.filter((aUser: CDocUserID) => aUser !== formData.username);
+        newViewers = newViewers.filter((aUser: CDocUserID) => aUser !== formData.username);
+      }
+
+      //  e.preventDefault();
+      props.permissionsWereChanged({
+        theOwner: props.owner,
+        theEditors: newEditors,
+        theViewers: newViewers,
+      });
+      console.log(formData);
     }
 
     return (
@@ -239,22 +261,24 @@ export default function CDocPermissions(props: {
         Save Changes
       </Button>
     );
-  }
+  }*/
 
-  /** 
+  /**
    * Displays a button which allows the user to exit the Permissions UI and return to the document.
    * @returns
+   * */
   function DrawExitButton() {
     //implement this the same way that permissionswerechanged was implemented? first see if that works
     function handleClick() {
       props.handleExit();
     }
+
     return (
-      <GridItem rowSpan={1} colSpan={5} bg='yellow.200'>
-        <Button onClick={handleClick}>Exit</Button>
-      </GridItem>
+      <Button m={'2'} onClick={() => handleClick()}>
+        Exit
+      </Button>
     );
-  }*/
+  }
 
   return (
     <Flex direction='column' justify='space-between' align='center'>
@@ -265,16 +289,15 @@ export default function CDocPermissions(props: {
       </Box>
       <Flex direction='row' align='center' m='5'>
         <Flex direction='column' align='center' m='2'>
-          <DrawEditorsBox />
+          <DrawEditorsBox permissionType='EDIT'></DrawEditorsBox>
           <Box height='20px'> </Box>
-          <DrawViewersBox />
+          <DrawEditorsBox permissionType='VIEW'></DrawEditorsBox>
         </Flex>
-        <DrawOwnershipBox />
+        {/*<DrawOwnershipBox />*/}
       </Flex>
       <Grid templateColumns='repeat(3, 1fr)' gap={6}>
-        <Box></Box>
-        <Box></Box>
-        <DrawSaveButton />
+        <AddUserField />
+        <DrawExitButton />
       </Grid>
     </Flex>
   );

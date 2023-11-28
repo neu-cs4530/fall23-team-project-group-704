@@ -124,8 +124,8 @@ class CDocUserDataMap implements ICDocUserDataMap {
           userID,
           foundEntry[1].activeDoc,
           foundEntry[1].ownedDocs,
-          foundEntry[1].sharedDocsEdit.filter(user => user !== userID),
-          foundEntry[1].sharedDocsView.filter(user => user !== userID),
+          foundEntry[1].sharedDocsEdit.filter(doc => doc !== docID),
+          foundEntry[1].sharedDocsView.filter(doc => doc !== docID),
         );
       } else {
         this._setUserData(

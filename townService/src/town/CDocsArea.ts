@@ -58,7 +58,7 @@ export default class CDocsArea extends InteractableArea {
 
   /**
    * WriteDoc: should tell the model to write the content to the specified doc.
-   * Should also call _emitAreaChanged()
+   * Should also call _emitAreaChanged() if the doc is tracked
    *
    * GetDoc: should ask the server for the given docid and return it
    *
@@ -76,6 +76,11 @@ export default class CDocsArea extends InteractableArea {
    * also emit area change event
    *
    * Validate User: return true if user and password match
+   *
+   * Create New Doc: creates new document for the given user and returns the new doc id
+   * emits area change event
+   *
+   * Share Doc:
    *
    * @param command
    * @param player

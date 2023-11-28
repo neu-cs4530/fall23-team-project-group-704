@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid';
 import Player from '../lib/Player';
 import {
   CDocCloseDocCommand,
+  CDocCreateNewDocCommand,
   CDocCreateNewUserCommand,
   CDocDocID,
   CDocGetDocCommand,
@@ -17,6 +18,7 @@ import {
   TownEmitter,
 } from '../types/CoveyTownSocket';
 import CDocsArea from './CDocsArea';
+import CDocUserDataMap from './CDocUserDataMap';
 import { ICDocServer } from './ICDocServer';
 
 const testDoc: ICDocDocument = {
@@ -47,9 +49,48 @@ describe('CDocsArea', () => {
 
   describe('handleCommand', () => {
     describe('writeDoc', () => {
-      it('writes to the server and emits area change event', async () => {
+      it('writes to the server and does not emit event since document is not opened', async () => {
         mockClear(townEmitter.emit);
         mockClear(mockServer.writeToDoc);
+
+        await testArea.handleCommand<CDocWriteDocCommand>(
+          {
+            type: 'WriteDoc',
+            content: 'test content',
+            docid: 'test_id',
+          },
+          newPlayer,
+        );
+        expect(mockServer.writeToDoc).toHaveBeenCalledWith('test_id', 'test content');
+        expect(townEmitter.emit).toHaveBeenCalledTimes(0);
+      });
+      it('writes to the server and does emit event since document is opened', async () => {
+        mockClear(townEmitter.emit);
+        mockClear(mockServer.writeToDoc);
+
+        mockServer.getDoc.mockImplementation(async (docID: CDocDocID) => {
+          const doc: ICDocDocument = {
+            createdAt: '',
+            owner: 'test_user',
+            docID: 'test_id',
+            docName: '',
+            editors: [],
+            viewers: [],
+            content: '',
+          };
+          return doc;
+        });
+
+        await testArea.handleCommand<CDocOpenDocCommand>(
+          {
+            type: 'OpenDoc',
+            docid: 'test_id',
+            userid: 'test_user',
+          },
+          newPlayer,
+        );
+
+        mockClear(townEmitter.emit);
         await testArea.handleCommand<CDocWriteDocCommand>(
           {
             type: 'WriteDoc',
@@ -95,7 +136,9 @@ describe('CDocsArea', () => {
 
         // toModel should not return correct result yet
         expect(() =>
-          (testArea.toModel() as ICDocArea).userToDocMap.getOwnedDocs('test_owner'),
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getOwnedDocs(
+            'test_owner',
+          ),
         ).toThrowError('User not found');
 
         const { docs } = (await testArea.handleCommand<CDocGetOwnedDocsCommand>(
@@ -107,9 +150,11 @@ describe('CDocsArea', () => {
         )) as unknown as { docs: CDocDocID[] };
 
         expect(testDocs).toEqual(docs);
-        expect((testArea.toModel() as ICDocArea).userToDocMap.getOwnedDocs('test_owner')).toEqual(
-          testDocs,
-        );
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getOwnedDocs(
+            'test_owner',
+          ),
+        ).toEqual(testDocs);
       });
     });
     describe('OpenDoc', () => {
@@ -128,9 +173,11 @@ describe('CDocsArea', () => {
           },
           newPlayer,
         );
-        expect((testArea.toModel() as ICDocArea).userToDocMap.getActiveDoc('test_user')).toEqual(
-          'test_id',
-        );
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getActiveDoc(
+            'test_user',
+          ),
+        ).toEqual('test_id');
         expect(townEmitter.emit).toHaveBeenCalledTimes(1);
       });
     });
@@ -151,9 +198,11 @@ describe('CDocsArea', () => {
           },
           newPlayer,
         );
-        expect((testArea.toModel() as ICDocArea).userToDocMap.getActiveDoc('test_user')).toEqual(
-          'test_id',
-        );
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getActiveDoc(
+            'test_user',
+          ),
+        ).toEqual('test_id');
         expect(townEmitter.emit).toHaveBeenCalledTimes(1);
 
         mockClear(townEmitter.emit);
@@ -166,7 +215,9 @@ describe('CDocsArea', () => {
           newPlayer,
         );
         expect(() =>
-          (testArea.toModel() as ICDocArea).userToDocMap.getActiveDoc('test_user'),
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getActiveDoc(
+            'test_user',
+          ),
         ).toThrowError('User has no active doc');
         expect(townEmitter.emit).toHaveBeenCalledTimes(1);
       });
@@ -204,6 +255,22 @@ describe('CDocsArea', () => {
         )) as unknown as { validation: boolean };
         expect(mockServer.validateUser).toHaveBeenCalledWith('test_user', 'test_password');
         expect(validation).toBeTruthy();
+      });
+    });
+    describe('CreateNewDoc', () => {
+      it('creates a new doc for the given user and returns it, delegating to CDocServer to create the doc and firing an area change event', async () => {
+        mockClear(townEmitter.emit);
+        mockServer.createNewDoc.mockImplementation(async userid => testDoc);
+        const { doc } = (await testArea.handleCommand<CDocCreateNewDocCommand>(
+          {
+            type: 'CreateNewDoc',
+            id: 'test_user',
+          },
+          newPlayer,
+        )) as unknown as { doc: ICDocDocument };
+        expect(mockServer.createNewDoc).toHaveBeenCalledWith('test_user');
+        expect(doc).toEqual(testDoc);
+        expect(townEmitter.emit).toHaveBeenCalledTimes(1);
       });
     });
   });

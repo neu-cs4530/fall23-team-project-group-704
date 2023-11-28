@@ -123,66 +123,51 @@ describe('[T2] CBoardAreaController', () => {
   });
   describe('getDocByID', () => {
     it('should return the right document', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      await testArea.writeToDoc('doc1');
-      await testArea.closeDocument();
-      await testArea.openDocument(id2);
-      await testArea.writeToDoc('doc2');
-      await testArea.closeDocument();
+      const testUser1 = nanoid();
+      const id1 = await testArea.addNewDocument(testUser1);
+      const id2 = await testArea.addNewDocument(testUser1);
+      await testArea.openDocument(testUser1,id1);
+      await testArea.writeToDoc(id1,'doc1');
 
       expect(await testArea.getDocByID(id1)).toEqual('doc1');
     });
     it('should throw exception if document does not exist', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      await testArea.writeToDoc('doc1');
-      await testArea.closeDocument();
-      await testArea.openDocument(id2);
-      await testArea.writeToDoc('doc2');
-      await testArea.closeDocument();
-
-      expect(async () => testArea.getDocByID('')).toThrow(new Error());
+      const testUser1 = nanoid();
+      const id1 = await testArea.addNewDocument(testUser1);
+      expect(async () => testArea.getDocByID(nanoid())).toThrow(new Error());
     });
   });
   describe('closeDocument', () => {
-    it('should close the right document', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      await testArea.writeToDoc('doc1');
-      await testArea.openDocument(id2);
-      await testArea.writeToDoc('doc2');
-      await testArea.closeDocument(id2);
-      
-      expect(await testArea.getOpenedDocument(id1)).toThrow(new Error());
+    it('should successfully close the right document', async () => {
+      const testUser1 = nanoid();
+      const id1 = await testArea.addNewDocument(testUser1);
+      const id2 = await testArea.addNewDocument(testUser1);
+      await testArea.openDocument(testUser1,id1);
+      await testArea.writeToDoc(id1,'doc1');
+      const contentDoc1 = await (await testArea.getDocByID(id1)).content;
+      expect(await testArea.getOpenedDocument(testUser1)).toEqual(contentDoc1);
+      await testArea.closeDocument(id1);
+      expect(async () => testArea.getOpenedDocument(testUser1)).toThrow(new Error());
     });
     it('should throw exception if no document is open', async () => {
-      expect(async () => testArea.closeDocument()).toThrow(new Error());
+      const testUser1 = nanoid();
+      const id1 = await testArea.addNewDocument(testUser1);
+      expect(async () => testArea.closeDocument(id1)).toThrow(new Error());
     });
   });
-  describe('getOwnedDocs', () => { /*
+  describe('getOwnedDocs', () => { 
     it('should return the right documents', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-      const id3 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      await testArea.writeToDoc('doc1');
-      await testArea.closeDocument();
-      await testArea.openDocument(id2);
-      await testArea.writeToDoc('doc2');
-      await testArea.closeDocument();
-      await testArea.openDocument(id3);
-      await testArea.writeToDoc('doc3');
-      await testArea.closeDocument();
+      const userid1 = nanoid();
+      const id1 = await testArea.addNewDocument(userid1);
+      const id2 = await testArea.addNewDocument(userid1);
+      const id3 = await testArea.addNewDocument(userid1);     
 
-      expect(await testArea.getOwnedDocs()).toEqual([id1, id2, id3]);
+      expect(await testArea.getOwnedDocs(userid1)).toEqual([id1, id2, id3]);
     });
-    */
+    
     it('should return empty list if no documents are owned by the user', async () => {
-      expect(async () => testArea.getOwnedDocs('1234')).totoEqual([]);
+      const testUser = nanoid();
+      expect(async () => testArea.getOwnedDocs(testUser)).totoEqual([]);
     });
   });
 });

@@ -1,9 +1,9 @@
 import {
   CDocDocID,
-  CDocUserID,
-  ExtendedPermissionType,
   ICDocUserDataMap,
+  CDocUserID,
   PermissionType,
+  ExtendedPermissionType,
 } from '../../types/CoveyTownSocket';
 
 interface CDocUserData {
@@ -12,7 +12,7 @@ interface CDocUserData {
   sharedDocsEdit: CDocDocID[];
   sharedDocsView: CDocDocID[];
 }
-export class CDocUserDataMap implements ICDocUserDataMap {
+class CDocUserDataMap implements ICDocUserDataMap {
   public isTrackingDoc(docid: string): boolean {
     if (!docid) throw new Error('Given null string in isTrackingDoc');
 
@@ -136,8 +136,15 @@ export class CDocUserDataMap implements ICDocUserDataMap {
           foundEntry[1].sharedDocsView.concat(permissionType === 'VIEW' ? [docID] : []),
         );
       }
+    } else {
+      this._setUserData(
+        userID,
+        undefined,
+        [],
+        permissionType === 'EDIT' ? [docID] : [],
+        permissionType === 'VIEW' ? [docID] : [],
+      );
     }
-    throw new Error('User not found');
   }
 
   private _setUserData(
@@ -161,7 +168,7 @@ export class CDocUserDataMap implements ICDocUserDataMap {
     const foundEntry = this._docMap.find(entry => entry[0] === userID);
 
     if (foundEntry) return foundEntry[1].activeDoc;
-    else return undefined;
+    return undefined;
   }
 }
 

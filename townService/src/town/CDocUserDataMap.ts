@@ -1,9 +1,9 @@
 import {
   CDocDocID,
-  CDocUserID,
-  ExtendedPermissionType,
   ICDocUserDataMap,
+  CDocUserID,
   PermissionType,
+  ExtendedPermissionType,
 } from '../types/CoveyTownSocket';
 
 interface CDocUserData {
@@ -54,14 +54,12 @@ class CDocUserDataMap implements ICDocUserDataMap {
   }
 
   public hasActiveDoc(userid: CDocUserID): boolean {
-    // if (!userid) throw new Error('Given null string in hasActiveDoc');
-    return this._docMap.find(entry => entry[0] === userid) !== undefined;
+    return this._getActiveDocOrDefault(userid) !== undefined;
   }
 
   public getActiveDoc(userid: CDocUserID): CDocDocID {
-    const foundEntry = this._docMap.find(entry => entry[0] === userid);
-
-    if (foundEntry && foundEntry[1].activeDoc) return foundEntry[1].activeDoc;
+    const activeDoc = this._getActiveDocOrDefault(userid);
+    if (activeDoc) return activeDoc;
     throw new Error('User has no active doc');
   }
 
@@ -164,6 +162,13 @@ class CDocUserDataMap implements ICDocUserDataMap {
       sharedDocsView: sharedView,
     };
     this._docMap.push([userid, newData]);
+  }
+
+  private _getActiveDocOrDefault(userID: CDocUserID): CDocDocID | undefined {
+    const foundEntry = this._docMap.find(entry => entry[0] === userID);
+
+    if (foundEntry) return foundEntry[1].activeDoc;
+    return undefined;
   }
 }
 

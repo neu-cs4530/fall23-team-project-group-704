@@ -45,6 +45,7 @@ export default function CDocAreaWrapper(): JSX.Element {
   });
   const toast = useToast();
   const [ownedDocs, setOwnedDocs] = useState<ICDocDocument[]>([]);
+  const [viewOnly, setViewOnly] = useState<string[]>([]);
   const [userID, setUserID] = useState<CDocUserID>('Ise');
 
   const [cDocAreaController, setCDocAreaController] = useState<CDocsAreaController | undefined>(
@@ -82,12 +83,19 @@ export default function CDocAreaWrapper(): JSX.Element {
         const docIds = cDocAreaController.getOwnedDocs(user);
         const getEdit = cDocAreaController.getDocsSharedWith(user, 'EDIT');
         const getView = cDocAreaController.getDocsSharedWith(user, 'VIEW');
-        const allDocIDS = await Promise.all([docIds, getEdit, getView]);
+        const allDocIDS = await Promise.all([docIds, getEdit]);
         const docs: Promise<ICDocDocument>[] = [];
         for (const idList of allDocIDS) {
           for (const id of idList) docs.push(cDocAreaController.getDocByID(id));
         }
-        setOwnedDocs(await Promise.all(docs));
+
+        const viewable: ICDocDocument[] = await Promise.all(
+          (await getView).map(id => cDocAreaController.getDocByID(id)),
+        );
+
+        setOwnedDocs((await Promise.all(docs)).concat(viewable));
+        setViewOnly(viewable.map(v => v.docID));
+        console.log(viewable);
       }
     },
     [cDocAreaController],
@@ -343,6 +351,7 @@ export default function CDocAreaWrapper(): JSX.Element {
         )}
         {pages === 3 && cDocAreaController && (
           <CDocument
+            canView={viewOnly.find(d => d === currentDocId) !== undefined}
             document={currentDocument}
             controller={cDocAreaController}
             handleBackToDirectory={handleBackToDirectory}

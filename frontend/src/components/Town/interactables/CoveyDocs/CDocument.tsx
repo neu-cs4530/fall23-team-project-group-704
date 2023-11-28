@@ -1,17 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-import { ICDocDocument } from '../../../../types/CoveyTownSocket';
+import { ICDocDocument, ICDocUserDataMap } from '../../../../types/CoveyTownSocket';
 import CDocsAreaController from '../../../../classes/interactable/CDocsAreaController';
-import { Button } from '@chakra-ui/react';
+import { Button, ListItem, UnorderedList } from '@chakra-ui/react';
 export default function CDocument({
   document,
   controller,
   handleBackToDirectory,
+  canView,
 }: {
   document: ICDocDocument;
   controller: CDocsAreaController;
   handleBackToDirectory: () => void;
   handlePermissions: () => void;
+  canView: boolean;
 }): JSX.Element {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
@@ -21,7 +23,9 @@ export default function CDocument({
   useEffect(() => {
     const interval = setInterval(
       () =>
-        editorRef.current && controller.writeToDoc(document.docID, editorRef.current.getContent()),
+        editorRef.current &&
+        !canView &&
+        controller.writeToDoc(document.docID, editorRef.current.getContent()),
       5000,
     );
     return () => {
@@ -32,6 +36,7 @@ export default function CDocument({
   return (
     <>
       <Editor
+        disabled={canView}
         onInit={(evt, editor) => (editorRef.current = editor)}
         initialValue={document.content}
         init={{

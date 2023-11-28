@@ -1,68 +1,79 @@
 import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
-import Player from '../lib/Player';
-import { getLastEmittedEvent } from '../TestUtils';
-import { TownEmitter } from '../types/CoveyTownSocket';
-import CDocServer from './CDocServer';
-import ConversationArea from './ConversationArea';
+import { ICDocDocument } from '../types/CoveyTownSocket';
+import MockCDocServer from './MockCDocServer';
 
 describe('CDocServer', () => {
-  // initialize any needed constants
+  describe('createNewDoc', () => {
+    const mockCDocServer: MockCDocServer = new MockCDocServer();
 
-  // do a beforeeach if necessary
+    it('creates a new document with the given owner', async () => {
+      const owner = 'testUser';
+
+      // Mock the behavior of nanoid to ensure consistent docID for testing
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+      jest.spyOn(require('nanoid'), 'nanoid').mockReturnValue('mockedDocID');
+
+      const newDoc: ICDocDocument = await mockCDocServer.createNewDoc(owner);
+
+      expect(newDoc.owner).toBe('mock owner');
+      expect(newDoc.docID).toBe('fakeID');
+      expect(newDoc.createdAt).toBeDefined();
+      expect(newDoc.docName).toBe('mock name');
+      expect(newDoc.editors).toHaveLength(0);
+      expect(newDoc.viewers).toHaveLength(0);
+      expect(newDoc.content).toBe('mock content');
+    });
+  });
 
   describe('addSharedWithListener', () => {
-    it('does something', () => {});
+    it('adds shared listener to listener list', () => {});
   });
 
   describe('removeSharedWithListener', () => {
-    it('does something', () => {});
-  });
-  describe('removeSharedWithListener', () => {
-    it('does something', () => {});
+    it('removes given listener from listener list', () => {});
   });
 
   describe('getSharedWith', () => {
-    it('does something', () => {});
+    it('retrieves sharedwith list', () => {});
   });
 
   describe('shareDocumentWith', () => {
-    it('does something', () => {});
+    it('shares document with specified user', () => {});
   });
 
   describe('validateUser', () => {
-    it('does something', () => {});
+    it('validates a valid user id', () => {});
   });
 
   describe('addDocumentEditedListener', () => {
-    it('does something', () => {});
+    it('adds specified listener to documenteditedlistener list', () => {});
   });
 
   describe('removeDocumentEditedListener', () => {
-    it('does something', () => {});
+    it('removes specified listener from list', () => {});
   });
 
   describe('getInstance', () => {
-    it('does something', () => {});
+    it('returns this instance of CDocServer', () => {});
   });
 
   describe('createNewDoc', () => {
-    it('does something', () => {});
+    it('creates a new doc with default name', () => {});
   });
 
   describe('createNewUser', () => {
-    it('does something', () => {});
+    it('creates a new user with the given name', () => {});
   });
 
   describe('getOwnedDocs', () => {
-    it('does something', () => {});
+    it('retrieves the users owned docs', () => {});
   });
   describe('writeToDoc', () => {
-    it('does something', () => {});
+    it('writes the given content to the document', () => {});
   });
 
   describe('getDoc', () => {
-    it('does something', () => {});
+    it('gets the speficied document', () => {});
   });
-  
 });

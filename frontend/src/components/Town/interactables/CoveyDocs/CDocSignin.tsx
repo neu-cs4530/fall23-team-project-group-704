@@ -25,10 +25,7 @@ interface SignInProps {
   signUp: (username: string, password: string) => void;
   signIn: (username: string, password: string) => void;
 }
-export default function CDocSignin({
-  signUp: signUp = async (username: string, password: string) => {},
-  signIn: signIn = async (username: string, password: string) => {},
-}: SignInProps) {
+export default function CDocSignin(props: SignInProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   // const [isUser, setIsUser] = useState(false);
@@ -69,10 +66,10 @@ export default function CDocSignin({
         colorScheme='teal'
         isLoading={false}
         type='submit'
-        onClick={() => signUp(username, password)}>
+        onClick={() => props.signUp(username, password)}>
         Sign up
       </Button>
-      <Button className={'signin'} onClick={() => signIn(username, password)}>
+      <Button className={'signin'} onClick={() => props.signIn(username, password)}>
         Sign in
       </Button>
     </Form>

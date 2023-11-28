@@ -9,6 +9,7 @@ import {
 } from '../types/CoveyTownSocket';
 
 export interface ICDocServer {
+  getAllRegisteredUsers(): Promise<CDocUserID[]>;
   createNewDoc(id: string): Promise<ICDocDocument>;
   validateUser(id: string, password: CDocPassword): Promise<boolean>;
   createNewUser(username: string, password: string): Promise<void>;
@@ -33,6 +34,8 @@ export interface ICDocServer {
       permissionType: ExtendedPermissionType,
     ) => void,
   ): void;
+
+  addNewUserRegisteredListener(listener: (userID: CDocUserID) => void): void;
 
   shareDocumentWith(
     docID: CDocDocID,
@@ -65,6 +68,14 @@ export class MockCDocServer implements ICDocServer {
     this._users = [];
     this._listeners = [];
     this._shareDocListeners = [];
+  }
+
+  getAllRegisteredUsers(): Promise<string[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  addNewUserRegisteredListener(listener: (userID: string) => void): void {
+    throw new Error('Method not implemented.');
   }
 
   addSharedWithListener(

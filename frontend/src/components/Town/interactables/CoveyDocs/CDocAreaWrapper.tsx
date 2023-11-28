@@ -134,9 +134,17 @@ export default function CDocAreaWrapper(): JSX.Element {
 
   const handleSharedWithMeChanged = useCallback(
     async (docID: string, permissionType: ExtendedPermissionType) => {
+      // NOTE: I filter before adding the new doc for handling VIEW, EDIT,
+      // because I noticed duplicates of the same document being displayed
+      // it seems that setOwnedDocs does not update the state immediately,
+      // so the early REMOVE does not actually remove immediately
       if (cDocAreaController) {
         if (permissionType === 'VIEW' || permissionType === 'EDIT')
-          setOwnedDocs(ownedDocs.concat([await cDocAreaController.getDocByID(docID)]));
+          setOwnedDocs(
+            ownedDocs
+              .filter(doc => doc.docID !== docID)
+              .concat([await cDocAreaController.getDocByID(docID)]),
+          );
         else if (permissionType === 'REMOVE')
           setOwnedDocs(ownedDocs.filter(doc => doc.docID !== docID));
       }
@@ -288,7 +296,7 @@ export default function CDocAreaWrapper(): JSX.Element {
       }
       //if the person previously previously had no access, add them as an editor
       //still have to implement this option through permissions ui
-      else await cDocAreaController.shareDocWith(currentDocId, editor, 'EDIT');
+      await cDocAreaController.shareDocWith(currentDocId, editor, 'EDIT');
     }
 
     //for every user that should be given view access

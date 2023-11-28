@@ -336,6 +336,10 @@ export default class CDocsAreaController extends InteractableAreaController<
 
       const pTypes: PermissionType[] = ['EDIT', 'VIEW'];
 
+      let removedPermissions: CDocDocID[] = [];
+      let addedViewers: CDocDocID[] = [];
+      let addedEditors: CDocDocID[] = [];
+
       for (const pType of pTypes) {
         const prevShared = oldMap.isTrackingUser(this._userID)
           ? oldMap.getSharedDocs(this._userID, pType)
@@ -344,12 +348,24 @@ export default class CDocsAreaController extends InteractableAreaController<
           ? this._userDataMap.getSharedDocs(this._userID, pType)
           : [];
 
-        const added = newShared.filter(doc => prevShared.indexOf(doc) < 0);
-        const removed = prevShared.filter(doc => newShared.indexOf(doc) < 0);
+        const addedShared = newShared.filter(doc => prevShared.indexOf(doc) < 0);
+        if (pType === 'EDIT') addedEditors = addedEditors.concat(addedShared);
+        else if (pType === 'VIEW') addedViewers = addedViewers.concat(addedShared);
 
-        for (const addDoc of added) this.emit('sharedWithMeChanged', addDoc, pType);
-        for (const removeDoc of removed) this.emit('sharedWithMeChanged', removeDoc, 'REMOVE');
+        removedPermissions = removedPermissions.concat(
+          prevShared.filter(doc => newShared.indexOf(doc) < 0),
+        );
       }
+
+      // only REMOVE truly removed docs, not docs that were changed from EDIT to VIEW or vice versa
+      removedPermissions = removedPermissions.filter(
+        doc => addedViewers.indexOf(doc) < 0 && addedEditors.indexOf(doc) < 0,
+      );
+      for (const removeDoc of removedPermissions)
+        this.emit('sharedWithMeChanged', removeDoc, 'REMOVE');
+      // The listeners in CDocAreaWrapper clear the document list of all documents with matching id before appending
+      for (const addDoc of addedEditors) this.emit('sharedWithMeChanged', addDoc, 'EDIT');
+      for (const addDoc of addedViewers) this.emit('sharedWithMeChanged', addDoc, 'VIEW');
     }
   }
 

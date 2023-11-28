@@ -132,8 +132,12 @@ class CDocUserDataMap implements ICDocUserDataMap {
           userID,
           foundEntry[1].activeDoc,
           foundEntry[1].ownedDocs,
-          foundEntry[1].sharedDocsEdit.concat(permissionType === 'EDIT' ? [docID] : []),
-          foundEntry[1].sharedDocsView.concat(permissionType === 'VIEW' ? [docID] : []),
+          foundEntry[1].sharedDocsEdit
+            .filter(doc => doc !== docID)
+            .concat(permissionType === 'EDIT' ? [docID] : []),
+          foundEntry[1].sharedDocsView
+            .filter(doc => doc !== docID)
+            .concat(permissionType === 'VIEW' ? [docID] : []),
         );
       }
     } else {

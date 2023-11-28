@@ -75,6 +75,8 @@ export default class CDocsArea extends InteractableArea {
    * throw error if given username is taken
    * also emit area change event
    *
+   * Validate User: return true if user and password match
+   *
    * @param command
    * @param player
    * @returns

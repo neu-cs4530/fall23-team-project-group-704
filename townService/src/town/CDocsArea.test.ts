@@ -1,7 +1,6 @@
 import exp from 'constants';
 import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
-import { T } from 'ramda';
 import Player from '../lib/Player';
 import {
   CDocCloseDocCommand,
@@ -10,6 +9,8 @@ import {
   CDocGetDocCommand,
   CDocGetOwnedDocsCommand,
   CDocOpenDocCommand,
+  CDocUserID,
+  CDocValidateUserCommand,
   CDocWriteDocCommand,
   ICDocArea,
   ICDocDocument,
@@ -184,6 +185,25 @@ describe('CDocsArea', () => {
         );
         expect(mockServer.createNewUser).toHaveBeenCalledWith('new_user', 'password');
         expect(townEmitter.emit).toHaveBeenCalledTimes(1);
+      });
+    });
+    describe('ValidateUser', () => {
+      it('return true if user and password match, forward args to CDocServer', async () => {
+        mockServer.validateUser.mockImplementation(
+          async (user: CDocUserID, password: string) =>
+            user === 'test_user' && password === 'test_password',
+        );
+
+        const { validation } = (await testArea.handleCommand<CDocValidateUserCommand>(
+          {
+            type: 'ValidateUser',
+            id: 'test_user',
+            password: 'test_password',
+          },
+          newPlayer,
+        )) as unknown as { validation: boolean };
+        expect(mockServer.validateUser).toHaveBeenCalledWith('test_user', 'test_password');
+        expect(validation).toBeTruthy();
       });
     });
   });

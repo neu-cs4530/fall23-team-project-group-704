@@ -5,7 +5,12 @@ import { Button, Modal, ModalContent, ModalFooter, ModalOverlay, useToast } from
 import CDocSignin from './CDocSignin';
 import CDocDirectory from './CDocDirectory';
 import CDocument from './CDocument';
-import { CDocDocID, CDocUserID, ICDocDocument } from '../../../../types/CoveyTownSocket';
+import {
+  CDocDocID,
+  CDocUserID,
+  ExtendedPermissionType,
+  ICDocDocument,
+} from '../../../../types/CoveyTownSocket';
 import CDocsAreaController from '../../../../classes/interactable/CDocsAreaController';
 import CDocPermissions from './CDocPermissions';
 import CDocsArea from '../CDocsArea';
@@ -127,6 +132,18 @@ export default function CDocAreaWrapper(): JSX.Element {
     }
   };
 
+  const handleSharedWithMeChanged = useCallback(
+    async (docID: string, permissionType: ExtendedPermissionType) => {
+      if (cDocAreaController) {
+        if (permissionType === 'VIEW' || permissionType === 'EDIT')
+          setOwnedDocs(ownedDocs.concat([await cDocAreaController.getDocByID(docID)]));
+        else if (permissionType === 'REMOVE')
+          setOwnedDocs(ownedDocs.filter(doc => doc.docID !== docID));
+      }
+    },
+    [cDocAreaController, ownedDocs],
+  );
+
   // sets the current document and switches to the document editor
   const handleDocument = useCallback(
     async (docId: string) => {
@@ -224,16 +241,19 @@ export default function CDocAreaWrapper(): JSX.Element {
       };
       cDocAreaController.addListener('docUpdated', updateDoument);
       cDocAreaController.addListener('newDocumentCreated', newDocumentCreated);
+      cDocAreaController.addListener('sharedWithMeChanged', handleSharedWithMeChanged);
 
       return () => {
         cDocAreaController.removeListener('docUpdated', updateDoument);
         cDocAreaController.removeListener('newDocumentCreated', newDocumentCreated);
+        cDocAreaController.removeListener('sharedWithMeChanged', handleSharedWithMeChanged);
       };
     }
   }, [
     cDocAreaController,
     coveyTownController,
     currentDocId,
+    handleSharedWithMeChanged,
     newConversation,
     updateOwnedDocs,
     userID,

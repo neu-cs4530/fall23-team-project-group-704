@@ -138,7 +138,15 @@ class CDocUserDataMap implements ICDocUserDataMap {
           foundEntry[1].sharedDocsView.concat(permissionType === 'VIEW' ? [docID] : []),
         );
       }
-    } else throw new Error('User not found');
+    } else {
+      this._setUserData(
+        userID,
+        undefined,
+        [],
+        permissionType === 'EDIT' ? [docID] : [],
+        permissionType === 'VIEW' ? [docID] : [],
+      );
+    }
   }
 
   private _setUserData(

@@ -322,8 +322,12 @@ export default class CDocsAreaController extends InteractableAreaController<
         this.emit('docClosed');
       }
 
-      const prevOwnedDocs = oldMap.getOwnedDocs(this._userID);
-      const newOwnedDocs = this._userDataMap.getOwnedDocs(this._userID);
+      const prevOwnedDocs = oldMap.isTrackingUser(this._userID)
+        ? oldMap.getOwnedDocs(this._userID)
+        : [];
+      const newOwnedDocs = oldMap.isTrackingUser(this._userID)
+        ? this._userDataMap.getOwnedDocs(this._userID)
+        : [];
 
       // TODO: this is brittle, what about doc deletion?
       if (newOwnedDocs.length > prevOwnedDocs.length) {
@@ -333,8 +337,12 @@ export default class CDocsAreaController extends InteractableAreaController<
       const pTypes: PermissionType[] = ['EDIT', 'VIEW'];
 
       for (const pType of pTypes) {
-        const prevShared = oldMap.getSharedDocs(this._userID, pType);
-        const newShared = this._userDataMap.getSharedDocs(this._userID, pType);
+        const prevShared = oldMap.isTrackingUser(this._userID)
+          ? oldMap.getSharedDocs(this._userID, pType)
+          : [];
+        const newShared = this._userDataMap.isTrackingUser(this._userID)
+          ? this._userDataMap.getSharedDocs(this._userID, pType)
+          : [];
 
         const added = newShared.filter(doc => prevShared.indexOf(doc) < 0);
         const removed = prevShared.filter(doc => newShared.indexOf(doc) < 0);

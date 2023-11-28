@@ -304,7 +304,7 @@ export default function CDocPermissions(props: {
           <Box height='20px'> </Box>
           <DrawEditorsBox permissionType='VIEW'></DrawEditorsBox>
         </Flex>
-        <DrawOwnershipBox />
+        {/*<DrawOwnershipBox />*/}
       </Flex>
       <Grid templateColumns='repeat(3, 1fr)' gap={6}>
         <AddUserField />

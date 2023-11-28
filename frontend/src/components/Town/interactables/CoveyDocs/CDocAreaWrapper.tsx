@@ -293,6 +293,7 @@ export default function CDocAreaWrapper(): JSX.Element {
 
   return (
     <Modal
+      size={'full'}
       isOpen={isOpen}
       onClose={() => {
         closeModal();
@@ -307,6 +308,7 @@ export default function CDocAreaWrapper(): JSX.Element {
             handleClick={handleDocument}
             handleClickPermissions={handleClickPermissions}
             handleNewDoc={handleNewDoc}
+            currentUser={userID}
           />
         )}
         {pages === 3 && cDocAreaController && (

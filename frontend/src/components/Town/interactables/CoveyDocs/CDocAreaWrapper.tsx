@@ -271,6 +271,7 @@ export default function CDocAreaWrapper(): JSX.Element {
     theOwner: string;
     theEditors: string[];
     theViewers: string[];
+    removed: string[];
   }): Promise<void> {
     if (cDocAreaController === undefined) {
       throw new Error('no controller defined.');
@@ -313,6 +314,9 @@ export default function CDocAreaWrapper(): JSX.Element {
       await cDocAreaController.shareDocWith(currentDocId, viewer, 'VIEW');
     }
 
+    for (const remove of permissions.removed)
+      await cDocAreaController.removeUserFrom(currentDocId, remove);
+
     //handling of transferring ownership -- keep?
     currentDocument.owner = permissions.theOwner; //have owndership?
   }
@@ -348,6 +352,7 @@ export default function CDocAreaWrapper(): JSX.Element {
         )}
         {pages === 4 && (
           <CDocPermissions
+            userID={userID}
             owner={currentDocument.owner}
             editors={currentDocument.editors}
             viewers={currentDocument.viewers}

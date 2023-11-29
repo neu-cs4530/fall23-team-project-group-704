@@ -6,7 +6,7 @@ import {
   ExtendedPermissionType,
 } from '../../types/CoveyTownSocket';
 
-interface CDocUserData {
+export interface CDocUserData {
   activeDoc: CDocDocID | undefined;
   ownedDocs: CDocDocID[];
   sharedDocsEdit: CDocDocID[];

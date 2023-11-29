@@ -1,114 +1,226 @@
-export {};
-describe('placeholder_test', () => {
-  it('placeholder_test', () => {
-    expect(true).toBeTruthy();
-  });
-});
-/** import { mock } from 'jest-mock-extended';
+import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
-import { PlayerLocation, WinnableGameState } from '../../types/CoveyTownSocket';
-import PlayerController from '../PlayerController';
+import { ICDocArea, ICDocDocument } from '../../types/CoveyTownSocket';
 import CDocsAreaController from './CDocsAreaController';
 import TownController from '../TownController';
+import { CDocUserData } from './CDocUserDataMap';
 describe('[T2] CBoardAreaController', () => {
   // A valid ConversationAreaController to be reused within the tests
   let testArea: CDocsAreaController;
+  let mockTownController = mock<TownController>();
   beforeEach(() => {
+    mockTownController = mock<TownController>();
     testArea = new CDocsAreaController(
       nanoid(),
       {
-        id: nanoid(),
+        docMap: [],
+        allRegisteredUsers: [],
+        type: 'CDocsArea',
+        id: 'fake_id',
         occupants: [],
-        history: [],
-        type: 'CovDocsArea',
-        game: undefined,
       },
-      mock<TownController>(),
+      mockTownController,
     );
   });
-  describe('validatePastUser', () => {
-    it('returns true if username and password match', () => {
-      // somehow set up an existing list of users for testArea
-      expect(testArea.validatePastUser('', '')).toEqual(true);
-    });
-    it('allows all methods to be used once validation is successful', () => {
-      // somehow set up an existing list of users for testArea
-      expect(testArea.validatePastUser('', '')).toEqual(true);
-      // hopefully no exceptions will be thrown when the following methods are called
-      testArea.addNewDocument();
-      testArea.closeDocument();
-      testArea.openDocument(nanoid());
-    });
-    it('returns false if username and password do not match', () => {
-      // somehow set up an existing list of users for testArea
-      expect(testArea.validatePastUser('', '')).toEqual(false);
-    });
-  });
+
   describe('createNewUser', () => {
-    it('creates new user if user does not currently exist', () => {
-      expect(testArea.validatePastUser('tester', 'passcode')).toEqual(false);
-      testArea.createNewUser('tester', 'passcode');
-      expect(testArea.validatePastUser('tester', 'passcode')).toEqual(true);
-    });
-    it('throws exception if user name is already taken', () => {
-      expect(testArea.validatePastUser('tester', 'passcode')).toEqual(false);
-      testArea.createNewUser('tester', 'passcode');
-      expect(testArea.validatePastUser('tester', 'passcode')).toEqual(true);
-
-      // now try creating the user again
-      expect(() => testArea.createNewUser('tester', 'passcode_')).toThrow(Error());
+    it('test calling createNewUser', async () => {
+      const testUser1 = nanoid();
+      const password = nanoid();
+      mockClear(mockTownController.sendInteractableCommand);
+      await testArea.createNewUser(testUser1, password);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'CreateNewUser',
+        username: testUser1,
+        password: password,
+      });
     });
   });
+
   describe('addNewDocument', () => {
-    it('throws exception if not signed in', () => {
-      expect(() => testArea.addNewDocument()).toThrow(new Error());
-    });
-    it('creates new id for each new document', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-
-      expect(id1 != id2).toBeTruthy();
+    it('test calling addNewDocument', async () => {
+      const testUser1 = nanoid();
+      mockTownController.sendInteractableCommand.mockImplementation(async () => {
+        const doc: ICDocDocument = {
+          createdAt: '',
+          owner: '',
+          docID: '',
+          docName: '',
+          editors: [],
+          viewers: [],
+          content: '',
+        };
+        return { doc: doc };
+      });
+      await testArea.addNewDocument(testUser1);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'CreateNewDoc',
+        id: testUser1,
+      });
     });
   });
+
   describe('getOpenedDocument', () => {
-    it('a new document opens as empty', async () => {
-      const id1 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      const content = await testArea.getOpenedDocument();
-      expect(content).toEqual('');
-    });
-    it('an existing document opens as it should be', async () => {
-      const id1 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      await testArea.writeToDoc('stuff');
-      const content = await testArea.getOpenedDocument();
-      expect(content).toEqual('stuff');
-    });
-    it('throws exception if no document is open', async () => {
-      expect(async () => testArea.getOpenedDocument()).toThrow(new Error());
+    it('test calling getOpenedDocument', async () => {
+      const testUser1 = nanoid();
+      mockClear(mockTownController.sendInteractableCommand);
+
+      const data: CDocUserData = {
+        activeDoc: 'doc1',
+        ownedDocs: ['doc1'],
+        sharedDocsEdit: [],
+        sharedDocsView: [],
+      };
+      const model: ICDocArea = {
+        docMap: [[testUser1, data]],
+        allRegisteredUsers: [],
+        type: 'CDocsArea',
+        id: '',
+        occupants: [],
+      };
+      testArea.updateFrom(model, []);
+      mockTownController.sendInteractableCommand.mockImplementation(async () => {
+        const doc: ICDocDocument = {
+          createdAt: '',
+          owner: '',
+          docID: '',
+          docName: '',
+          editors: [],
+          viewers: [],
+          content: '',
+        };
+        return { doc: doc };
+      });
+
+      //  await testArea.openDocument(testUser1, 'doc1');
+      await testArea.getOpenedDocument(testUser1);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'GetDoc',
+        docid: 'doc1',
+      });
     });
   });
   describe('openDocument', () => {
-    it('should open the right document', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      await testArea.writeToDoc('doc1');
-      await testArea.closeDocument();
-      await testArea.openDocument(id2);
-      await testArea.writeToDoc('doc2');
-      await testArea.closeDocument();
-
-      await testArea.openDocument(id1);
-
-      expect(await testArea.getOpenedDocument()).toEqual('doc1');
+    it('test calling openDocument', async () => {
+      const testUser1 = nanoid();
+      mockClear(mockTownController.sendInteractableCommand);
+      await testArea.openDocument(testUser1, 'doc1');
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'OpenDoc',
+        docid: 'doc1',
+        userid: testUser1,
+      });
     });
-    it('should throw exception if a document is already open', async () => {
-      const id1 = await testArea.addNewDocument();
-      const id2 = await testArea.addNewDocument();
-      await testArea.openDocument(id1);
-      expect(await testArea.openDocument(id2)).toThrow(new Error());
+  });
+  describe('getDocByID', () => {
+    it('test calling getDocByID', async () => {
+      mockTownController.sendInteractableCommand.mockImplementation(async () => {
+        const doc: ICDocDocument = {
+          createdAt: '',
+          owner: '',
+          docID: '',
+          docName: '',
+          editors: [],
+          viewers: [],
+          content: '',
+        };
+        return { doc: doc };
+      });
+
+      await testArea.getDocByID('doc1');
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledTimes(1);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'GetDoc',
+        docid: 'doc1',
+      });
+    });
+  });
+  describe('closeDocument', () => {
+    it('test calling closeDocument', async () => {
+      mockClear(mockTownController.sendInteractableCommand);
+      await testArea.closeDocument('doc1');
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledTimes(1);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'CloseDoc',
+        id: 'doc1',
+      });
+    });
+  });
+  describe('getOwnedDocs', () => {
+    it('test calling getOwnedDocs', async () => {
+      const testUser1 = nanoid();
+      mockTownController.sendInteractableCommand.mockImplementation(async () => {
+        const doc: ICDocDocument = {
+          createdAt: '',
+          owner: '',
+          docID: '',
+          docName: '',
+          editors: [],
+          viewers: [],
+          content: '',
+        };
+        return { docs: [doc] };
+      });
+
+      await testArea.getOwnedDocs(testUser1);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledTimes(1);
+      expect(mockTownController.sendInteractableCommand).toHaveBeenCalledWith(testArea.id, {
+        type: 'GetOwnedDocs',
+        id: testUser1,
+      });
+    });
+  });
+
+  describe('updateFrom', () => {
+    it('should call the document edited listener if it had the same active doc before and after', async () => {
+      const testUser1 = nanoid();
+      const data: CDocUserData = {
+        activeDoc: 'doc1',
+        ownedDocs: ['doc1'],
+        sharedDocsEdit: [],
+        sharedDocsView: [],
+      };
+      const model: ICDocArea = {
+        docMap: [[testUser1, data]],
+        allRegisteredUsers: [],
+        type: 'CDocsArea',
+        id: '',
+        occupants: [],
+      };
+
+      const testingDoc: ICDocDocument = {
+        createdAt: '',
+        owner: testUser1,
+        docID: 'doc1',
+        docName: '',
+        editors: [],
+        viewers: [],
+        content: '',
+      };
+
+      // mock this so sign in works
+      mockTownController.sendInteractableCommand.mockImplementation(async () => {
+        return { validation: true };
+      });
+      expect(await testArea.signInUser(testUser1, 'random password')).toBeTruthy();
+
+      // mock this so getDocByID works
+      mockTownController.sendInteractableCommand.mockImplementation(async () => {
+        return { doc: testingDoc };
+      });
+
+      const listener = jest.fn(() => {});
+      testArea.addListener('docUpdated', listener);
+      //setEditors(cDocAreaController.viewers);
+      // give them an active doc
+      testArea.updateFrom(model, []);
+      expect(listener).toHaveBeenCalledTimes(0);
+
+      // give them the same active doc
+      testArea.updateFrom(model, []);
+      await new Promise(r => setTimeout(r, 500));
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(testingDoc);
     });
   });
 });
-*/

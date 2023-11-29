@@ -1,5 +1,7 @@
 # Additional Notes for Our Project
 
+Link to deployment: coveydocsui.onrender.com
+
 The instructions in the original README should be sufficient to setup our app.
 Please note that we use a PostgresQL database deployed on render.com.
 Some of our tests directly modify this database.

@@ -1,3 +1,19 @@
+# Additional Notes for Our Project
+
+The instructions in the original README should be sufficient to setup our app.
+Please note that we use a PostgresQL database deployed on render.com.
+Some of our tests directly modify this database.
+If you need to reset the database or need access, use this command:
+
+PGPASSWORD=BnMjyOzetiuOg8VECO3gWl5KeYp5w4iZ psql -h dpg-clbtekccu2es738mmif0-a.oregon-postgres.render.com -U coveydocs_user coveydocs
+
+If the database is down, send us an email.
+
+We also use the library TypeORM to query this database. This library can be faulty at times.
+If the backend ever needs to be rebooted due to TypeORM error or other errors, send us an email.
+We haven't had to reboot the backend besides in local development, so it should be fine.
+
+
 # Covey.Town
 
 Covey.Town provides a virtual meeting space where different groups of people can have simultaneous video calls, allowing participants to drift between different conversations, just like in real life.

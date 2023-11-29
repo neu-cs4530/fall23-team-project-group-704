@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { ICDocArea, ICDocDocument } from '../../types/CoveyTownSocket';
 import CDocsAreaController from './CDocsAreaController';
 import TownController from '../TownController';
+import { CDocUserData } from './CDocUserDataMap';
 describe('[T2] CBoardAreaController', () => {
   // A valid ConversationAreaController to be reused within the tests
   let testArea: CDocsAreaController;

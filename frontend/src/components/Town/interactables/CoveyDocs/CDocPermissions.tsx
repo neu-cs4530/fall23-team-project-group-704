@@ -1,7 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Center,
-  Divider,
   RadioGroup,
   Stack,
   Radio,
@@ -49,6 +47,7 @@ export default function CDocPermissions(props: {
   }) => void;
   handleExit: () => void;
 }): JSX.Element {
+  // need to disable linter to allow use of any type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = (e: any, userName: CDocUserID, permissionType: ExtendedPermissionType) => {
     let newEditors: CDocUserID[] = [];
@@ -202,6 +201,7 @@ export default function CDocPermissions(props: {
     };
 
     const [formData, setFormData] = useState('');
+    // need to disable linter to allow use of any type
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleFormDataChange = (e: any) => {
       const value = e.target.value;

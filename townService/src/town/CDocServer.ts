@@ -27,7 +27,6 @@ export default class CDocServer implements ICDocServer {
 
   private _userCreatedListeners: ((userID: CDocUserID) => void)[];
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._listeners = [];
     this._shareDocListeners = [];

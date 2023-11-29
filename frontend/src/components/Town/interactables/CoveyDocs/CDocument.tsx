@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-import { ICDocDocument, ICDocUserDataMap } from '../../../../types/CoveyTownSocket';
+import { ICDocDocument } from '../../../../types/CoveyTownSocket';
 import CDocsAreaController from '../../../../classes/interactable/CDocsAreaController';
-import { Button, ListItem, UnorderedList } from '@chakra-ui/react';
+import { Button } from '@chakra-ui/react';
 export default function CDocument({
   document,
   controller,
@@ -15,6 +15,7 @@ export default function CDocument({
   handlePermissions: () => void;
   canView: boolean;
 }): JSX.Element {
+  // need to disable linter to allow use of any type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
 
@@ -31,7 +32,7 @@ export default function CDocument({
     return () => {
       clearInterval(interval);
     };
-  }, [controller, document.docID]);
+  }, [canView, controller, document.docID]);
 
   return (
     <>

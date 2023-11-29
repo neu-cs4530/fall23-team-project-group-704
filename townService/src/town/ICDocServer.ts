@@ -62,7 +62,6 @@ export class MockCDocServer implements ICDocServer {
     permissionType: ExtendedPermissionType,
   ) => void)[];
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._mockOwnedDocs = [];
     this._users = [];

@@ -23,6 +23,7 @@ import {
 
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 import TownController from '../TownController';
+import CDocUserDataMap from './CDocUserDataMap';
 
 //TODO:
 //idea : add a parameter on document that is permissionsOpen? that is a state variable. that way the controller
@@ -30,18 +31,16 @@ import TownController from '../TownController';
 //works to determine if this is a worthwhile change
 
 /**
- * The events that a CovDocsAreaController can emit
+ * The events that a CDocsAreaController can emit
  */
 export type CovDocsEvents = BaseInteractableEventMap & {
   docOpened: (docID: CDocDocID) => void;
   docClosed: () => void;
-  docUpdated: (newContent: string) => void;
+  docUpdated: (doc: ICDocDocument) => void;
   newUserRegistered: (user_id: CDocUserID) => void;
-  userLoggedIn: (user_id: CDocUserID) => void;
   // sends the id of the new document created, and if it is valid
   // it isn't valid if we don't know which is the newly created document
   newDocumentCreated: (docid: CDocDocID, valid_id: boolean) => void;
-  userLoggedOut: (user_id: CDocUserID) => void;
   sharedWithMeChanged: (docID: CDocDocID, permissionType: ExtendedPermissionType) => void;
   //add one for active users changed and add a field for active users in board area?
 };
@@ -61,7 +60,7 @@ export type CovDocsCloseDoc = { id: CovDocDocID };
  * A very state machine class. Could it be refactored through advanced design patterns?
  * What if we don't store the signed in user and the opened document here.
  */
-export default class CovDocsAreaController extends InteractableAreaController<
+export default class CDocsAreaController extends InteractableAreaController<
   CovDocsEvents,
   ICDocArea
 > {
@@ -71,6 +70,8 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
   // a cached state to fire the appropriate update events
   private _boardArea: ICDocArea;
+
+  private _userDataMap: CDocUserDataMap;
 
   private _userID: string | undefined;
 
@@ -84,6 +85,7 @@ export default class CovDocsAreaController extends InteractableAreaController<
     // super(boardAreaModel.id);
     super(id);
     this._boardArea = boardAreaModel;
+    this._userDataMap = CDocUserDataMap.fromData(boardAreaModel.docMap);
     this._townController = townController;
   }
 
@@ -195,8 +197,8 @@ export default class CovDocsAreaController extends InteractableAreaController<
   //what is this method used for?
   public async getOpenedDocument(user_id: CDocUserID): Promise<string> {
     if (user_id === undefined) throw new Error('Given null user_id in getOpenedDocument');
-    if (this._boardArea.userToDocMap.hasActiveDoc(user_id))
-      return (await this.getDocByID(this._boardArea.userToDocMap.getActiveDoc(user_id))).content;
+    if (this._userDataMap.hasActiveDoc(user_id))
+      return (await this.getDocByID(this._userDataMap.getActiveDoc(user_id))).content;
     else throw new Error('No active document');
   }
 
@@ -283,7 +285,9 @@ export default class CovDocsAreaController extends InteractableAreaController<
    */
   protected _updateFrom(updatedModel: ICDocArea): void {
     const oldBoard = this._boardArea;
+    const oldMap = this._userDataMap;
     this._boardArea = updatedModel;
+    this._userDataMap = CDocUserDataMap.fromData(updatedModel.docMap);
 
     if (oldBoard.allRegisteredUsers !== this._boardArea.allRegisteredUsers) {
       this.emit(
@@ -292,33 +296,38 @@ export default class CovDocsAreaController extends InteractableAreaController<
       );
     }
 
-    if (this._userID) {
-      const hadOpenDoc = oldBoard.userToDocMap.hasActiveDoc(this._userID);
-      const hasOpenDoc = updatedModel.userToDocMap.hasActiveDoc(this._userID);
+    if (this._userID !== undefined) {
+      const hadOpenDoc = oldMap.hasActiveDoc(this._userID);
+      const hasOpenDoc = this._userDataMap.hasActiveDoc(this._userID);
 
       //add emit statements for ui
       if (!hadOpenDoc && hasOpenDoc) {
-        this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
+        this.emit('docOpened', this._userDataMap.getActiveDoc(this._userID));
       } else if (
         hadOpenDoc &&
         hasOpenDoc &&
-        oldBoard.userToDocMap.getActiveDoc(this._userID) !==
-          updatedModel.userToDocMap.getActiveDoc(this._userID)
+        oldMap.getActiveDoc(this._userID) !== this._userDataMap.getActiveDoc(this._userID)
       ) {
-        this.emit('docOpened', updatedModel.userToDocMap.getActiveDoc(this._userID));
+        this.emit('docOpened', this._userDataMap.getActiveDoc(this._userID));
       } else if (
         hadOpenDoc &&
         hasOpenDoc &&
-        oldBoard.userToDocMap.getActiveDoc(this._userID) ===
-          updatedModel.userToDocMap.getActiveDoc(this._userID)
+        oldMap.getActiveDoc(this._userID) === this._userDataMap.getActiveDoc(this._userID)
       ) {
-        this._sendDocUpdated(updatedModel.userToDocMap.getActiveDoc(this._userID));
+        this._sendDocUpdated(
+          oldMap.getActiveDoc(this._userID),
+          this._userDataMap.getActiveDoc(this._userID),
+        );
       } else if (hadOpenDoc && !hasOpenDoc) {
         this.emit('docClosed');
       }
 
-      const prevOwnedDocs = oldBoard.userToDocMap.getOwnedDocs(this._userID);
-      const newOwnedDocs = updatedModel.userToDocMap.getOwnedDocs(this._userID);
+      const prevOwnedDocs = oldMap.isTrackingUser(this._userID)
+        ? oldMap.getOwnedDocs(this._userID)
+        : [];
+      const newOwnedDocs = oldMap.isTrackingUser(this._userID)
+        ? this._userDataMap.getOwnedDocs(this._userID)
+        : [];
 
       // TODO: this is brittle, what about doc deletion?
       if (newOwnedDocs.length > prevOwnedDocs.length) {
@@ -327,20 +336,45 @@ export default class CovDocsAreaController extends InteractableAreaController<
 
       const pTypes: PermissionType[] = ['EDIT', 'VIEW'];
 
+      let removedPermissions: CDocDocID[] = [];
+      let addedViewers: CDocDocID[] = [];
+      let addedEditors: CDocDocID[] = [];
+
       for (const pType of pTypes) {
-        const prevShared = oldBoard.userToDocMap.getSharedDocs(this._userID, pType);
-        const newShared = updatedModel.userToDocMap.getSharedDocs(this._userID, pType);
+        const prevShared = oldMap.isTrackingUser(this._userID)
+          ? oldMap.getSharedDocs(this._userID, pType)
+          : [];
+        const newShared = this._userDataMap.isTrackingUser(this._userID)
+          ? this._userDataMap.getSharedDocs(this._userID, pType)
+          : [];
 
-        const added = newShared.filter(doc => prevShared.indexOf(doc) < 0);
-        const removed = prevShared.filter(doc => newShared.indexOf(doc) < 0);
+        const addedShared = newShared.filter(doc => prevShared.indexOf(doc) < 0);
+        if (pType === 'EDIT') addedEditors = addedEditors.concat(addedShared);
+        else if (pType === 'VIEW') addedViewers = addedViewers.concat(addedShared);
 
-        for (const addDoc of added) this.emit('sharedWithMeChanged', addDoc, pType);
-        for (const removeDoc of removed) this.emit('sharedWithMeChanged', removeDoc, 'REMOVE');
+        removedPermissions = removedPermissions.concat(
+          prevShared.filter(doc => newShared.indexOf(doc) < 0),
+        );
       }
+
+      // only REMOVE truly removed docs, not docs that were changed from EDIT to VIEW or vice versa
+      removedPermissions = removedPermissions.filter(
+        doc => addedViewers.indexOf(doc) < 0 && addedEditors.indexOf(doc) < 0,
+      );
+      for (const removeDoc of removedPermissions)
+        this.emit('sharedWithMeChanged', removeDoc, 'REMOVE');
+      // The listeners in CDocAreaWrapper clear the document list of all documents with matching id before appending
+      for (const addDoc of addedEditors) this.emit('sharedWithMeChanged', addDoc, 'EDIT');
+      for (const addDoc of addedViewers) this.emit('sharedWithMeChanged', addDoc, 'VIEW');
     }
   }
 
-  private async _sendDocUpdated(docID: CDocDocID) {
-    this.emit('docUpdated', (await this.getDocByID(docID)).content);
+  private async _sendDocUpdated(oldID: CDocDocID, docID: CDocDocID) {
+    const oldDoc = this.getDocByID(oldID);
+    const newDoc = this.getDocByID(docID);
+
+    const docs = await Promise.all([oldDoc, newDoc]);
+
+    this.emit('docUpdated', docs[1]);
   }
 }

@@ -1,4 +1,4 @@
-import { ICDocDocument } from '../../../../types/CoveyTownSocket';
+import { CDocDocID, ICDocDocument } from '../../../../types/CoveyTownSocket';
 import React from 'react';
 import styled from 'styled-components';
 import { TableContainer, Text, Thead, Tbody, Tr, Td, Th, Table, Button } from '@chakra-ui/react';
@@ -34,11 +34,13 @@ export default function CDocDirectory({
   handleClick,
   handleClickPermissions,
   handleNewDoc,
+  currentUser,
 }: {
   documents: ICDocDocument[];
   handleClick: (docId: string) => void;
-  handleClickPermissions: () => void;
+  handleClickPermissions: (docID: CDocDocID) => void;
   handleNewDoc: () => void;
+  currentUser: string;
 }): JSX.Element {
   const cdocs = documents.map((d, index) => {
     return (
@@ -47,7 +49,9 @@ export default function CDocDirectory({
         <Td>{d.owner}</Td>
         <Td>{d.createdAt}</Td>
         <Td>
-          <Button onClick={handleClickPermissions}>Edit Permissions</Button>
+          {currentUser === d.owner && (
+            <Button onClick={() => handleClickPermissions(d.docID)}>Edit Permissions</Button>
+          )}
         </Td>
       </StyledDocument>
     );

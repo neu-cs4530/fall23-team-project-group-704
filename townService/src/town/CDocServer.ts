@@ -10,6 +10,7 @@ import { ICDocServer } from './ICDocServer';
 import Documents from '../api/document';
 import appDataSource from '../api/datasource';
 import Users from '../api/user';
+import Permissions from '../api/permissions';
 
 /**
  * Class that executes database queries. See ICDocServer.ts for documentation.
@@ -25,10 +26,27 @@ export default class CDocServer implements ICDocServer {
     permissionType: ExtendedPermissionType,
   ) => void)[];
 
+  private _userCreatedListeners: ((userID: CDocUserID) => void)[];
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
     this._listeners = [];
     this._shareDocListeners = [];
+    this._userCreatedListeners = [];
+    // this._debugDeleteAll();
+  }
+
+  private async _debugDeleteAll() {
+    await appDataSource
+      .createQueryBuilder()
+      .delete()
+      .from(Documents)
+      .where('user_id = :userID', { userID: 'Ise' })
+      .execute();
+  }
+
+  addNewUserRegisteredListener(listener: (userID: string) => void): void {
+    this._userCreatedListeners.push(listener);
   }
 
   public addSharedWithListener(
@@ -51,20 +69,54 @@ export default class CDocServer implements ICDocServer {
     this._shareDocListeners = this._shareDocListeners.filter(l => l !== listener);
   }
 
-  public getSharedWith(userID: string, permissionType: PermissionType): Promise<string[]> {
-    throw new Error('Method not implemented.');
+  public async getSharedWith(userID: string, permissionType: PermissionType): Promise<string[]> {
+    const docs = await appDataSource
+      .createQueryBuilder()
+      .select('perm')
+      .from(Permissions, 'perm')
+      .where('perm.userID = :userID', { userID })
+      .andWhere('perm.permissionType = :permissionType', { permissionType })
+      .getMany();
+
+    return docs.map(perm => perm.docID);
   }
 
+  // Only does something if the document is not shared with this person, else fails
   public async shareDocumentWith(
     docID: string,
     userID: string,
     permissionType: PermissionType,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    const perms = await appDataSource.manager.find(Permissions, {
+      where: { userID, docID },
+    });
+
+    if (perms.length !== 0)
+      throw new Error('User already has permissions on doc, remove them first');
+
+    const foundUsers = await appDataSource.manager.find(Users, { where: { id: userID } });
+    if (foundUsers.length === 0) throw new Error('User does not exist');
+
+    const perm: Permissions = new Permissions();
+    perm.docID = docID;
+    perm.userID = userID;
+    perm.permissionType = permissionType;
+
+    await appDataSource.createQueryBuilder().insert().into(Permissions).values([perm]).execute();
+
+    this._shareDocListeners.map(listener => listener(docID, userID, permissionType));
   }
 
   public async removeUserFrom(docID: string, userID: string): Promise<void> {
-    throw new Error('Method not implemented.');
+    await appDataSource
+      .createQueryBuilder()
+      .delete()
+      .from(Permissions)
+      .where('docID = :docID', { docID })
+      .andWhere('userID = :userID', { userID })
+      .execute();
+
+    this._shareDocListeners.map(listener => listener(docID, userID, 'REMOVE'));
   }
 
   public async validateUser(id: string, password: string): Promise<boolean> {
@@ -99,8 +151,6 @@ export default class CDocServer implements ICDocServer {
 
     newDoc.user_id = user_id;
     newDoc.name = 'New Document';
-    newDoc.allowedusersview = [];
-    newDoc.allowedusersedit = [];
     newDoc.data = 'this is a default doc';
     newDoc.id = nanoid();
 
@@ -111,6 +161,7 @@ export default class CDocServer implements ICDocServer {
       .values([newDoc])
       .returning('id')
       .execute();
+
     return this.getDoc(newID.generatedMaps[0].id);
   }
 
@@ -134,14 +185,21 @@ export default class CDocServer implements ICDocServer {
     await appDataSource.createQueryBuilder().insert().into(Users).values([newUser]).execute();
   }
 
-  public async getOwnedDocs(docid: CDocDocID): Promise<CDocDocID[]> {
+  public async getOwnedDocs(userID: CDocUserID): Promise<CDocDocID[]> {
     const docs = await appDataSource
       .createQueryBuilder()
       .select('doc')
       .from(Documents, 'doc')
-      .where('doc.id = :id', { id: docid })
+      .where('doc.user_id = :userID', { userID })
       .getMany();
-    return docs.map(doc => String(doc.name));
+
+    // await appDataSource
+    // .createQueryBuilder()
+    // .delete()
+    // .from(Documents)
+    // .where('user_id = :userID', { userID: 'Ise' })
+    // .execute();
+    return docs.map(doc => doc.id);
   }
 
   public async writeToDoc(docid: CDocDocID, content: string) {
@@ -167,14 +225,36 @@ export default class CDocServer implements ICDocServer {
     } else {
       const doc: ICDocDocument = {
         owner: document.user_id,
-        editors: document.allowedusersedit,
-        viewers: document.allowedusersview,
+        editors: await this._getCollaboratorsFor(docid, 'EDIT'),
+        viewers: await this._getCollaboratorsFor(docid, 'VIEW'),
         content: document.data,
-        createdAt: 'Missing in database',
+        createdAt: document.date.toISOString(),
         docID: document.id,
         docName: document.name,
       };
       return doc;
     }
+  }
+
+  public async getAllRegisteredUsers(): Promise<CDocUserID[]> {
+    const foundUsers = await appDataSource.manager.find(Users, { where: {} });
+    return foundUsers.map(user => user.id);
+  }
+
+  private _addIfNotThere<Type>(list: Type[], item: Type): Type[] {
+    if (list.find(elem => elem === item) !== undefined) return list;
+    return list.concat([item]);
+  }
+
+  private async _getCollaboratorsFor(docID: CDocDocID, permissionType: PermissionType) {
+    const collaborators = await appDataSource
+      .createQueryBuilder()
+      .select('perm')
+      .from(Permissions, 'perm')
+      .where('perm.docID = :docID', { docID })
+      .andWhere('perm.permissionType = :permissionType', { permissionType })
+      .getMany();
+
+    return collaborators.map(perm => perm.userID);
   }
 }

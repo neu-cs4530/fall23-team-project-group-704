@@ -4,7 +4,7 @@ import {
   CDocUserID,
   PermissionType,
   ExtendedPermissionType,
-} from '../types/CoveyTownSocket';
+} from '../../types/CoveyTownSocket';
 
 interface CDocUserData {
   activeDoc: CDocDocID | undefined;

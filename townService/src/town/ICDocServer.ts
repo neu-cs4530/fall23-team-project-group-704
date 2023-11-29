@@ -140,6 +140,14 @@ export class MockCDocServer implements ICDocServer {
     this._shareDocListeners = [];
   }
 
+  getAllRegisteredUsers(): Promise<string[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  addNewUserRegisteredListener(listener: (userID: string) => void): void {
+    throw new Error('Method not implemented.');
+  }
+
   addSharedWithListener(
     listener: (docid: string, targetUser: string, permissionType: ExtendedPermissionType) => void,
   ): void {

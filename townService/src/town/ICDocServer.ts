@@ -8,18 +8,66 @@ import {
   PermissionType,
 } from '../types/CoveyTownSocket';
 
+/**
+ * Interface for database wrapper.
+ */
 export interface ICDocServer {
-  getAllRegisteredUsers(): Promise<CDocUserID[]>;
+  /**
+   * Creates a new document in the database with the given user as owner, and returns it.
+   * @param id
+   */
   createNewDoc(id: string): Promise<ICDocDocument>;
+
+  /**
+   * Checks if the given user and password combo is valid.
+   * @param id
+   * @param password
+   */
   validateUser(id: string, password: CDocPassword): Promise<boolean>;
+
+  /**
+   * Creates a new user with given username and password, or throws
+   * error if the username is already taken.
+   * @param username
+   * @param password
+   */
   createNewUser(username: string, password: string): Promise<void>;
+
+  /**
+   * Gets all owned documents for the given user, or none if they don't exist.
+   * @param id
+   */
   getOwnedDocs(id: string): Promise<CDocDocID[]>;
+
+  /**
+   * Returns the given document, or throws error if the doc doesn't exist.
+   * @param docid
+   */
   getDoc(docid: string): Promise<ICDocDocument>;
+
+  /**
+   * Overwrites the content of the specified doc, if it exists.
+   * @param docid
+   * @param content
+   */
   writeToDoc(docid: string, content: string): Promise<void>;
 
+  /**
+   * Add a listener for the document edited event.
+   * @param listener
+   */
   addDocumentEditedListener(listener: (docid: CDocDocID) => void): void;
+
+  /**
+   * Remove a listener from the document edited event.
+   * @param listener
+   */
   removeDocumentEditedListener(listener: (docid: CDocDocID) => void): void;
 
+  /**
+   * Add a listener for the "doc shared with someone" event.
+   * @param listener
+   */
   addSharedWithListener(
     listener: (
       docid: CDocDocID,
@@ -27,6 +75,11 @@ export interface ICDocServer {
       permissionType: ExtendedPermissionType,
     ) => void,
   ): void;
+
+  /**
+   * Remove a listener from the "doc shared with someone" event.
+   * @param listener
+   */
   removeSharedWithListener(
     listener: (
       docid: CDocDocID,
@@ -35,15 +88,32 @@ export interface ICDocServer {
     ) => void,
   ): void;
 
-  addNewUserRegisteredListener(listener: (userID: CDocUserID) => void): void;
-
+  /**
+   * Share the given document with the given user for given permission type.
+   * If there is no permission data regarding the specified user and file, throws error.
+   * If the user does not exist, throws error.
+   * @param docID
+   * @param userID
+   * @param permissionType
+   */
   shareDocumentWith(
     docID: CDocDocID,
     userID: CDocUserID,
     permissionType: PermissionType,
   ): Promise<void>;
+
+  /**
+   * Removes the given user from the document.
+   * @param docID
+   * @param userID
+   */
   removeUserFrom(docID: CDocDocID, userID: CDocDocID): Promise<void>;
 
+  /**
+   * Gets all documents shared with a person, returning empty array if they don't exist or nothing is shared with them.
+   * @param userID
+   * @param permissionType
+   */
   getSharedWith(userID: CDocUserID, permissionType: PermissionType): Promise<CDocDocID[]>;
 }
 

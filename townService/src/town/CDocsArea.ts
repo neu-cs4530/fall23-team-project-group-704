@@ -22,7 +22,7 @@ import CDocUserDataMap from './CDocUserDataMap';
 // How to send different model to each user?
 // TODO: this area for now will only handle one user
 export default class CDocsArea extends InteractableArea {
-  private _server: ICDocServer = CDocServer.getInstance();
+  private _server: ICDocServer;
 
   private _userToDocMap: CDocUserDataMap;
 
@@ -35,11 +35,17 @@ export default class CDocsArea extends InteractableArea {
    * @param coordinates  the bounding box that defines this conversation area
    * @param townEmitter a broadcast emitter that can be used to emit updates to players
    */
-  public constructor(id: string, coordinates: BoundingBox, townEmitter: TownEmitter) {
+  public constructor(
+    id: string,
+    coordinates: BoundingBox,
+    townEmitter: TownEmitter,
+    server: ICDocServer,
+  ) {
     super(id, coordinates, townEmitter);
 
     this._userToDocMap = new CDocUserDataMap();
     this._registeredUsers = [];
+    this._server = server;
     // for some reason we have to pass the callback this._userToDocMap, or we get null error
     this._server.addDocumentEditedListener(doc =>
       this._handleDocumentEdited(doc, this._userToDocMap),
@@ -51,7 +57,38 @@ export default class CDocsArea extends InteractableArea {
   }
 
   /**
-   * See command definitions for documentation per command.
+   * WriteDoc: should tell the model to write the content to the specified doc.
+   * Should also call _emitAreaChanged() if the doc is tracked
+   *
+   * GetDoc: should ask the server for the given docid and return it
+   *
+   * GetOwnedDocs: same as GetDoc, but also updates the cached state for this user,
+   * such that toModel is now up to date
+   *
+   * OpenDoc: sets the given doc as 'active' for the user, and emits an area change event
+   * the new toModel() value should indicate the given doc as active
+   *
+   * CloseDoc: should remove the given doc as the active doc if it is active, and
+   * also emit an area change event
+   *
+   * CreateNewUser: creates the user with given username and password
+   * throw error if given username is taken
+   * also emit area change event
+   *
+   * Validate User: return true if user and password match
+   *
+   * Create New Doc: creates new document for the given user and returns the new doc id
+   * emits area change event
+   *
+   * Share Doc: shares the document with the given person, and emits area change with cache updated
+   * throws error if person doesn't exist or already has permissions on the given doc
+   *
+   * Remove User: should remove the user from the doc if such a permission exists,
+   * should trigger update of cache and fire area change event
+   *
+   * Get Shared With Me: gets all docs shared with me based on permissiontype,
+   * returning [] if there are none
+   *
    * @param command
    * @param player
    * @returns
@@ -150,13 +187,14 @@ export default class CDocsArea extends InteractableArea {
   public static fromMapObject(
     mapObject: ITiledMapObject,
     broadcastEmitter: TownEmitter,
+    server: ICDocServer,
   ): CDocsArea {
     const { name, width, height } = mapObject;
     if (!width || !height) {
       throw new Error(`Malformed viewing area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    return new CDocsArea(name, rect, broadcastEmitter);
+    return new CDocsArea(name, rect, broadcastEmitter, server);
   }
 
   private _handleDocumentEdited(docid: CDocDocID, userToDocMap: CDocUserDataMap) {

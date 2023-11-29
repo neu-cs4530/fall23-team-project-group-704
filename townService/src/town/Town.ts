@@ -24,6 +24,7 @@ import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
 import ViewingArea from './ViewingArea';
 import CDocsArea from './CDocsArea';
+import CDocServer from './CDocServer';
 
 /**
  * The Town class implements the logic for each town: managing the various events that
@@ -410,7 +411,9 @@ export default class Town {
 
     const cDocAreas = objectLayer.objects
       .filter(eachObject => eachObject.type === 'CDocsArea')
-      .map(eachGameAreaObj => CDocsArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
+      .map(eachGameAreaObj =>
+        CDocsArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter, CDocServer.getInstance()),
+      );
 
     //  if (cDocAreas.length <= 0) throw new Error('no cdocareas');
 

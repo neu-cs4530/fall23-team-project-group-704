@@ -16,7 +16,6 @@ import {
 } from '../types/CoveyTownSocket';
 import InteractableArea from './InteractableArea';
 import { ICDocServer } from './ICDocServer';
-import CDocServer from './CDocServer';
 import CDocUserDataMap from './CDocUserDataMap';
 
 // How to send different model to each user?

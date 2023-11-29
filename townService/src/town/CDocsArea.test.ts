@@ -1,5 +1,6 @@
 import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
+import appDataSource from '../api/datasource';
 import Player from '../lib/Player';
 import {
   CDocCloseDocCommand,
@@ -20,7 +21,8 @@ import {
   TownEmitter,
 } from '../types/CoveyTownSocket';
 import CDocsArea from './CDocsArea';
-import CDocUserDataMap from './CDocUserDataMap';
+import CDocServer from './CDocServer';
+import CDocUserDataMap, { CDocUserData } from './CDocUserDataMap';
 import { ICDocServer } from './ICDocServer';
 
 const testDoc: ICDocDocument = {
@@ -398,6 +400,67 @@ describe('CDocsArea', () => {
         )) as unknown as { docs: CDocDocID[] };
         expect(docs).toEqual(['id1', 'id2', 'id3']);
       });
+    });
+  });
+  describe('toModel', () => {
+    it('should initally return empty model', () => {
+      const model: ICDocArea = {
+        docMap: [],
+        allRegisteredUsers: [],
+        type: 'CDocsArea',
+        id: testArea.id,
+        occupants: [newPlayer.id],
+      };
+      expect((testArea.toModel() as ICDocArea).docMap).toEqual(model.docMap);
+      expect((testArea.toModel() as ICDocArea).occupants).toEqual(model.occupants);
+      expect((testArea.toModel() as ICDocArea).type).toEqual(model.type);
+      expect((testArea.toModel() as ICDocArea).id).toEqual(model.id);
+    });
+
+    it('should return correct model after some operations, also proving that the listeners and caching work', async () => {
+      await appDataSource.initialize();
+      townEmitter = mock<TownEmitter>();
+      const server = CDocServer.getInstance();
+      testArea = new CDocsArea(id, testAreaBox, townEmitter, server);
+      newPlayer = new Player(nanoid(), mock<TownEmitter>());
+      testArea.add(newPlayer);
+
+      const randID = nanoid();
+      const randPassword = nanoid();
+
+      await testArea.handleCommand<CDocCreateNewUserCommand>(
+        {
+          type: 'CreateNewUser',
+          username: randID,
+          password: randPassword,
+        },
+        newPlayer,
+      );
+      const { doc } = (await testArea.handleCommand<CDocCreateNewDocCommand>(
+        {
+          type: 'CreateNewDoc',
+          id: randID,
+        },
+        newPlayer,
+      )) as unknown as { doc: ICDocDocument };
+      const userData: CDocUserData = {
+        activeDoc: undefined,
+        ownedDocs: [doc.docID],
+        sharedDocsEdit: [],
+        sharedDocsView: [],
+      };
+      const model: ICDocArea = {
+        docMap: [[randID, userData]],
+        allRegisteredUsers: [randID],
+        type: 'CDocsArea',
+        id: testArea.id,
+        occupants: [newPlayer.id],
+      };
+
+      expect((testArea.toModel() as ICDocArea).docMap).toEqual(model.docMap);
+      expect((testArea.toModel() as ICDocArea).type).toEqual(model.type);
+      expect((testArea.toModel() as ICDocArea).id).toEqual(model.id);
+      expect((testArea.toModel() as ICDocArea).occupants).toEqual(model.occupants);
     });
   });
 });

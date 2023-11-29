@@ -80,7 +80,11 @@ export default class CDocsArea extends InteractableArea {
    * Create New Doc: creates new document for the given user and returns the new doc id
    * emits area change event
    *
-   * Share Doc:
+   * Share Doc: shares the document with the given person, and emits area change with cache updated
+   * throws error if person doesn't exist or already has permissions on the given doc
+   *
+   * Remove User: should remove the user from the doc if such a permission exists,
+   * should trigger update of cache and fire area change event
    *
    * @param command
    * @param player

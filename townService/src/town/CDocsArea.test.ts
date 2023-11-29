@@ -10,6 +10,8 @@ import {
   CDocGetDocCommand,
   CDocGetOwnedDocsCommand,
   CDocOpenDocCommand,
+  CDocRemoveUserCommand,
+  CDocShareDocCommand,
   CDocUserID,
   CDocValidateUserCommand,
   CDocWriteDocCommand,
@@ -271,6 +273,101 @@ describe('CDocsArea', () => {
         expect(mockServer.createNewDoc).toHaveBeenCalledWith('test_user');
         expect(doc).toEqual(testDoc);
         expect(townEmitter.emit).toHaveBeenCalledTimes(1);
+      });
+    });
+    describe('ShareDoc', () => {
+      it('delegates to mockServer to share the doc with the person, and emits area change event with cache update', async () => {
+        mockClear(townEmitter.emit);
+        await testArea.handleCommand<CDocShareDocCommand>(
+          {
+            type: 'ShareDoc',
+            docID: 'test_id',
+            targetUser: 'test_user',
+            permissionType: 'EDIT',
+          },
+          newPlayer,
+        );
+        expect(mockServer.shareDocumentWith).toHaveBeenCalledWith('test_id', 'test_user', 'EDIT');
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getSharedDocs(
+            'test_user',
+            'EDIT',
+          ),
+        ).toHaveLength(1);
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getSharedDocs(
+            'test_user',
+            'VIEW',
+          ),
+        ).toHaveLength(0);
+        expect(townEmitter.emit).toHaveBeenCalledTimes(1);
+      });
+      it('delegates to mockServer to share the doc with the person, and emits area change event with cache update', async () => {
+        mockClear(townEmitter.emit);
+        await testArea.handleCommand<CDocShareDocCommand>(
+          {
+            type: 'ShareDoc',
+            docID: 'test_id',
+            targetUser: 'test_user',
+            permissionType: 'VIEW',
+          },
+          newPlayer,
+        );
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getSharedDocs(
+            'test_user',
+            'EDIT',
+          ),
+        ).toHaveLength(0);
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getSharedDocs(
+            'test_user',
+            'VIEW',
+          ),
+        ).toHaveLength(1);
+
+        expect(mockServer.shareDocumentWith).toHaveBeenCalledWith('test_id', 'test_user', 'VIEW');
+        expect(townEmitter.emit).toHaveBeenCalledTimes(1);
+      });
+    });
+    describe('RemoveUser', () => {
+      it('should delegate to the mockServer removeUser, should trigger update of cache and fire area change event', async () => {
+        // repeat share doc test to set up cached state
+        await testArea.handleCommand<CDocShareDocCommand>(
+          {
+            type: 'ShareDoc',
+            docID: 'test_id',
+            targetUser: 'test_user',
+            permissionType: 'VIEW',
+          },
+          newPlayer,
+        );
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getSharedDocs(
+            'test_user',
+            'VIEW',
+          ),
+        ).toHaveLength(1);
+
+        mockClear(mockServer.removeUserFrom);
+        mockClear(townEmitter.emit);
+        await testArea.handleCommand<CDocRemoveUserCommand>(
+          {
+            type: 'RemoveUser',
+            docID: 'test_id',
+            targetUser: 'test_user',
+          },
+          newPlayer,
+        );
+
+        expect(mockServer.removeUserFrom).toHaveBeenCalledWith('test_id', 'test_user');
+        // check that cached state is modified
+        expect(
+          CDocUserDataMap.fromData((testArea.toModel() as ICDocArea).docMap).getSharedDocs(
+            'test_user',
+            'VIEW',
+          ),
+        ).toHaveLength(0);
       });
     });
   });

@@ -86,6 +86,9 @@ export default class CDocsArea extends InteractableArea {
    * Remove User: should remove the user from the doc if such a permission exists,
    * should trigger update of cache and fire area change event
    *
+   * Get Shared With Me: gets all docs shared with me based on permissiontype,
+   * returning [] if there are none
+   *
    * @param command
    * @param player
    * @returns

@@ -1,4 +1,3 @@
-import exp from 'constants';
 import { mock, mockClear } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import Player from '../lib/Player';
@@ -9,6 +8,7 @@ import {
   CDocDocID,
   CDocGetDocCommand,
   CDocGetOwnedDocsCommand,
+  CDocGetSharedWithMe,
   CDocOpenDocCommand,
   CDocRemoveUserCommand,
   CDocShareDocCommand,
@@ -368,6 +368,35 @@ describe('CDocsArea', () => {
             'VIEW',
           ),
         ).toHaveLength(0);
+      });
+    });
+    describe('GetSharedWithMe', () => {
+      it('delegates call to server', async () => {
+        mockClear(mockServer.getSharedWith);
+        await testArea.handleCommand<CDocGetSharedWithMe>(
+          {
+            type: 'GetSharedWithMe',
+            userID: 'test_user',
+            permissionType: 'EDIT',
+          },
+          newPlayer,
+        );
+        expect(mockServer.getSharedWith).toHaveBeenCalledWith('test_user', 'EDIT');
+      });
+      it('gets the docs shared with the person', async () => {
+        mockServer.getSharedWith.mockImplementation(async (user, permissionType) => {
+          if (user === 'test_user' && permissionType === 'EDIT') return ['id1', 'id2', 'id3'];
+          return [];
+        });
+        const { docs } = (await testArea.handleCommand<CDocGetSharedWithMe>(
+          {
+            type: 'GetSharedWithMe',
+            userID: 'test_user',
+            permissionType: 'EDIT',
+          },
+          newPlayer,
+        )) as unknown as { docs: CDocDocID[] };
+        expect(docs).toEqual(['id1', 'id2', 'id3']);
       });
     });
   });

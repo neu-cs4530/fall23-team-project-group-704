@@ -1,4 +1,5 @@
 import exp from 'constants';
+import { mock } from 'jest-mock-extended';
 import { nanoid } from 'nanoid';
 import appDataSource from '../api/datasource';
 import CDocServer from './CDocServer';
@@ -77,5 +78,49 @@ describe('CDocServer', () => {
         expect(ownedDocs).toEqual([doc1.docID, doc2.docID, doc3.docID]);
       });
     });
+    describe('writeToDoc', () => {
+      it('does not throw error if doc does not exist, fires event', async () => {
+        // A better behavior to have in the implementation would be not firing the event...
+        const listener = mock((docid: string) => {});
+        CDocServer.getInstance().addDocumentEditedListener(listener);
+        const randID = nanoid();
+        await CDocServer.getInstance().writeToDoc(randID, 'random content');
+        expect(listener).toHaveBeenCalledWith(randID);
+        CDocServer.getInstance().removeDocumentEditedListener(listener);
+      });
+      it('overwrites contents of doc, fires event', async () => {
+        const listener = mock((docid: string) => {});
+        CDocServer.getInstance().addDocumentEditedListener(listener);
+        const doc = await CDocServer.getInstance().createNewDoc('test_user');
+        const randomContent = 'random content';
+
+        expect(randomContent !== doc.content).toEqual(true);
+        await CDocServer.getInstance().writeToDoc(doc.docID, randomContent);
+
+        expect(listener).toHaveBeenCalledWith(doc.docID);
+        CDocServer.getInstance().removeDocumentEditedListener(listener);
+
+        expect((await CDocServer.getInstance().getDoc(doc.docID)).content).toEqual(randomContent);
+      });
+    });
+    describe('getDoc', () => {
+      it('if doc does not exist, throws error', async () => {
+        await expect(CDocServer.getInstance().getDoc(nanoid())).rejects.toThrow(
+          new Error('Document not found'),
+        );
+      });
+      it('returns document by id', async () => {
+        const doc = await CDocServer.getInstance().createNewDoc('test_user');
+
+        expect((await CDocServer.getInstance().getDoc(doc.docID)).content).toEqual(doc);
+      });
+    });
+    describe('getRegisteredUsers', () => {
+      it('returns all registered users', async () => {
+        await CDocServer.getInstance().createNewUser(nanoid(), nanoid());
+        expect((await CDocServer.getInstance().getAllRegisteredUsers()).length).toBeGreaterThan(0);
+      });
+    });
+    describe('');
   });
 });

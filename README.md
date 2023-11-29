@@ -13,6 +13,7 @@ We also use the library TypeORM to query this database. This library can be faul
 If the backend ever needs to be rebooted due to TypeORM error or other errors, send us an email.
 We haven't had to reboot the backend besides in local development, so it should be fine.
 
+KNOWN BUG: documents shared with you under view-only permission may be initially editable. This is easily fixed by refreshing the UI by creating a new document of your own. Then, the view-only document should become truly view-only.
 
 # Covey.Town
 
